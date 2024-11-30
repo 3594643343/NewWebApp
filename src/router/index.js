@@ -4,6 +4,8 @@ import button from '@/views/test/button.vue'
 import plusIcon from '@/views/test/plusIcon.vue'
 import test from '@/views/test/test.vue'
 import Register from '@/views/register/Register.vue'
+import EmailLogin from '@/views/login/EmailLogin.vue'
+import AccountLogin from '@/views/login/AccountLogin.vue'
 import Main from '@/views/main/Main.vue'
 
 const router = createRouter({
@@ -28,6 +30,16 @@ const router = createRouter({
       path: '/register',
       name:'register',
       component: Register,
+    },
+    {
+      path: '/emaillogin',
+      name: 'emaillogin',
+      component: EmailLogin,
+    },
+    {
+      path: '/accountlogin',
+      name: 'accountlogin',
+      component: AccountLogin,
     },
     {
       path: '/test',
