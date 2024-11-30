@@ -13,21 +13,30 @@
           alt="Element logo"
         />
       </el-menu-item>
-      <el-menu-item index="1">注册</el-menu-item>
-      <el-sub-menu index="2">
+      <el-menu-item index="register">注册</el-menu-item>
+      <el-sub-menu index="login">
         <template #title>登录</template>
-        <el-menu-item index="2-1">邮箱登录</el-menu-item>
-        <el-menu-item index="2-2">账号登录</el-menu-item>
+        <el-menu-item index="email-login">邮箱登录</el-menu-item>
+        <el-menu-item index="account-login">账号登录</el-menu-item>
       </el-sub-menu>
     </el-menu>
 </template>
   
 <script lang="ts" setup>
 import { ref } from 'vue'
-  
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 const activeIndex = ref('1')
 const handleSelect = (key: string, keyPath: string[]) => {
-console.log(key, keyPath)
+  console.log(key, keyPath)
+  if (key === 'register') {
+    router.push('/register')
+  } else if (key === 'email-login') {
+    router.push('/emaillogin')
+  } else if (key === 'account-login') {
+    router.push('/accountlogin')
+  }
 }
 </script>
   
