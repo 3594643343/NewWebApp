@@ -5,43 +5,38 @@ import MainSider from '@/components/layouts/MainSider.vue';
 </script>
 
 <template>
-    <div class="common-layout">
+  <div class="common-layout">
+    <el-container>
+      <el-header>
+        <MainHeader />
+      </el-header>
       <el-container>
-        <el-header>
-            <MainHeader />
-        </el-header>
-        <el-container>
-          <el-aside width="200px" class="main-sider">
-            <MainSider />
-          </el-aside>
-          <el-main>Main</el-main>
-        </el-container>
+        <el-aside>
+          <MainSider />
+        </el-aside>
+        <el-main>
+          <router-view />
+        </el-main>
       </el-container>
-    </div>
-  </template>
+    </el-container>
+  </div>
+</template>
 
 <style scoped>
-.common-layout {
-  height: 100%;
-}
-.el-container {
-    height: 100%;
-}
 .el-header {
-  height: 60px;
-  line-height: 60px;
   background-color: #fff;
-  padding: 0 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  offset: 10;
-  position: top;
-}
-.el-aside {
-  background-color: #fff;
-  overflow: auto;
+  padding: 0;
 }
 
-.main-sider {
-  background-color: #eef0f4;
+.el-aside {
+  margin-top: 0%;
+  background-color: #fff;
+  padding: 10px;
+  padding-right: 0%;
+  width: 250px;
+}
+
+.el-main {
+  padding: 20px;
 }
 </style>

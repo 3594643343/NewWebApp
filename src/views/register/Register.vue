@@ -36,9 +36,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 
-const form = reactive({
+const form = ref({
 username: '',
 email: '',
 password: '',

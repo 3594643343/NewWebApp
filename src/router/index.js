@@ -5,6 +5,10 @@ import plusIcon from '@/views/test/plusIcon.vue'
 import test from '@/views/test/test.vue'
 import Register from '@/views/register/Register.vue'
 import Main from '@/views/main/Main.vue'
+import User from '@/views/main/User.vue'
+import Record from '@/views/main/Record.vue'
+import Setting from '@/views/main/Setting.vue'
+import Friend from '@/views/main/Friend.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +42,28 @@ const router = createRouter({
       path: '/main',
       name:'main',
       component: Main,
+      children: [
+        {
+          path: 'user',
+          name: 'user',
+          component: User,
+        },
+        {
+          path:'record',
+          name:'record',
+          component: Record,
+        },
+        {
+          path:'setting',
+          name:'setting',
+          component: Setting,
+        },
+        {
+          path: 'friend',
+          name: 'friend',
+          component: Friend,
+        },
+      ],
     },
   ],
 })
