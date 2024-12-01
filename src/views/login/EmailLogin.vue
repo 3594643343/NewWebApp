@@ -28,7 +28,9 @@
   
   <script lang="ts" setup>
   import { ref} from 'vue'
-  
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
   
   
   
@@ -50,6 +52,7 @@
   
   const handleEmailLogin = () => {
   console.log('email-login')
+  router.push('/main')
   }
   
   </script>

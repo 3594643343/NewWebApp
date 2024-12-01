@@ -7,6 +7,7 @@ import Register from '@/views/register/Register.vue'
 import EmailLogin from '@/views/login/EmailLogin.vue'
 import AccountLogin from '@/views/login/AccountLogin.vue'
 import Main from '@/views/main/Main.vue'
+import BookMeeting from '@/views/main/BookMeeting.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,6 +51,11 @@ const router = createRouter({
       path: '/main',
       name:'main',
       component: Main,
+    },
+    {
+      path: '/main/bookmeeting',
+      name: '/main/bookmeeting',
+      component: BookMeeting,
     },
   ],
 })
