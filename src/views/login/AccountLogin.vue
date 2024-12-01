@@ -28,10 +28,10 @@
   
   <script lang="ts" setup>
   import { ref} from 'vue'
-  
-  
-  
-  
+  import { useRouter } from 'vue-router';
+
+  const router = useRouter();
+
   const form = ref({
   username: '',
   password: '',
@@ -50,6 +50,7 @@
   
   const handleAccountLogin = () => {
   console.log('AccountLogin')
+  router.push('/main');
   }
   
   </script>

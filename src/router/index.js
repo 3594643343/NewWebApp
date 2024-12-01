@@ -11,6 +11,7 @@ import User from '@/views/main/User.vue'
 import Record from '@/views/main/Record.vue'
 import Setting from '@/views/main/Setting.vue'
 import Friend from '@/views/main/Friend.vue'
+import BookMeeting from '@/views/main/BookMeeting.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -76,6 +77,11 @@ const router = createRouter({
           component: Friend,
         },
       ],
+    },
+    {
+      path: '/main/bookmeeting',
+      name: '/main/bookmeeting',
+      component: BookMeeting,
     },
   ],
 })
