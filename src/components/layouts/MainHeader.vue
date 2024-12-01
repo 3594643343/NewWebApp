@@ -32,9 +32,9 @@ const handleSelect = (key: string, keyPath: string[]) => {
         alt="Element logo"
       />
     </el-menu-item>
-    <el-menu-item index="1">加入会议</el-menu-item>
-    <el-menu-item index="main/bookmeeting">预定会议</el-menu-item>
-    <el-menu-item index="3">快速会议</el-menu-item>
+    <el-menu-item index="1" style="font-weight: bold;">加入会议</el-menu-item>
+    <el-menu-item index="main/bookmeeting" style="font-weight: bold;">预定会议</el-menu-item>
+    <el-menu-item index="3" style="font-weight: bold;">快速会议</el-menu-item>
   </el-menu>
 </template>
 
