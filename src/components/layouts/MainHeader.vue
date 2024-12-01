@@ -4,17 +4,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
   
-const activeIndex = ref('1')
-const handleSelect = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
-  if (key === 'main/bookmeeting') {
-    router.push('/main/bookmeeting')
-  } else if (key === 'email-login') {
-    router.push('/emaillogin')
-  } else if (key === 'account-login') {
-    router.push('/accountlogin')
-  }
-}
+const activeIndex = ref('')
 </script>
 
 <template>
@@ -23,7 +13,7 @@ const handleSelect = (key: string, keyPath: string[]) => {
     class="main-header"
     mode="horizontal"
     :ellipsis="false"
-    @select="handleSelect"
+    router
   >
     <el-menu-item index="0">
       <img
@@ -33,7 +23,7 @@ const handleSelect = (key: string, keyPath: string[]) => {
       />
     </el-menu-item>
     <el-menu-item index="1" style="font-weight: bold;">加入会议</el-menu-item>
-    <el-menu-item index="main/bookmeeting" style="font-weight: bold;">预定会议</el-menu-item>
+    <el-menu-item index="bookmeeting" style="font-weight: bold;">预定会议</el-menu-item>
     <el-menu-item index="3" style="font-weight: bold;">快速会议</el-menu-item>
   </el-menu>
 </template>

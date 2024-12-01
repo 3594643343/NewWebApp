@@ -45,13 +45,15 @@ import {
   Orange,
   Setting,
 } from '@element-plus/icons-vue'
-
+import { ref } from 'vue'
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)
 }
 const handleClose = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)
 }
+
+const activeIndex = ref('/main/user')
 </script>
 
 <style lang="scss" scoped>

@@ -76,13 +76,14 @@ const router = createRouter({
           name: 'friend',
           component: Friend,
         },
+        {
+          path: 'bookmeeting',
+          name: 'bookmeeting',
+          component: BookMeeting,
+        },
       ],
     },
-    {
-      path: '/main/bookmeeting',
-      name: '/main/bookmeeting',
-      component: BookMeeting,
-    },
+    
   ],
 })
 
