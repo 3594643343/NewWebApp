@@ -1,11 +1,12 @@
 <script setup>
-
+import ProfileChange from '@/components/usersetting/ProfileChange.vue';
 </script>
 
 <template>
     <div class="user">
-        <h1>用户信息</h1>
+        <h2>个人资料</h2>
     </div>
+    <ProfileChange />
 </template>
 
 <style>

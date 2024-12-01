@@ -29,6 +29,7 @@
   <script lang="ts" setup>
   import { ref} from 'vue'
   import { useRouter } from 'vue-router';
+  import { userLoginService } from '@/api/user';
 
   const router = useRouter();
 
@@ -36,6 +37,8 @@
   username: '',
   password: '',
   })
+
+  const useremail= ref('');
   
   const rules = {
   username: [
@@ -48,9 +51,26 @@
   ],
   }
   
-  const handleAccountLogin = () => {
-  console.log('AccountLogin')
-  router.push('/main');
+  const handleAccountLogin = async() => {
+    try {
+    const result = await userLoginService({
+      userEmail: useremail.value,
+      userName: form.value.username,
+      userPassword: form.value.password,
+    });
+    console.log(result);
+    if (result) {
+      // 登录成功，跳转到主页
+      localStorage.setItem('token', result.data.token);
+      console.log("Login:", result.data.token);
+      console.log('Login successful');
+      router.push('/main');
+    } else {
+      console.log("error:", result); // 输出错误信息
+    }
+  } catch (error) {
+    console.error('登录失败:', error); // 捕获并处理错误
+  }
   }
   
   </script>

@@ -7,21 +7,11 @@ const instance = axios.create({
   timeout: 10000,
 });
 
-
-
 instance.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
     console.log("token:",token)
     if (token) {
-       //config.headers.Authorization = `${token}`; // 添加token
-       //config.params['token'] = token;
-        //console.log(config.headers.Authorization)
-         //if(config.params){
         config.headers['token'] = token;
-         //}
-         //else{
-            // config.params = {token:token}
-        // }
     }
     return config;
 }, error => {
