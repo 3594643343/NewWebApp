@@ -33,7 +33,7 @@ import MainSider from '@/components/layouts/MainSider.vue';
   background-color: #fff;
   padding: 10px;
   padding-right: 0%;
-  width: 250px;
+  width: 210px;
 }
 
 .el-main {

@@ -38,30 +38,9 @@ const rules = {
   ]
 };
 
-// const dialogVisible = ref(false);
-/*
+
+
 const handleRegister = async () => {
-  // console.log(form.value.);
-
-  // // 验证表单
-  // const isValid = await new Promise((resolve) => {
-  //   // 手动触发验证
-  //   form.value.$refs.form.validate((valid) => {
-  //     resolve(valid);
-  //   });
-  // });
-
-  // if (!isValid) {
-  //   return; // 表单不合法
-  // }
-
-  console.log('Username type:', typeof form.value.username);
-  console.log('Email type:', typeof form.value.email);
-  console.log('Password type:', typeof form.value.password);
-  console.log('Confirm Password type:', typeof form.value.confirmPassword);
-
-  console.log(form.value);
-  // 调用注册服务
   try {
     const result = await userRegisterService({
       userEmail: form.value.email,
@@ -69,29 +48,16 @@ const handleRegister = async () => {
       userPassword: form.value.password,
       checkPassword: form.value.confirmPassword
     });
-
     console.log(result);
-    if (result.success) {
-      // const token = result.token; // 确保这里获取到 token，根据具体返回值修改
-      // const decoded = jwtDecode(token); // 解码 token
-      // console.log(decoded); // 查看解码后的内容
+    if (result.status === 200) {
       // 注册成功，跳转到登录页面
       router.push('/accountlogin');
     } else {
       console.log(result.msg); // 输出错误信息
-      alert(result.msg); // 提示用户
     }
   } catch (error) {
-    console.error('注册失败:', error.response ? error.response.data : error);
-    alert('注册失败，请检查控制台');
+    console.error('注册失败:', error); // 捕获并处理错误
   }
-};
-*/
-
-const handleRegister = () => {
-  // console.log(form.value.);
-  router.push('/accountlogin');
-  // 验证表单
 }
 
 </script>
