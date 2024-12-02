@@ -13,6 +13,7 @@ import Schedule from '@/views/main/Schedule.vue'
 import Setting from '@/views/main/Setting.vue'
 import Friend from '@/views/main/Friend.vue'
 import BookMeeting from '@/views/main/BookMeeting.vue'
+import JoinMeeting from '@/views/main/JoinMeeting.vue'
 import Meeting from '@/views/meeting/Meeting.vue'
 import Admin from '@/views/admin/Admin.vue'
 
@@ -88,6 +89,11 @@ const router = createRouter({
           path: 'bookmeeting',
           name: 'bookmeeting',
           component: BookMeeting,
+        },
+        {
+          path: 'joinmeeting',
+          name: 'joinmeeting',
+          component: JoinMeeting,
         },
       ],
     },

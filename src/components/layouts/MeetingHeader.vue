@@ -15,7 +15,7 @@ const activeIndex = ref('')
       :ellipsis="false"
       router
     >
-      <el-menu-item index="0">
+      <el-menu-item>
         <img
           style="width: 100px"
           src="@/assets/logo/icon_wemeet.svg"

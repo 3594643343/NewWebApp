@@ -63,6 +63,8 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 const activeItem = ref(route.path); // 初始化为当前路由路径
+const logoutDialogVisible = ref(false); // 退出登录弹窗可见性
+
 
 // 当路由变化时更新 activeItem
 watch(

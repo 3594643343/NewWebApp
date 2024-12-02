@@ -109,7 +109,7 @@ const showUserProfile = async () => {
         </div>
       </el-card>
     <!-- </el-container> -->
-</template>
+  </template>
   
   
 <style scoped>
