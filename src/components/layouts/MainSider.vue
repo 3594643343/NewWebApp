@@ -31,13 +31,29 @@
           <el-icon><setting /></el-icon>
           <span>设置</span>
         </el-menu-item>
-        <el-menu-item index="/main/register" :class="{ 'active-item': activeItem === '/main/register' }" @click="logout">
+        <el-menu-item plain @click="logoutDialogVisible = true">
           <el-icon><DArrowLeft /></el-icon>
           <span>退出登录</span>
         </el-menu-item>
       </el-menu>
     </el-col>
   </el-row>
+  <el-dialog
+    v-model="logoutDialogVisible"
+    title="确认退出"
+    width="400"
+    align-center
+  >
+    <span>您确定要退出登录吗？</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="logoutDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="logout">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
