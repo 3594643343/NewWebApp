@@ -26,7 +26,7 @@
     <!-- </el-container> -->
   </template>
   
-  <script lang="ts" setup>
+<script lang="ts" setup>
   import { ref} from 'vue'
   import { useRouter } from 'vue-router';
   import { userLoginService } from '@/api/user';
@@ -62,6 +62,7 @@
     if (result) {
       // 登录成功，跳转到主页
       localStorage.setItem('token', result.data.token);
+
       console.log("Login:", result.data.token);
       console.log('Login successful');
       router.push('/main');
@@ -73,7 +74,7 @@
   }
   }
   
-  </script>
+</script>
   
   
   

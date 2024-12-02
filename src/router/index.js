@@ -9,9 +9,12 @@ import AccountLogin from '@/views/login/AccountLogin.vue'
 import Main from '@/views/main/Main.vue'
 import User from '@/views/main/User.vue'
 import Record from '@/views/main/Record.vue'
+import Schedule from '@/views/main/Schedule.vue'
 import Setting from '@/views/main/Setting.vue'
 import Friend from '@/views/main/Friend.vue'
 import BookMeeting from '@/views/main/BookMeeting.vue'
+import Meeting from '@/views/meeting/Meeting.vue'
+import Admin from '@/views/admin/Admin.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -67,6 +70,11 @@ const router = createRouter({
           component: Record,
         },
         {
+          path:'schedule',
+          name:'schedule',
+          component: Schedule,
+        },
+        {
           path:'setting',
           name:'setting',
           component: Setting,
@@ -83,7 +91,16 @@ const router = createRouter({
         },
       ],
     },
-    
+    {
+      path: '/meeting',
+      name:'meeting',
+      component: Meeting,
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: Admin,
+    }
   ],
 })
 
