@@ -27,7 +27,7 @@
           <el-icon><setting /></el-icon>
           <span>设置</span>
         </el-menu-item>
-        <el-menu-item index="/main/register" :class="{ 'active-item': activeItem === '/main/register' }" @click="setActive('/main/register')">
+        <el-menu-item index="/main/register" :class="{ 'active-item': activeItem === '/main/register' }" @click="logout">
           <el-icon><DArrowLeft /></el-icon>
           <span>退出登录</span>
         </el-menu-item>
@@ -38,7 +38,8 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-
+import { useRouter } from 'vue-router';
+const router = useRouter();
 const activeItem = ref('/main/user'); // 默认选中项
 
 function setActive(item) {
@@ -48,6 +49,12 @@ function setActive(item) {
 }
 
 const activeIndex = ref('/main/user')
+
+
+const logout = () => {
+  localStorage.removeItem('userProfile'); // 清除用户数据
+  router.push('/accountlogin'); // 跳转到登录页面
+};
 </script>
 
 <style lang="scss" scoped>
