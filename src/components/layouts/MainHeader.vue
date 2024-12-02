@@ -62,7 +62,7 @@ const logout = () => {
         alt="Element logo"
       />
     </el-menu-item>
-    <el-menu-item index="1" style="font-weight: bold;">加入会议</el-menu-item>
+    <el-menu-item index="/main/joinmeeting" style="font-weight: bold;">加入会议</el-menu-item>
     <el-menu-item index="/main/bookmeeting" style="font-weight: bold;">预定会议</el-menu-item>
     <el-menu-item index="3" style="font-weight: bold;">快速会议</el-menu-item>
     

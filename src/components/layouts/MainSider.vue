@@ -26,7 +26,7 @@
           <el-icon><ChatDotRound /></el-icon>
           <span>好友</span>
         </el-menu-item>
-        <br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <br><br><br><br><br><br><br><br><br><br><br>
         <el-menu-item index="/main/setting" :class="{ 'active-item': activeItem === '/main/setting' }" >
           <el-icon><setting /></el-icon>
           <span>设置</span>
@@ -63,6 +63,7 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 const activeItem = ref('/main/user'); // 初始化为当前路由路径
+const logoutDialogVisible = ref(false); // 退出登录弹窗可见性
 
 // 当路由变化时更新 activeItem
 watch(
