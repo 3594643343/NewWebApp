@@ -1,4 +1,66 @@
-<template>
+  <script lang="ts" setup>
+  import { ref} from 'vue'
+  import { ElMessage } from 'element-plus';
+  import { useRouter } from 'vue-router';
+  import { userLoginService, fetchUserProfile } from '@/api/user';
+
+  const router = useRouter();
+  
+  const form = ref({
+  email: '',
+  password: '',
+  })
+  
+  const username = ref('')
+
+  const rules = {
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 16, message: '长度在 6 到 16 个字符', trigger: 'blur' }
+  ],
+  }
+  
+  const handleEmailLogin = async() => {
+    try {
+    const result = await userLoginService({
+      userEmail: form.value.email,
+      userName: username.value,
+      userPassword: form.value.password,
+    });
+    console.log(result);
+    if (result) {
+      // 登录成功，跳转到主页
+      localStorage.setItem('token', result.data.token);
+      console.log("Login:", result.data.token);
+      console.log('Login successful');
+      // 获取用户信息
+      const userProfile = await fetchUserProfile();
+      // 检查用户信息是否成功获取
+      if (userProfile && userProfile.data) {
+        console.log('User Profile:', userProfile.data);
+        localStorage.setItem('userProfile', JSON.stringify(userProfile.data)); // 确保数据被正确存储
+      } else {
+        console.error('获取用户信息失败:', userProfile);
+        ElMessage.error('获取用户信息失败，请重试。'); // 提示用户
+      }
+      // 跳转到主页
+      router.push('/main');
+    } else {
+      console.log("error:", result); // 输出错误信息
+    }
+  } catch (error) {
+    console.error('登录失败:', error); // 捕获并处理错误
+    ElMessage.error('邮箱或密码错误，请重新登录。')
+  }
+  }
+  
+  </script>
+  
+  <template>
     <BaseHeader/>
     <!-- <el-container class="page-container"> -->
       <el-card class="page-container">
@@ -25,39 +87,6 @@
       </el-card>
     <!-- </el-container> -->
   </template>
-  
-  <script lang="ts" setup>
-  import { ref} from 'vue'
-  import { useRouter } from 'vue-router';
-
-  const router = useRouter();
-  
-  
-  
-  const form = ref({
-  email: '',
-  password: '',
-  })
-  
-  const rules = {
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 16, message: '长度在 6 到 16 个字符', trigger: 'blur' }
-  ],
-  }
-  
-  const handleEmailLogin = () => {
-  console.log('email-login')
-  router.push('/main')
-  }
-  
-  </script>
-  
-  
   
   <style scoped>
   .page-container {

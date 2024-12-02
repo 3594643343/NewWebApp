@@ -53,7 +53,7 @@ const handleRegister = async () => {
       // 注册成功，跳转到登录页面
       router.push('/accountlogin');
     } else {
-      console.log(result.msg); // 输出错误信息
+      console.log(result); // 输出错误信息
     }
   } catch (error) {
     console.error('注册失败:', error); // 捕获并处理错误

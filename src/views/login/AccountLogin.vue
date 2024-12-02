@@ -1,35 +1,8 @@
-<template>
-    <BaseHeader/>
-    <!-- <el-container class="page-container"> -->
-      <el-card class="page-container">
-        <h2 class="header-title">登 录</h2>
-        <div class="account-login-container">
-          <el-form :model="form" :rules="rules" :label-position="'left'" label-width="90px" class="account-login-form">
-            <el-form-item label="用户名" prop="username">
-              <el-input type="text" v-model="form.username" placeholder="请输入用户名" />
-            </el-form-item>
-
-            <el-form-item label="密码" prop="password">
-              <el-input type="password" v-model="form.password" placeholder="请输入密码" />
-            </el-form-item>
-
-            <!-- <el-form-item> -->
-              <el-button type="primary" class="account-login-button" @click="handleAccountLogin">登录</el-button>
-            <!-- </el-form-item> -->
-          </el-form>
-  
-          <p class="text-center login-link">
-            没有账户？<router-link to="/register">注册</router-link>
-          </p>
-        </div>
-      </el-card>
-    <!-- </el-container> -->
-  </template>
-  
-  <script lang="ts" setup>
+<script lang="ts" setup>
   import { ref} from 'vue'
+  import { ElMessage } from 'element-plus';
   import { useRouter } from 'vue-router';
-  import { userLoginService } from '@/api/user';
+  import { userLoginService, fetchUserProfile } from '@/api/user';
 
   const router = useRouter();
 
@@ -39,6 +12,12 @@
   })
 
   const useremail= ref('');
+
+  const userProfile = ref({
+  avatar: '', // 初始头像为空字符串，稍后将更新
+  username: '', // 初始昵称为空字符串
+  signature: '', // 初始签名为空字符串
+});
   
   const rules = {
   username: [
@@ -51,33 +30,88 @@
   ],
   }
   
-  const handleAccountLogin = async() => {
-    try {
+  const handleAccountLogin = async () => {
+  try {
     const result = await userLoginService({
       userEmail: useremail.value,
       userName: form.value.username,
       userPassword: form.value.password,
     });
+    
     console.log(result);
+    
     if (result) {
-      // 登录成功，跳转到主页
-      localStorage.setItem('token', result.data.token);
+      // 登录成功，存储 token
+      localStorage.setItem('token', result.data.token); // 存储 token
       console.log("Login:", result.data.token);
       console.log('Login successful');
-      router.push('/main');
+
+      // 假设用户信息在返回中包含其他数据，你可以将其存储在 localStorage
+      showUserProfile();
+
+      // 跳转到主页
+      router.push('/main/user');
     } else {
       console.log("error:", result); // 输出错误信息
     }
   } catch (error) {
     console.error('登录失败:', error); // 捕获并处理错误
+    ElMessage.error('账号或密码错误，请重新登录。');
   }
+}
+
+const showUserProfile = async () => {
+  try {
+    const response = await fetchUserProfile();
+    if (response && response.data) {
+      // userProfile.value = response.data; 
+      userProfile.value.avatar = response.data.avatar; // 这里假设 avatar 是 Base64 字符串
+      userProfile.value.username = response.data.username; // 设置昵称
+      userProfile.value.signature = response.data.signature; // 设置签名
+      localStorage.setItem('userProfile', JSON.stringify(userProfile.value));
+      console.log('获取用户信息成功:', userProfile.value);
+    } else {
+      console.error('未能获取用户信息');
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error.response ? error.response.data : error.message);
+    if (error.response && error.response.status === 500) {
+        ElMessage.error('服务器内部错误，请稍后再试。');
+    }
   }
+};
   
-  </script>
+</script>
   
+<template>
+  <BaseHeader/>
+  <!-- <el-container class="page-container"> -->
+    <el-card class="page-container">
+      <h2 class="header-title">登 录</h2>
+      <div class="account-login-container">
+        <el-form :model="form" :rules="rules" :label-position="'left'" label-width="90px" class="account-login-form">
+          <el-form-item label="用户名" prop="username">
+            <el-input type="text" v-model="form.username" placeholder="请输入用户名" />
+          </el-form-item>
+
+          <el-form-item label="密码" prop="password">
+            <el-input type="password" v-model="form.password" placeholder="请输入密码" />
+          </el-form-item>
+
+          <!-- <el-form-item> -->
+            <el-button type="primary" class="account-login-button" @click="handleAccountLogin">登录</el-button>
+          <!-- </el-form-item> -->
+        </el-form>
+
+        <p class="text-center login-link">
+          没有账户？<router-link to="/register">注册</router-link>
+        </p>
+      </div>
+    </el-card>
+  <!-- </el-container> -->
+</template>
   
-  
-  <style scoped>
+<style scoped>
   .page-container {
     max-width: 400px; /* 设置最大宽度 */
     width: 90%; /* 设置宽度自适应 */
@@ -124,4 +158,4 @@
   }
   
   
-  </style>
+</style>
