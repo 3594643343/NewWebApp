@@ -14,6 +14,10 @@
           <el-icon><user /></el-icon>
           <span>个人资料</span>
         </el-menu-item>
+        <el-menu-item index="/main/schedule" :class="{ 'active-item': activeItem === '/main/schedule' }" @click="setActive('/main/schedule')">
+          <el-icon><Memo /></el-icon>
+          <span>我的日程</span>
+        </el-menu-item>
         <el-menu-item index="/main/record" :class="{ 'active-item': activeItem === '/main/record' }" @click="setActive('/main/record')">
           <el-icon><document /></el-icon>
           <span>会议记录</span>
@@ -22,7 +26,7 @@
           <el-icon><ChatDotRound /></el-icon>
           <span>好友</span>
         </el-menu-item>
-        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <br><br><br><br><br><br><br><br><br><br><br><br><br>
         <el-menu-item index="/main/setting" :class="{ 'active-item': activeItem === '/main/setting' }" @click="setActive('/main/setting')">
           <el-icon><setting /></el-icon>
           <span>设置</span>

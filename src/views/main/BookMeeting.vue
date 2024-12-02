@@ -1,8 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import MainHeader from '@/components/layouts/MainHeader.vue';
-import MainSider from '@/components/layouts/MainSider.vue';
+import { bookMeetingService }from '@/api/user';
 
 const router = useRouter();
 const form = ref({
@@ -57,8 +56,18 @@ const rules = {
     { required: true, message: '请选择权限', trigger: 'change' }
   ]
 };
+// 格式化日期时间的函数
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份需要加1，并且格式化为两位数
+  const day = String(date.getDate()).padStart(2, '0'); // 日期格式化为两位数
+  const hours = String(date.getHours()).padStart(2, '0'); // 小时格式化为两位数
+  const minutes = String(date.getMinutes()).padStart(2, '0'); // 分钟格式化为两位数
+  const seconds = String(date.getSeconds()).padStart(2, '0'); // 秒数格式化为两位数
 
-const handleBookMeeting = () => {
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`; // 返回格式化后的字符串
+};
+const handleBookMeeting =  async () => {
   if (form.value.meetingName === '') {
     return;
   }
@@ -71,22 +80,39 @@ const handleBookMeeting = () => {
   if (form.value.meetingPassword === '') {
     return;
   }
-  alert('会议预定成功');
+  const startTime = formatDate(new Date(form.value.meetingStartTime)); // 调用格式化函数
+  const endTime = formatDate(new Date(form.value.meetingEndTime)); // 调用格式化函数
+  console.log(startTime, endTime);
+
+  try {
+    const result = await bookMeetingService({
+      meetingName: form.value.meetingName,
+      meetingStartTime: startTime,
+      meetingEndTime: endTime,
+      meetingPassword: form.value.meetingPassword,
+      defaultPermission: form.value.defaultPermission,
+    });
+    console.log(result);
+    if (result.code === 1) {
+      // 会议预定成功，处理逻辑
+      console.log("Book meeting:", result.data.token);
+      console.log('Book meeting successful');
+      alert('会议预定成功');
+      router.push('/main/record');
+    } else {
+      console.log(result.msg); // 输出错误信息
+    }
+  } catch (error) {
+    console.error('预定会议失败:', error.response ? error.response.data : error);
+  }
+
 };
 
 </script>
 
 <template>
     <div class="common-layout">
-      <!-- <el-container>
-        <el-header>
-            <MainHeader />
-        </el-header>
-        <el-container>
-          <el-aside width="200px" class="main-sider">
-            <MainSider />
-          </el-aside> -->
-            <h2 class="header-title">预定会议</h2>
+      <h2 class="header-title">预定会议</h2>
             <el-card class="page-container">
                 
                 <div class="book-meeting-container">
@@ -118,19 +144,10 @@ const handleBookMeeting = () => {
                 </el-form>
                 </div>
             </el-card>
-        <!-- </el-container>
-        
-      </el-container> -->
+            
     </div>
   </template>
 
 <style scoped>
-/* .common-layout {
-  height: 100%;
-}
 
-
-.main-sider {
-  background-color: #eef0f4;
-} */
 </style>

@@ -19,3 +19,19 @@ request.put('/userinfo/change/info', { userName, signature})
 //获取会议列表
 export const getMeetingRecordService = () =>
     request.get('/record/list')
+
+//创建会议
+export const bookMeetingService = ({meetingName,meetingStartTime,meetingEndTime,meetingPassword,defaultPermission}) =>
+    request.post('/menu/book', {meetingName,meetingStartTime,meetingEndTime,meetingPassword,defaultPermission})
+
+//显示日程
+export const mainMeetingsShow = () => 
+    request.get('/schedule/show')
+
+//添加日程
+export const mainMeetingsAdd = ({meetingNumber,meetingPassword}) => 
+    request.post('/schedule/add', {meetingNumber,meetingPassword})
+
+// 删除日程
+export const mainMeetingsDelete = ({meetingNumber}) => 
+    request.delete(`/schedule/cancle?meetingNumber=${meetingNumber}`)
