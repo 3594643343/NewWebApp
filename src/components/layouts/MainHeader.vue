@@ -10,6 +10,7 @@ const username = ref(''); // 用于存储用户名
 const signature = ref(''); // 用于存储签名
 const popoverVisible = ref(false); 
 const activeItem = ref('/main/user');
+const logoutDialogVisible = ref(false); // 退出登录弹窗
 
 const retrieveUserProfile = () => {
   const userProfileData = localStorage.getItem('userProfile');
@@ -98,13 +99,29 @@ const logout = () => {
                 个人资料
               </el-button>
               
-              <el-button type="text" @click="logout" class="icon-button">
+              <el-button type="text" plain @click="logoutDialogVisible = true" class="icon-button">
                 <el-icon><SwitchButton /></el-icon>
                 退出登录
               </el-button>
             </div>
     </el-popover>
   </el-menu>
+  <el-dialog
+    v-model="logoutDialogVisible"
+    title="确认退出"
+    width="400"
+    align-center
+  >
+    <span>您确定要退出登录吗？</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="logoutDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="logout">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <style>
