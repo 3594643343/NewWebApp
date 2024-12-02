@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import { defineStore } from 'pinia'
 
 
 // export const useCounterStore = defineStore('counter', () => {
@@ -26,6 +25,17 @@ import { defineStore } from 'pinia'
 // }, {
 //   persist: true
 // })
+import { defineStore } from 'pinia';
+
+export const useRouteStore = defineStore('route',() => {
+  const currentRoute = ref('');
+  const setCurrentRoute = (newRoute) => {
+    currentRoute.value = newRoute;
+  }
+  return {
+    currentRoute, setCurrentRoute
+  }
+});
 
 
 

@@ -57,24 +57,31 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, watch, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+
 const router = useRouter();
-const activeItem = ref('/main/user'); // 默认选中项
-const logoutDialogVisible = ref(false); // 退出登录弹窗
+const route = useRoute();
+const activeItem = ref(route.path); // 初始化为当前路由路径
 
-function setActive(item) {
-  activeItem.value = item;
-  // 这里可以根据需要执行路由导航
-  // router.push(item); // 如果使用 Vue Router，可以添加路由导航
-}
-
-const activeIndex = ref('/main/user')
-
+// 当路由变化时更新 activeItem
+watch(
+  () => route.path,
+  (newPath) => {
+    // 你可以根据需要调整路径以匹配你的菜单项 index
+    // 例如，如果你的菜单项 index 是 '/main/user' 而不是简单的 '/user'
+    // 你可能需要在这里做一些字符串处理来匹配它们
+    activeItem.value = newPath.startsWith('/main') ? newPath : '/main/user'; // 默认回到个人资料
+  },
+  { immediate: true } // 立即执行一次以设置初始值
+);
 
 const logout = () => {
   localStorage.removeItem('userProfile'); // 清除用户数据
   router.push('/accountlogin'); // 跳转到登录页面
+  // 注意：这里你可能需要重置 activeItem 到一个默认值，比如 '/main/user' 或 '/accountlogin'（取决于你的设计）
+  // activeItem.value = '/accountlogin'; // 如果你想在登出后显示登录页面的菜单项作为激活状态（如果有的话）
+  // 但是，由于登出后用户可能会看到登录页面，而没有侧边栏菜单，所以这可能不是必要的
 };
 </script>
 
