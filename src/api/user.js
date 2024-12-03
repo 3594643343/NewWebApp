@@ -24,6 +24,19 @@ export const getMeetingRecordService = () =>
 export const bookMeetingService = ({meetingName,meetingStartTime,meetingEndTime,meetingPassword,defaultPermission}) =>
     request.post('/menu/book', {meetingName,meetingStartTime,meetingEndTime,meetingPassword,defaultPermission})
 
+//加入会议
+export const joinMeetingService = ({meetingNumber,meetingPassword}) =>
+    request.post('/menu/join', {meetingNumber,meetingPassword})
+
+//获取在会用户信息
+export const getInMeetingUsers = (meetingNumber) => {
+    return request.get('/meeting/userlist', {
+        params: {
+            meetingNumber: meetingNumber // 作为查询参数传递
+        }
+    });
+};
+
 //显示日程
 export const mainMeetingsShow = () => 
     request.get('/schedule/show')

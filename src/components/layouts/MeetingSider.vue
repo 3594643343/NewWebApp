@@ -1,16 +1,23 @@
 <template>
   <div class="meeting-page">
     <el-container>
-      <el-aside width="200px" class="sidebar">
+      <el-aside width="300px" class="sidebar">
         <el-scrollbar style="height: 100vh;">
           <div class="avatar-list">
-            <el-avatar
+            <div
               v-for="(user, index) in users"
               :key="index"
-              :src="user.avatar"
-              size="60"
               class="avatar-item"
-            ></el-avatar>
+            >
+            <el-avatar
+                :src="user.avatar"
+                size="60"
+              ></el-avatar>
+              <span class="username">{{ user.username }}</span>
+              <span class="mic-status" :class="{'on': user.micStatus, 'off': !user.micStatus}">
+                {{ user.micStatus ? '麦克风开' : '麦克风关' }}
+              </span>
+            </div>
           </div>
         </el-scrollbar>
       </el-aside>
@@ -26,21 +33,38 @@
 </template>
 
 <script>
+import { ref, onMounted } from 'vue';
+import { getInMeetingUsers } from '@/api/user'; 
+
+const users = ref([]);
+
 export default {
   name: 'MeetingPage',
-  data() {
-    return {
-      users: [
-        { avatar: 'https://via.placeholder.com/60' },
-        { avatar: 'https://via.placeholder.com/60' },
-        { avatar: 'https://via.placeholder.com/60' },
-        { avatar: 'https://via.placeholder.com/60' },
-        { avatar: 'https://via.placeholder.com/60' },
-        // 添加更多用户头像链接
-      ],
+  setup() {
+    const users = ref([]);
+    const meetingNumber = localStorage.getItem('meetingNumber');
+
+    const fetchUsers = async () => {
+      try {
+        const response = await getInMeetingUsers(meetingNumber);
+        if (response && response.data) {
+          console.log('获取的用户数据:', response.data);
+          users.value = response.data;
+        }
+      } catch (error) {
+        console.error('获取用户列表失败:', error.response ? error.response.data : error.message);
+      }
     };
-  },
+
+    onMounted(() => {
+      fetchUsers();
+    });
+
+    return { users }; // 确保返回 users
+  }
 };
+
+
 </script>
 
 <style scoped>
