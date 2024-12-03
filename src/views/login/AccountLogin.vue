@@ -48,9 +48,13 @@
 
       // 假设用户信息在返回中包含其他数据，你可以将其存储在 localStorage
       showUserProfile();
-
-      // 跳转到主页
-      router.push('/main/user');
+      if(result.data.isadmin===true){
+        router.push('/admin');
+      }
+      else{
+        router.push('/main/user');
+      }
+      
     } else {
       console.log("error:", result); // 输出错误信息
     }

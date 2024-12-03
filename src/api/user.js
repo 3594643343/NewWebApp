@@ -35,3 +35,8 @@ export const mainMeetingsAdd = ({meetingNumber,meetingPassword}) =>
 // 删除日程
 export const mainMeetingsDelete = ({meetingNumber}) => 
     request.delete(`/schedule/cancle?meetingNumber=${meetingNumber}`)
+
+// 管理员获取用户信息
+export const adminGetUserList = () => 
+    request.get('/admin/getall')
+
