@@ -42,6 +42,8 @@ if (!joinMeetingForm.value.meetingNumber.trim()) {
       if (response.code === 1) { // 成功
         console.log('加入会议成功', response.data);
         ElMessage.success('加入会议成功');
+        localStorage.setItem('meetingNumber', joinMeetingForm.value.meetingNumber.trim());
+        localStorage.setItem('meetingPassword', joinMeetingForm.value.meetingPassword.trim()); // 保存会议号、密码到 localStorage
         router.push('/meeting'); // 跳转到会议页面
       } else {
         const msg = response.msg || '加入会议失败';

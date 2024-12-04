@@ -28,6 +28,10 @@ export const bookMeetingService = ({meetingName,meetingStartTime,meetingEndTime,
 export const joinMeetingService = ({meetingNumber,meetingPassword}) =>
     request.post('/menu/join', {meetingNumber,meetingPassword})
 
+//快速会议
+export const quickMeetingService = () =>
+    request.get('/menu/quick')
+
 //获取在会用户信息
 export const getInMeetingUsers = (meetingNumber) => {
     return request.get('/meeting/userlist', {
@@ -36,6 +40,32 @@ export const getInMeetingUsers = (meetingNumber) => {
         }
     });
 };
+
+//禁言
+export const muteUser = ({userId,meetingNumber}) => 
+    request.post('/meeting/mute', {userId,meetingNumber})
+
+//解除禁言
+export const disMuteUser = ({userId,meetingNumber}) => 
+    request.post('/meeting/dismute', {userId,meetingNumber})
+
+//上传文件
+export const uploadFile = (meetingNumber, file) => {
+    // 创建一个 FormData 对象以便上传文件
+    const formData = new FormData();
+    formData.append('file', file); // 将文件附加到 FormData 对象中
+
+    // 发起请求
+    return request.post('/meeting/uploadfile', formData, {
+        params: {
+            meetingNumber: meetingNumber // 作为查询参数传递
+        },
+        headers: {
+            'Content-Type': 'multipart/form-data' // 指定内容类型为表单数据
+        }
+    });
+};
+
 
 //显示日程
 export const mainMeetingsShow = () => 

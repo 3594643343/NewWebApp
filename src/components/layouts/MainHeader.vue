@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ref , onMounted } from 'vue'
+import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
+import { quickMeetingService  } from '@/api/user'; 
 
 const router = useRouter();
 const activeIndex = ref('');
@@ -45,6 +47,29 @@ const logout = () => {
   popoverVisible.value = false;
   router.push('/accountlogin'); // 跳转到登录页面
 };
+
+const quickMeeting = async() => {
+  try {
+    const response = await quickMeetingService();
+    console.log('快速会议结果:', response);
+    if (response && response.data) {
+      console.log('快速会议成功：');
+      localStorage.setItem('meetingNumber', response.data.meetingNumber);
+      localStorage.setItem('meetingPassword', response.data.meetingPassword);
+      console.log('会议号:', localStorage.getItem('meetingPassword'));
+      console.log('会议密码:', localStorage.getItem('meetingPassword'));
+      router.push('/meeting')
+      // joinMeeting();
+
+    } else {
+      console.error('快速会议失败');
+    }
+  } catch (error) {
+    console.log('快速会议失败:', error);
+  }
+
+}
+
 </script>
 
 <template>
@@ -64,7 +89,7 @@ const logout = () => {
     </el-menu-item>
     <el-menu-item index="/main/joinmeeting" style="font-weight: bold;">加入会议</el-menu-item>
     <el-menu-item index="/main/bookmeeting" style="font-weight: bold;">预定会议</el-menu-item>
-    <el-menu-item index="3" style="font-weight: bold;">快速会议</el-menu-item>
+    <el-menu-item @click="quickMeeting" style="font-weight: bold;">快速会议</el-menu-item>
     
     <el-popover
       placement="top-start"

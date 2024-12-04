@@ -1,6 +1,7 @@
 <script setup>
 import MeetingHeader from '@/components/layouts/MeetingHeader.vue';
 import MeetingSider from '@/components/layouts/MeetingSider.vue';
+import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
 </script>
 
 <template>
@@ -10,12 +11,14 @@ import MeetingSider from '@/components/layouts/MeetingSider.vue';
             <MeetingHeader />
         </el-header>
         <el-container>
-          <el-aside width="200px" hegiht="100%">
+          <el-aside width="250px" hegiht="100%">
             <MeetingSider />
           </el-aside>
           <el-container>
             <el-main>Main</el-main>
-            <el-footer>Footer</el-footer>
+            <el-footer>
+              <MeetingFooter />
+            </el-footer>
           </el-container>
         </el-container>
       </el-container>
