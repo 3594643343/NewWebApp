@@ -80,16 +80,17 @@ const quickMeeting = async() => {
     :ellipsis="false"
     router
   >
-    <el-menu-item>
+    <div class="logo-container">
       <img
         style="width: 100px"
         src="@/assets/logo/icon_wemeet.svg"
         alt="Element logo"
       />
-    </el-menu-item>
-    <el-menu-item index="/main/joinmeeting" style="font-weight: bold;">加入会议</el-menu-item>
-    <el-menu-item index="/main/bookmeeting" style="font-weight: bold;">预定会议</el-menu-item>
-    <el-menu-item @click="quickMeeting" style="font-weight: bold;">快速会议</el-menu-item>
+    </div>
+    <div class="menu-items">
+      <el-menu-item index="/main/joinmeeting" style="font-weight: bold;">加入会议</el-menu-item>
+      <el-menu-item index="/main/bookmeeting" style="font-weight: bold;">预定会议</el-menu-item>
+      <el-menu-item @click="quickMeeting" style="font-weight: bold;">快速会议</el-menu-item>
     
     <el-popover
       placement="top-start"
@@ -130,6 +131,7 @@ const quickMeeting = async() => {
               </el-button>
             </div>
     </el-popover>
+  </div>
   </el-menu>
   <el-dialog
     v-model="logoutDialogVisible"
@@ -150,8 +152,18 @@ const quickMeeting = async() => {
 </template>
 
 <style>
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .el-menu--horizontal > .el-menu-item:nth-child(1) {
   margin-right: auto;
+}
+
+.menu-items {
+  display: flex;
+  align-items: center;
 }
 
 .button-group {
@@ -160,6 +172,7 @@ const quickMeeting = async() => {
     width: 100%;
     margin-top: 15px;
 }
+
 .icon-button {
     display: flex;
     flex-direction: column;

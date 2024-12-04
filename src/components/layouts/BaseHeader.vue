@@ -1,24 +1,26 @@
 <template>
     <el-menu
       :default-active="activeIndex"
-      class="el-menu-demo"
+      class="base-header"
       mode="horizontal"
       :ellipsis="false"
       @select="handleSelect"
     >
-      <el-menu-item index="0">
+      <div class="logo-container">
         <img
           style="width: 100px"
           src="@/assets/logo/icon_wemeet.svg"
           alt="Element logo"
         />
-      </el-menu-item>
-      <el-menu-item index="register">注册</el-menu-item>
+      </div>
+      <div class="menu-items">
+      <el-menu-item index="register" style="font-weight: bold;">注册</el-menu-item>
       <el-sub-menu index="login">
-        <template #title>登录</template>
-        <el-menu-item index="email-login">邮箱登录</el-menu-item>
-        <el-menu-item index="account-login">账号登录</el-menu-item>
+        <template #title ><span style="font-weight: bold;">登录</span></template>
+        <el-menu-item index="email-login" style="font-weight: bold;">邮箱登录</el-menu-item>
+        <el-menu-item index="account-login" style="font-weight: bold;">账号登录</el-menu-item>
       </el-sub-menu>
+    </div>
     </el-menu>
 </template>
   
@@ -41,7 +43,18 @@ const handleSelect = (key: string, keyPath: string[]) => {
 </script>
   
 <style>
+.base-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .el-menu--horizontal > .el-menu-item:nth-child(1) {
   margin-right: auto;
+}
+
+.menu-items {
+  display: flex;
+  align-items: center;
 }
 </style>

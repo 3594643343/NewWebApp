@@ -54,11 +54,17 @@ const changeProfile = async () => {
   // 验证用户名不能为空
   if (!profileForm.newUsername.trim()) {
     ElMessage.error('昵称不能为空');
-    return; // 防止继续执行
+    return;
   }
   
   if (!profileForm.newSignature.trim()) {
     ElMessage.error('签名不能为空');
+    return;
+  }
+
+  // 验证个性签名不得超过50个字符
+  if (profileForm.newSignature.trim().length > 50) {
+    ElMessage.error('个性签名不得超过50个字符');
     return; // 防止继续执行
   }
   
@@ -91,6 +97,7 @@ const changeProfile = async () => {
           localStorage.setItem('userProfile', JSON.stringify(userProfile)); // 保存更新后的数据
         }
         dialogChangeProfileVisible.value = false;
+        location.reload(); // 页面刷新
       } else {
         const msg = response.msg || '用户信息更新失败';
         console.error('用户信息更新失败:', msg);
