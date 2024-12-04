@@ -28,7 +28,7 @@
     try {
     const result = await userLoginService({
       userEmail: form.value.email,
-      userName: username.value,
+      userName: null,
       userPassword: form.value.password,
     });
     console.log(result);
