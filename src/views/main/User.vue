@@ -78,10 +78,18 @@ const changeProfile = async () => {
     if (response) {
       if (response.code === 1) { // 修改成功
         console.log('用户信息更新成功', response.data);
-    //     // 更新本地状态
+        // 更新本地状态
         username.value = profileForm.newUsername.trim();
         signature.value = profileForm.newSignature.trim();
         ElMessage.success('个人信息修改成功');
+        // 更新 localStorage 中的 userProfile
+        const userProfileData = localStorage.getItem('userProfile');
+        if (userProfileData) {
+          const userProfile = JSON.parse(userProfileData);
+          userProfile.username = username.value; // 更新用户名
+          userProfile.signature = signature.value; // 更新签名
+          localStorage.setItem('userProfile', JSON.stringify(userProfile)); // 保存更新后的数据
+        }
         dialogChangeProfileVisible.value = false;
       } else {
         const msg = response.msg || '用户信息更新失败';
