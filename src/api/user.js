@@ -12,9 +12,28 @@ export const userLoginService = ({userName, userEmail, userPassword}) =>
 export const fetchUserProfile = () => 
     request.get('/userinfo/get')
 
+//修改头像
+export const updateUserAvatarApi = (avatar) => 
+    request.put('/userinfo/change/avatar', avatar, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+
+
 //修改用户信息（昵称、签名）
 export const updateUserProfileApi = ({ userName, signature}) => 
 request.put('/userinfo/change/info', { userName, signature})
+
+//修改密码
+export const updateUserPasswordApi = ({ oldPassword, newPassword, confirmPassword }) => {
+    const queryParams = new URLSearchParams({
+        oldPassword,
+        newPassword,
+        confirmPassword
+    });
+    return request.put(`/userinfo/change/password?${queryParams.toString()}`);
+}
 
 //获取会议列表
 export const getMeetingRecordService = () =>

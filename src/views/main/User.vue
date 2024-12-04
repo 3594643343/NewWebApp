@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { updateUserProfileApi } from '@/api/user';
+import { updateUserProfileApi, updateUserPasswordApi, updateUserAvatarApi  } from '@/api/user';
 // import ProfileChange from '@/components/usersetting/ProfileChange.vue';
 
 const errorHandler = () => true;
@@ -10,7 +10,8 @@ const username = ref(''); // 用于存储用户名
 const signature = ref(''); // 用于存储签名
 
 const dialogChangeProfileVisible = ref(false); // 控制修改个人信息弹窗的显示
-const dialogChangePasswordVisible = ref(false)
+const dialogChangePasswordVisible = ref(false);
+const showEditText = ref(false); // 用于控制是否显示“修改头像”
 const formLabelWidth = '140px'
 const profileForm = reactive({
     newUsername: '',
@@ -98,24 +99,109 @@ const changeProfile = async () => {
   }
 };
 
+// 上传头像的函数
+const uploadAvatar = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg'; // 限制选择的文件类型为jpg图片
+    input.onchange = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('avatar', file);
+            try {
+                const response = await updateUserAvatarApi(formData);
+                if (response && response.code === 1) {
+                  console.log('头像修改成功:', response);
+                  ElMessage.success('头像修改成功');
+                  // 将文件转换为 Base64 字符串
+                  const reader = new FileReader();
+                  reader.readAsDataURL(file);
+                  reader.onload = () => {
+                    const base64String = reader.result;
+                    // 更新 avatarSrc 以显示新头像
+                    avatarSrc.value = base64String;
 
+                    // 更新 localStorage 中的 userProfile
+                    const userProfileData = localStorage.getItem('userProfile');
+                    if (userProfileData) {
+                      const userProfile = JSON.parse(userProfileData);
+                      userProfile.avatar = base64String.split(',')[1]; // 仅保留 Base64 字符串部分
+                      localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                    }
+
+                    // 改变 avatarSrc 变量以便界面立即显示新头像
+                    avatarSrc.value = base64String;
+                    location.reload(); // 页面刷新
+                  };
+                } else {
+                    ElMessage.error('头像修改失败1');
+                }
+            } catch (error) {
+              console.error('头像修改失败:', error.response ? error.response.data : error.message);
+              ElMessage.error('头像修改失败');
+            }
+        }
+    };
+    input.click(); // 模拟点击，打开文件选择对话框
+};
 
 // 修改密码操作
 const changePassword = async () => {
+    console.log('修改密码:', {
+      oldPassword: form.oldPassword.trim(),
+      newPassword: form.newPassword.trim(),
+      confirmPassword: form.confirmPassword.trim(),
+    });
+  if (!form.oldPassword.trim()) {
+    ElMessage.error('旧密码不能为空');
+    return; // 防止继续执行
+  }
+  
+  if (!form.newPassword.trim()) {
+    ElMessage.error('新密码不能为空');
+    return; // 防止继续执行
+  }
+  // 确保新密码和旧密码密码不同
+  if (form.newPassword.trim() == form.oldPassword.trim()) {
+    ElMessage.error('新密码不能与旧密码相同');
+    return;
+  }
   // 确保新密码和确认密码匹配
-  if (form.newPassword !== form.confirmPassword) {
+  if (form.newPassword.trim() !== form.confirmPassword.trim()) {
     ElMessage.error('新密码和确认密码不匹配');
     return;
   }
 
-  // 此处可以集成 API 调用进行密码更改
-  // 例如: await updateUserPasswordApi(form.oldPassword, form.newPassword);
 
-  ElMessage.success('密码修改成功');
-  form.oldPassword = '';
-  form.newPassword = '';
-  form.confirmPassword = '';
-  dialogChangePasswordVisible.value = false; // 关闭修改密码的弹窗
+  try {
+    console.log('修改密码2:', {
+      oldPassword: form.oldPassword.trim(),
+      newPassword: form.newPassword.trim(),
+      confirmPassword: form.confirmPassword.trim(),
+    });
+    const response = await updateUserPasswordApi({
+      oldPassword: form.oldPassword,// 旧密码
+      newPassword: form.newPassword,// 新密码
+      confirmPassword: form.confirmPassword // 确认密码
+    });
+
+    if (response) {
+      if (response.code === 1) { // 修改成功
+        console.log('密码修改成功', response.data);
+        ElMessage.success('密码修改成功');
+        dialogChangePasswordVisible.value = false; // 关闭修改密码的弹窗
+      } else {
+        const msg = response.msg || '修改密码失败';
+        ElMessage.error(msg); // 显示返回的错误信息
+      }
+    } else {
+      ElMessage.error('修改密码失败，未获得有效响应');
+    }
+  } catch (error) {
+    const errorMsg = error.response ? error.response.msg || error.message : '修改密码失败';
+    ElMessage.error(errorMsg); // 显示错误信息
+  }
 };
 
 </script>
@@ -130,10 +216,16 @@ const changePassword = async () => {
             </div>
             </template>
             <div class="info">
-            <el-avatar :size="60" :src="avatarSrc" @error="errorHandler">
-                <img
-                    src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png"
-                />
+            <el-avatar :size="60" @error="errorHandler" 
+              @mouseover="showEditText = true" 
+              @mouseleave="showEditText = false"
+              @click="showEditText ? uploadAvatar() : null">
+              <template v-if="showEditText">
+                  <span class="avatar-text">修改头像</span>
+              </template>
+              <template v-else>
+                  <img :src="avatarSrc" />
+              </template>
             </el-avatar>
             <div class="details">
                 <div class="username">{{ username }}</div>
@@ -257,6 +349,14 @@ const changePassword = async () => {
 /* 鼠标悬停时按钮样式变化 */
 .tea-btn--link:hover {
     color: #0056b3; /* 鼠标悬停时的颜色 */
+}
+
+.avatar-text {
+    font-size: 18px; /* 根据需要调整字体大小 */
+    color: #ffffff; /* 文字颜色 */
+    background-color: rgba(0, 0, 0, 0.7); /* 半透明背景 */
+    padding: 5px; /* 内边距 */
+    border-radius: 4px; /* 圆角 */
 }
 
 </style>

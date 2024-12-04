@@ -16,7 +16,7 @@ import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
           </el-aside>
           <el-container>
             <el-main>Main</el-main>
-            <el-footer>
+            <el-footer class="footer">
               <MeetingFooter />
             </el-footer>
           </el-container>
@@ -24,3 +24,12 @@ import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
       </el-container>
     </div>
 </template>
+
+
+<style lang="scss" scoped>
+  .footer {
+    font-size: 14px;
+    color: #666;
+  }
+
+</style>

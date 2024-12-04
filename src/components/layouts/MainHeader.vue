@@ -56,7 +56,7 @@ const quickMeeting = async() => {
       console.log('快速会议成功：');
       localStorage.setItem('meetingNumber', response.data.meetingNumber);
       localStorage.setItem('meetingPassword', response.data.meetingPassword);
-      console.log('会议号:', localStorage.getItem('meetingPassword'));
+      console.log('会议号:', localStorage.getItem('meetingNumber'));
       console.log('会议密码:', localStorage.getItem('meetingPassword'));
       router.push('/meeting')
       // joinMeeting();

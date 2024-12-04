@@ -47,7 +47,7 @@
       console.log('Login successful');
 
       // 假设用户信息在返回中包含其他数据，你可以将其存储在 localStorage
-      showUserProfile();
+      await showUserProfile();
       if(result.data.isadmin===true){
         router.push('/admin');
       }
