@@ -1,4 +1,4 @@
-  <script lang="ts" setup>
+<script lang="ts" setup>
   import { ref} from 'vue'
   import { ElMessage } from 'element-plus';
   import { useRouter } from 'vue-router';
@@ -11,7 +11,13 @@
   password: '',
   })
   
-  const username = ref('')
+  // const username = ref('')
+
+  const userProfile = ref({
+  avatar: '', // 初始头像为空字符串，稍后将更新
+  username: '', // 初始昵称为空字符串
+  signature: '', // 初始签名为空字符串  
+  });
 
   const rules = {
   email: [
@@ -31,6 +37,7 @@
       userName: null,
       userPassword: form.value.password,
     });
+    console.log(form.value.email, form.value.password);
     console.log(result);
     if (result) {
       // 登录成功，跳转到主页
@@ -38,17 +45,13 @@
       console.log("Login:", result.data.token);
       console.log('Login successful');
       // 获取用户信息
-      const userProfile = await fetchUserProfile();
-      // 检查用户信息是否成功获取
-      if (userProfile && userProfile.data) {
-        console.log('User Profile:', userProfile.data);
-        localStorage.setItem('userProfile', JSON.stringify(userProfile.data)); // 确保数据被正确存储
-      } else {
-        console.error('获取用户信息失败:', userProfile);
-        ElMessage.error('获取用户信息失败，请重试。'); // 提示用户
+      await showUserProfile();
+      if(result.data.isadmin===true){
+        router.push('/admin');
       }
-      // 跳转到主页
-      router.push('/main');
+      else{
+        router.push('/main/user');
+      }
     } else {
       console.log("error:", result); // 输出错误信息
     }
@@ -58,6 +61,26 @@
   }
   }
   
+  const showUserProfile = async () => {
+  try {
+    const response = await fetchUserProfile();
+    if (response && response.data) {
+      // userProfile.value = response.data; 
+      userProfile.value.avatar = response.data.avatar; // 这里假设 avatar 是 Base64 字符串
+      userProfile.value.username = response.data.username; // 设置昵称
+      userProfile.value.signature = response.data.signature; // 设置签名
+      localStorage.setItem('userProfile', JSON.stringify(userProfile.value));
+      console.log('获取用户信息成功:', userProfile.value);
+    } else {
+      console.error('未能获取用户信息');
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error.response ? error.response.data : error.message);
+    if (error.response && error.response.status === 500) {
+        ElMessage.error('服务器内部错误，请稍后再试。');
+    }
+  }
+};
   </script>
   
   <template>

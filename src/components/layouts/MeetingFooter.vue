@@ -8,7 +8,7 @@
       <input type="file" @change="handleFileUpload" style="display:none" ref="fileInput" />
       <el-button type="primary" @click="triggerFileInput">文件上传</el-button>
       <el-button type="primary" @click="settings">设置</el-button>
-      <el-button type="danger" @click="exitMeeting">退出会议</el-button>
+      <el-button type="danger" @click="confirmLeaveMeeting">退出会议</el-button>
   
       <el-dialog v-model="InviteVisible" title="邀请" width="300" center>
         <div>
@@ -22,19 +22,35 @@
           </div>
         </template>
       </el-dialog>
+      <el-dialog v-model="confirmLeaveVisible" title="确认退出" width="300" center>
+        <div>
+          <p>您确定要退出会议吗？</p>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="confirmLeaveVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleLeaveMeeting">确认</el-button>
+          </div>
+        </template>
+      </el-dialog>
+
     </div>
   </template>
   
   <script setup>
   import { ref } from 'vue';
-  import { ElMessage } from 'element-plus';
-  import { uploadFile } from '@/api/user'; // 导入上传文件的接口
+  import { useRouter } from 'vue-router';
+  import { ElMessage, ElDialog } from 'element-plus';
+  import { uploadFile , leaveMeetingService } from '@/api/user'; // 导入上传文件的接口
   
+  const router = useRouter();
   const InviteVisible = ref(false);
   const meetingNumber = localStorage.getItem('meetingNumber');
   const meetingPassword = localStorage.getItem('meetingPassword');
   const fileInput = ref(null); // 声明和初始化 fileInput 引用
-  
+  const confirmLeaveVisible = ref(false);
+
+  //复制会议号与密码到剪贴板
   const copyToClipboard = () => {
     const textToCopy = `会议号: ${meetingNumber}, 会议密码: ${meetingPassword}`; // 要复制的文本
     navigator.clipboard.writeText(textToCopy).then(() => {
@@ -50,8 +66,12 @@
     if (file) {
       try {
         const response = await uploadFile(meetingNumber, file); // 调用上传文件的接口
-        console.log('上传成功:', response);
-        ElMessage.success('文件上传成功'); // 上传成功的反馈
+        if (response && response.code === 1) {
+          console.log('文件上传成功:', response);
+          ElMessage.success('文件上传成功');
+        } else {
+            ElMessage.error('文件上传失败');
+        }
       } catch (error) {
         console.error('上传文件失败:', error.response ? error.response.data : error.message);
         ElMessage.error('文件上传失败'); // 上传失败的反馈
@@ -80,8 +100,28 @@
     console.log("设置功能");
   };
   
-  const exitMeeting = () => {
-    console.log("退出会议功能");
+  // 触发离开会议确认对话框
+  const confirmLeaveMeeting = () => {
+    confirmLeaveVisible.value = true; // 显示确认对话框
+  };
+
+  const handleLeaveMeeting  = async () => {
+    try {
+    const response = await leaveMeetingService();
+    console.log('退出会议结果:', response);
+    if (response && response.code === 1) {
+      console.log('退出会议成功：');
+      router.push('/main/user')
+
+    } else {
+      console.error('退出会议失败');
+    }
+  } catch (error) {
+    console.log('退出会议失败:', error);
+  } finally {
+    confirmLeaveVisible.value = false; // 关闭确认对话框
+  }
+
   };
   </script>
   

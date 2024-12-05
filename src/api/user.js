@@ -85,6 +85,9 @@ export const uploadFile = (meetingNumber, file) => {
     });
 };
 
+//离开会议
+export const leaveMeetingService = () =>
+    request.get('/meeting/leave')
 
 //显示日程
 export const mainMeetingsShow = () => 

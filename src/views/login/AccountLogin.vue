@@ -16,8 +16,8 @@
   const userProfile = ref({
   avatar: '', // 初始头像为空字符串，稍后将更新
   username: '', // 初始昵称为空字符串
-  signature: '', // 初始签名为空字符串
-});
+  signature: '', // 初始签名为空字符串  
+  });
   
   const rules = {
   username: [
