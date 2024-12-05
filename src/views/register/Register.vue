@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus'
 import { userRegisterService } from '../../api/user';
 // import jwtDecode from 'jwt-decode';
 
@@ -42,18 +43,21 @@ const rules = {
 
 const handleRegister = async () => {
   try {
-    const result = await userRegisterService({
+    const response = await userRegisterService({
       userEmail: form.value.email,
       userName: form.value.username,
       userPassword: form.value.password,
       checkPassword: form.value.confirmPassword
     });
-    console.log(result);
-    if (result.status === 200) {
+    console.log(response);
+    if (response && response.code === 1) {
       // 注册成功，跳转到登录页面
+      ElMessage.success('注册成功，请登录');
       router.push('/accountlogin');
     } else {
-      console.log(result); // 输出错误信息
+      const msg = response.msg || '注册失败';
+        console.error('注册失败:', msg);
+        ElMessage.error(msg); // 显示返回的错误信息
     }
   } catch (error) {
     console.error('注册失败:', error); // 捕获并处理错误
