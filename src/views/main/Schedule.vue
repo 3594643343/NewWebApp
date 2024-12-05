@@ -63,8 +63,7 @@
     <!-- 添加日程弹窗 -->
     <el-dialog
       title="添加日程"
-      :visible.sync="addScheduleDialog"
-      width="30%"
+      v-model="addScheduleDialog"
       class="dialog-container"
     >
       <el-form ref="form" label-width="80px">
@@ -85,7 +84,10 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { mainMeetingsShow, mainMeetingsAdd } from '@/api/user';
+import { mainMeetingsShow, mainMeetingsAdd,joinScheduleMeeting,mainMeetingsDelete } from '@/api/user';
+import router from '@/router';
+
+
 
 const activeName = ref('first');
 const meetinglist = ref([]);
@@ -142,12 +144,41 @@ const addSchedule = async () => {
   }
 };
 
-const joinMeeting = (meeting) => {
-  console.log('加入会议:', meeting);
+// 加入日程会议
+const joinMeeting = async (meeting) => {
+  try {
+    const response = await joinScheduleMeeting({
+      meetingnumber: meeting.meetingNumber,
+    });
+    if (response) {
+      console.log('加入会议成功', response.data);
+      router.push('/meeting')
+    } else {
+      console.error('加入会议失败');
+    }
+  } catch (error) {
+    console.error('加入会议失败:', error); // 错误处理
+    console.log('加入会议失败会议号:', meeting.meetingNumber);
+  }
+  
 };
 
-const deleteMeeting = (meeting) => {
-  console.log('删除会议:', meeting);
+
+// 删除日程
+const deleteMeeting = async (meeting) => {
+  try {
+    const response = await mainMeetingsDelete({
+      meetingNumber: meeting.meetingNumber,
+    });
+    if (response) {
+      console.log('删除日程成功', response.data);
+      loadRecordMeetings(); // 刷新会议列表
+    } else {
+      console.error('删除日程失败');
+    }
+  } catch (error) {
+    console.error('删除日程失败:', error); // 错误处理
+  }
 };
 
 onMounted(() => {
@@ -178,17 +209,11 @@ onMounted(() => {
   margin-right: 10px;
 }
 .dialog-container {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #c6c0c0;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  width: 300px;
-  scale: 0.7;
+  width: 400px;
+  top: 200px;
+  
 }
+
 .dialog-footer {
   display: flex;
   justify-content: flex-end;

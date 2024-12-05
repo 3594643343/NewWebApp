@@ -98,6 +98,14 @@ export const mainMeetingsAdd = ({meetingNumber,meetingPassword}) =>
 export const mainMeetingsDelete = ({meetingNumber}) => 
     request.delete(`/schedule/cancle?meetingNumber=${meetingNumber}`)
 
+//加入日程会议
+export const joinScheduleMeeting = ({meetingnumber}) => 
+    request.get('/schedule/join', {
+        params: {
+            meetingnumber: meetingnumber // 作为查询参数传递
+        }
+    })
+
 // 管理员获取用户信息
 export const adminGetUserList = () => 
     request.get('/admin/getall')

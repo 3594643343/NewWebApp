@@ -9,7 +9,7 @@
           <div class="header-content">
             <el-input
               v-model="searchText"
-              placeholder="输入用户姓名"
+              placeholder="输入用户名"
               class="search-input"
               size="large" 
             />
@@ -25,7 +25,8 @@
                 <el-avatar :src="scope.row.avatar" size="large"></el-avatar>
               </template>
             </el-table-column>
-            <el-table-column prop="name" label="用户名" />
+            <el-table-column prop="username" label="用户名" />
+            <el-table-column label="个性签名" prop="signature" />
             <el-table-column label="操作" width="200">
               <template v-slot="scope">
                 <div class="action-buttons">
@@ -44,18 +45,16 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import AdminHeader from '@/components/layouts/AdminHeader.vue';
-import {adminGetUserList} from '@/api/user';
+import { adminGetUserList } from '@/api/user';
 
-// 示例数据
 const users = ref([]);
-
 const searchText = ref('');
-const searchResults = ref([]); // 用来保存搜索结果
+const searchResults = ref([]);
 
 const searchUser = () => {
   console.log('搜索用户:', searchText.value);
   searchResults.value = users.value.filter(user => 
-    user.name.toLowerCase().includes(searchText.value.toLowerCase())
+    user.username.toLowerCase().includes(searchText.value.toLowerCase())
   );
 };
 
@@ -65,30 +64,30 @@ const listAllUsers = () => {
 };
 
 const viewProfile = (user) => {
-  console.log('查看用户资料:', user.name);
+  console.log('查看用户资料:', user.username);
 };
 
 const deleteUser = (user) => {
-  console.log('删除用户:', user.name);
+  console.log('删除用户:', user.username);
 };
 
-// 计算属性返回当前显示数据
+// 计算属性返回当前显示的数据
 const filteredData = computed(() => {
   return searchResults.value.length > 0 ? searchResults.value : users.value;
 });
 
-
-const loadusersinfo = async () => {
+const loadUsersInfo = async () => {
   try {
     const response = await adminGetUserList();
-    users.value = response.data.data;
+    users.value = response.data.data; // 确保与后端返回的数据字段对应
+    console.log('加载用户信息成功:', users.value);
   } catch (error) {
     console.log(error);
   }
 };
 
 onMounted(() => {
-  loadusersinfo();
+  loadUsersInfo();
 });
 </script>
 
@@ -96,30 +95,30 @@ onMounted(() => {
 .admin-layout {
   height: 100vh;
   display: flex;
-  justify-content: center; /* 居中对齐整个组件 */
-  align-items: center; /* 垂直居中 */
+  justify-content: center;
+  align-items: center;
 }
 
 .main-container {
-  width: 90%; /* 或者设置为特定宽度，例如 800px */
-  max-width: 1200px; /* 限制最大宽度 */
-  padding: 10px; /* 组件内间距 */
-  background-color: #ffffff; /* 背景色 */
-  border-radius: 8px; /* 添加圆角 */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+  width: 90%;
+  max-width: 1200px;
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .header {
   display: flex;
-  justify-content: center; /* 中心对齐内容 */
-  padding: 10px; /* 调整边距，使整体更紧凑 */
+  justify-content: center;
+  padding: 10px;
 }
 
 .sticky-header {
   position: sticky;
-  top: 0; /* 固定在顶部 */
-  background-color: #ffffff; /* 确保背景为白色 */
-  z-index: 10; /* 确保在其他元素上方 */
+  top: 0;
+  background-color: #ffffff;
+  z-index: 10;
 }
 
 .header-content {
@@ -128,18 +127,18 @@ onMounted(() => {
 }
 
 .search-input {
-  width: 250px; /* 增大输入框宽度 */
-  margin-right: 5px; /* 减少右边距 */
+  width: 250px;
+  margin-right: 5px;
 }
 
 .add-button {
-  margin-left: 10px; /* 调整增加用户按钮的间距 */
+  margin-left: 10px;
 }
 
 .table-container {
-  max-height: 400px; /* 限制表格的最大高度 */
-  overflow-y: auto; /* 显示垂直滚动条 */
-  margin-top: 10px; /* 为表格与上方区域增加一些间距 */
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 10px;
 }
 
 .el-avatar {
@@ -148,7 +147,7 @@ onMounted(() => {
 
 .action-buttons {
   display: flex;
-  gap: 10px; /* 按钮之间的间距 */
+  gap: 10px;
 }
 
 .el-table .el-table-column--center {
