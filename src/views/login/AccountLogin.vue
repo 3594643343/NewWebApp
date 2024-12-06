@@ -49,10 +49,10 @@
       // 假设用户信息在返回中包含其他数据，你可以将其存储在 localStorage
       await showUserProfile();
       // if(result.data.isadmin===false){
-        router.push('/main/user');
+        // router.push('/main/user');
       // }
       // else{
-        // router.push('/admin');
+        router.push('/admin');
       // }
       
     } else {
