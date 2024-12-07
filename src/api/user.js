@@ -39,6 +39,14 @@ export const updateUserPasswordApi = ({ oldPassword, newPassword, confirmPasswor
 export const getMeetingRecordService = () =>
     request.get('/record/list')
 
+//获取会议详情
+export const getMeetingDetailService = (recordId) =>
+    request.get('/record/detail', {
+        params: {
+            recordId: recordId // 作为查询参数传递
+        }
+    })
+
 //创建会议
 export const bookMeetingService = ({meetingName,meetingStartTime,meetingEndTime,meetingPassword,defaultPermission}) =>
     request.post('/menu/book', {meetingName,meetingStartTime,meetingEndTime,meetingPassword,defaultPermission})
@@ -100,6 +108,14 @@ export const mainMeetingsAdd = ({meetingNumber,meetingPassword}) =>
 // 删除日程
 export const mainMeetingsDelete = ({meetingNumber}) => 
     request.delete(`/schedule/cancle?meetingNumber=${meetingNumber}`)
+
+//加入日程会议
+export const joinScheduleMeeting = ({meetingnumber}) => 
+    request.get('/schedule/join', {
+        params: {
+            meetingnumber: meetingnumber // 作为查询参数传递
+        }
+    })
 
 // 管理员获取用户信息
 export const adminGetUserList = () => 

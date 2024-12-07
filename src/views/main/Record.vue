@@ -15,13 +15,13 @@
     </el-row>
     
     <el-table :data="filteredMeetings" style="width: 100%;">
-      <el-table-column label="会议时间" width="200">
+      <el-table-column label="会议时间" width="400">
         <template #default="scope">
-          {{ scope.row.startTime }} - {{ scope.row.endTime }}
+          {{ scope.row.meetingStartTime }} - {{ scope.row.meetingEndTime }}
         </template>
       </el-table-column>
-      <el-table-column prop="subject" label="会议主题" width="180" />
-      <el-table-column prop="host" label="会议主持人" width="150" />
+      <el-table-column prop="meetingName" label="会议主题" width="180" />
+      <el-table-column prop="meetingHost" label="会议主持人" width="150" />
       <el-table-column label="参与者">
         <template #default="scope">
           <el-dropdown>
