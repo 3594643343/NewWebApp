@@ -13,6 +13,7 @@
             {{ friend.name }}
           </el-menu-item>
         </el-menu>
+        <el-button type="primary" @click="addFriend" class="add-friend-btn">添加好友</el-button>
       </el-aside>
       <el-container>
         <el-header class="chat-header">
@@ -28,7 +29,6 @@
               <span>{{ msg.text }}</span>
             </div>
           </div>
-          <!-- 输入框和发送按钮现在在主体部分 -->
           <div class="input-wrapper">
             <el-input
               v-model="newMessage"
@@ -54,21 +54,38 @@ const friends = ref([
   { id: 3, name: 'Charlie', avatar: 'path/to/charlie.jpg' },
 ]);
 
-const selectedFriend = ref(friends.value[0]); // 默认选择第一个好友
-const messages = ref([]); // 聊天记录
-const newMessage = ref(''); // 输入框内容
+const selectedFriend = ref(friends.value[0]);
+const messages = ref([]);
+const newMessage = ref('');
 
 // 选择好友
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
-  messages.value = []; // 清空消息记录，实际应用中可以加载该好友的历史消息
+  messages.value = [];
 };
 
 // 发送消息
 const sendMessage = () => {
   if (newMessage.value.trim()) {
     messages.value.push({ id: messages.value.length + 1, text: newMessage.value, sender: 'me' });
-    newMessage.value = ''; // 清空输入框
+    newMessage.value = '';
+  }
+};
+
+// 添加好友
+const addFriend = () => {
+  const friendName = prompt('请输入好友的名字:');
+  const avatarPath = prompt('请输入好友的头像路径:'); // 可以根据需要更改为更复杂的输入处理
+  if (friendName && avatarPath) {
+    const newFriend = {
+      id: friends.value.length + 1,
+      name: friendName,
+      avatar: avatarPath,
+    };
+    friends.value.push(newFriend);
+    alert('好友添加成功！');
+  } else {
+    alert('请填写好友的名字和头像路径！');
   }
 };
 </script>
@@ -88,7 +105,15 @@ const sendMessage = () => {
 .user-list {
   background-color: #ffffff;
   border-right: 1px solid #e0e0e0;
+  position: relative; /* 使按钮绝对定位在好友列表内 */
 }
+
+.add-friend-btn {
+  position: relative; /* 绝对定位按钮 */
+  left: 100px;
+  bottom: 215px;
+}
+
 
 .chat-header {
   background-color: #ffffff;
@@ -100,17 +125,17 @@ const sendMessage = () => {
   padding: 10px;
   background-color: #ffffff;
   flex: 1;
-  overflow-y: auto; /* 可滚动 */
+  overflow-y: auto;
   display: flex;
-  flex-direction: column; /* 使消息和输入框垂直排列 */
+  flex-direction: column;
 }
 
 .message-list {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* 消息间距 */
-  flex-grow: 1; /* 使消息列表占用剩余空间 */
-  overflow-y: auto; /* 消息区域可滚动 */
+  gap: 10px;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .message {
@@ -132,14 +157,14 @@ const sendMessage = () => {
 .input-wrapper {
   display: flex;
   align-items: center;
-  margin-top: 10px; /* 增加输入框的上边距 */
-  margin-bottom: 200px; /* 增加输入框的下边距 */
-  margin-left: 10px; /* 增加输入框的左边距 */
+  margin-top: 10px;
+  margin-bottom: 200px;
+  margin-left: 10px;
 }
 
 .input-message {
-  margin-right: 10px; /* 输入框与按钮间距 */
-  width: 60%; /* 根据需要调整宽度 */
-  margin-left: 220px; /* 增加输入框的左边距 */
+  margin-right: 10px;
+  width: 60%;
+  margin-left: 220px;
 }
 </style>

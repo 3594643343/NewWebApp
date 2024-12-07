@@ -94,8 +94,7 @@ onMounted(() => {
 <style>
 .admin-layout {
   height: 100vh;
-  display: flex;
-  justify-content: center;
+  display: fixed;
   align-items: center;
 }
 

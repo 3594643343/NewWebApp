@@ -35,13 +35,21 @@ export const updateUserPasswordApi = ({ oldPassword, newPassword, confirmPasswor
     return request.put(`/userinfo/change/password?${queryParams.toString()}`);
 }
 
-//获取会议列表
+//获取会议记录列表
 export const getMeetingRecordService = () =>
     request.get('/record/list')
 
 //获取会议详情
 export const getMeetingDetailService = (recordId) =>
     request.get('/record/detail', {
+        params: {
+            recordId: recordId // 作为查询参数传递
+        }
+    })
+
+//删除会议记录
+export const deleteMeetingRecordService = (recordId) =>
+    request.delete('/record/delete', {
         params: {
             recordId: recordId // 作为查询参数传递
         }

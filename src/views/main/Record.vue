@@ -44,7 +44,7 @@
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
-import { getMeetingRecordService } from '@/api/user';
+import { getMeetingRecordService,getMeetingDetailService, deleteMeetingRecordService } from '@/api/user';
 import { onMounted } from 'vue';
 
 const meetingRecord = ref([]); // 会议记录列表
@@ -91,14 +91,32 @@ function search() {
   console.log('搜索:', searchType.value, searchQuery.value);
 }
 
-function viewDetails(meeting) {
-  console.log('查看会议详细信息:', meeting);
-}
+const viewDetails = async (meeting) => {
+  try {
+    const response = await getMeetingDetailService(meeting.recordId);
+    if (response) {
+      console.log('获取会议详情成功：', response.data);
+    } else {
+      console.error('未能获取会议详情');
+    }
+  } catch (error) {
+    console.error('获取会议详情失败:', error); // 错误处理
+  }
+};
+const deleteMeeting = async (meeting) => {
+  try {
+    const response = await deleteMeetingRecordService(meeting.recordId);
+    if (response) {
+      console.log('删除会议记录成功：', response.data);
+      loadRecordMeetings(); // 刷新会议列表
+    } else {
+      console.error('未能删除会议记录');
+    }
+  } catch (error) {
+    console.error('删除会议记录失败:', error); // 错误处理
+  }
+};
 
-function deleteMeeting(meeting) {
-  console.log('删除会议记录:', meeting);
-  // 在这里添加删除会议记录的逻辑
-}
 </script>
 
 <style>
