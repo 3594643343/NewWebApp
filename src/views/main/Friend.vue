@@ -9,12 +9,44 @@
             :key="friend.id"
             @click="selectFriend(friend)"
           >
-            <el-avatar :src="friend.avatar" size="small" class="avatar" />
+            <el-avatar :src="friend.avatar" size="large" class="avatar" />
             {{ friend.name }}
           </el-menu-item>
         </el-menu>
         <el-button type="primary" @click="addFriend" class="add-friend-btn">添加好友</el-button>
+        <!-- 添加好友弹窗 -->
+        <el-dialog title="申请添加好友" v-model="addFriendDialog" width="30%">
+          <el-form :model="newFriend">
+            <el-form-item label="好友 ID" required>
+              <el-input v-model="newFriend.id"></el-input>
+            </el-form-item>
+            <el-form-item label="验证消息" required>
+              <el-input v-model="newFriend.message"></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="addFriendDialog = false">取消</el-button>
+            <el-button type="primary" @click="addFriend">发送申请</el-button>
+          </span>
+        </el-dialog>
       </el-aside>
+
+      <!-- 新增的群聊列表 -->
+      <el-aside class="group-list" width="250px">
+        <h3>群聊列表</h3>
+        <el-menu>
+          <el-menu-item
+            v-for="group in groups"
+            :key="group.id"
+            @click="selectGroup(group)"
+          >
+            <el-avatar :src="group.avatar" size="large" class="avatar" />
+            {{ group.name }}
+          </el-menu-item>
+        </el-menu>
+        <el-button type="primary" @click="addGroup" class="add-group-btn">创建群聊</el-button>
+      </el-aside>
+
       <el-container>
         <el-header class="chat-header">
           <h3>与 {{ selectedFriend.name }} 的聊天</h3>
@@ -46,21 +78,46 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref , onMounted } from 'vue';
+import { getUserFriends} from '../../api/user';
 
 const friends = ref([
   { id: 1, name: 'Alice', avatar: 'path/to/alice.jpg' },
   { id: 2, name: 'Bob', avatar: 'path/to/bob.jpg' },
   { id: 3, name: 'Charlie', avatar: 'path/to/charlie.jpg' },
+  { id: 4, name: 'David', avatar: 'path/to/david.jpg' },
+]);
+
+const groups = ref([
+  { id: 1, name: '工作群', avatar: 'path/to/group1.jpg' },
+  { id: 2, name: '家庭群', avatar: 'path/to/group2.jpg' },
+  { id: 3, name: '朋友群', avatar: 'path/to/group3.jpg' },
+  { id: 4, name: '同学群', avatar: 'path/to/group4.jpg' },
 ]);
 
 const selectedFriend = ref(friends.value[0]);
+console.log("selectedFriend.value", selectedFriend.value);
 const messages = ref([]);
 const newMessage = ref('');
+const addFriendDialog = ref(false);
+const newFriend = ref({ id: '', message: '' });
+
+// const getFriends = async () => {
+//   const result = await getUserFriends();
+//   friends.value = result.data;
+//   console.log("friends.value", friends.value);
+// };
+
 
 // 选择好友
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
+  messages.value = [];
+};
+
+// 选择群聊
+const selectGroup = (group) => {
+  selectedFriend.value = group;
   messages.value = [];
 };
 
@@ -74,25 +131,33 @@ const sendMessage = () => {
 
 // 添加好友
 const addFriend = () => {
-  const friendName = prompt('请输入好友的名字:');
-  const avatarPath = prompt('请输入好友的头像路径:'); // 可以根据需要更改为更复杂的输入处理
-  if (friendName && avatarPath) {
-    const newFriend = {
-      id: friends.value.length + 1,
-      name: friendName,
+  addFriendDialog.value = true;
+};
+
+// 创建群聊
+const addGroup = () => {
+  const groupName = prompt('请输入群聊的名字:');
+  const avatarPath = prompt('请输入群聊的头像路径:');
+  if (groupName && avatarPath) {
+    const newGroup = {
+      id: groups.value.length + 1,
+      name: groupName,
       avatar: avatarPath,
     };
-    friends.value.push(newFriend);
-    alert('好友添加成功！');
+    groups.value.push(newGroup);
+    alert('群聊创建成功！');
   } else {
-    alert('请填写好友的名字和头像路径！');
+    alert('请填写群聊的名字和头像路径！');
   }
 };
+onMounted(() => {
+  // getFriends();
+});
 </script>
 
 <style>
 .chat-layout {
-  height: 100vh;
+  height: 80vh;
   display: flex;
   align-items: stretch;
 }
@@ -105,15 +170,19 @@ const addFriend = () => {
 .user-list {
   background-color: #ffffff;
   border-right: 1px solid #e0e0e0;
-  position: relative; /* 使按钮绝对定位在好友列表内 */
 }
 
-.add-friend-btn {
-  position: relative; /* 绝对定位按钮 */
-  left: 100px;
-  bottom: 215px;
+.group-list {
+  background-color: #ffffff;
+  border-left: 1px solid #e0e0e0; /* 添加左边框以区分 */
 }
 
+.add-friend-btn,
+.add-group-btn {
+  position: relative;
+  bottom: 265px;
+  left: 90px;
+}
 
 .chat-header {
   background-color: #ffffff;
@@ -158,13 +227,22 @@ const addFriend = () => {
   display: flex;
   align-items: center;
   margin-top: 10px;
-  margin-bottom: 200px;
-  margin-left: 10px;
+  padding: 10px;
+  margin-bottom: 100px;
 }
 
 .input-message {
   margin-right: 10px;
-  width: 60%;
-  margin-left: 220px;
+  flex-grow: 1; /* 自适应宽度 */
+}
+
+.avatar {
+  margin-right: 10px; /* 头像与名称间距 */
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
