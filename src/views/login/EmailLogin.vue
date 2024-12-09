@@ -42,6 +42,7 @@
     if (result) {
       // 登录成功，跳转到主页
       localStorage.setItem('token', result.data.token);
+      localStorage.setItem('userId',result.data.userId);
       console.log("Login:", result.data.token);
       console.log('Login successful');
       // 获取用户信息

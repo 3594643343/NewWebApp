@@ -43,6 +43,7 @@
     if (result) {
       // 登录成功，存储 token
       localStorage.setItem('token', result.data.token); // 存储 token
+      localStorage.setItem('userId',result.data.userId);
       console.log("Login:", result.data.token);
       console.log('Login successful');
 

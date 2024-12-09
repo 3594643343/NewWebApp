@@ -108,6 +108,7 @@
   const handleLeaveMeeting  = async () => {
     try {
     const response = await leaveMeetingService();
+    setTimeout(1000);
     console.log('退出会议结果:', response);
     if (response && response.code === 1) {
       console.log('退出会议成功：');
