@@ -13,9 +13,8 @@
               class="search-input"
               size="large" 
             />
-            <el-button type="primary" @click="searchUser" size="small">搜索</el-button>
-            <el-button @click="listAllUsers" size="small">列出全部用户</el-button>
-            <el-button type="success" size="small" class="add-button">增加用户</el-button>
+            <el-button type="primary" @click="searchUser" size="medium">搜索</el-button>
+            <el-button type="primary" @click="logoutDialogVisible = true" size="medium">退出登录</el-button>
           </div>
         </div>
         <div class="table-container">
@@ -30,26 +29,44 @@
             <el-table-column label="操作" width="200">
               <template v-slot="scope">
                 <div class="action-buttons">
-                  <el-button type="text" @click="viewProfile(scope.row)" size="small">查看资料</el-button>
-                  <el-button type="text" @click="deleteUser(scope.row)" size="small">删除用户</el-button>
+                  <el-button :plain="true" type="text" @click="resetPassword(scope.row)" size="small">重置密码</el-button>
                 </div>
               </template>
             </el-table-column>
           </el-table>
         </div>
       </el-main>
+      <el-dialog
+    v-model="logoutDialogVisible"
+    title="确认退出"
+    width="400"
+    align-center
+  >
+    <span>您确定要退出登录吗？</span>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="logoutDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="logout">
+          确认
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
     </el-container>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { ElMessage } from 'element-plus'
 import AdminHeader from '@/components/layouts/AdminHeader.vue';
-import { adminGetUserList } from '@/api/user';
+import { adminGetUserList,adminResetPassword } from '@/api/user';
+import router from '@/router';
 
 const users = ref([]);
 const searchText = ref('');
 const searchResults = ref([]);
+const logoutDialogVisible = ref(false);
 
 const searchUser = () => {
   console.log('搜索用户:', searchText.value);
@@ -58,17 +75,23 @@ const searchUser = () => {
   );
 };
 
-const listAllUsers = () => {
-  searchText.value = '';
-  searchResults.value = [];
-};
 
-const viewProfile = (user) => {
-  console.log('查看用户资料:', user.username);
-};
+const resetPassword = async (user) => {
+  try {
+    const response = await adminResetPassword({
+      userId: user.id,
+    }
+    );
+    console.log('重置密码成功:', response);
+    ElMessage({
+    message: '重置密码成功',
+    type: 'success',
+  })
+    loadUsersInfo();
 
-const deleteUser = (user) => {
-  console.log('删除用户:', user.username);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 // 计算属性返回当前显示的数据
@@ -79,11 +102,22 @@ const filteredData = computed(() => {
 const loadUsersInfo = async () => {
   try {
     const response = await adminGetUserList();
-    users.value = response.data.data; // 确保与后端返回的数据字段对应
+    users.value = response.data.map(user => {
+        // 对每个用户的头像进行格式转换
+        return {
+          ...user,
+          avatar: user.avatar ? 'data:image/png;base64,' + user.avatar : '',// 格式转换
+          micStatus: false // 默认麦克风未禁言
+        };
+      });
+    console.log('response.data.data:', response);
     console.log('加载用户信息成功:', users.value);
   } catch (error) {
     console.log(error);
   }
+};
+const logout = () => {
+  router.push('/accountlogin');
 };
 
 onMounted(() => {
@@ -94,8 +128,7 @@ onMounted(() => {
 <style>
 .admin-layout {
   height: 100vh;
-  display: flex;
-  justify-content: center;
+  display: fixed;
   align-items: center;
 }
 
@@ -106,6 +139,10 @@ onMounted(() => {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.main-content {
+  padding: 10px;
+  margin-left: 300px;
 }
 
 .header {

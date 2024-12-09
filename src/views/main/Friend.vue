@@ -9,11 +9,44 @@
             :key="friend.id"
             @click="selectFriend(friend)"
           >
-            <el-avatar :src="friend.avatar" size="small" class="avatar" />
+            <el-avatar :src="friend.avatar" size="large" class="avatar" />
             {{ friend.name }}
           </el-menu-item>
         </el-menu>
+        <el-button type="primary" @click="addFriend" class="add-friend-btn">添加好友</el-button>
+        <!-- 添加好友弹窗 -->
+        <el-dialog title="申请添加好友" v-model="addFriendDialog" width="30%">
+          <el-form :model="newFriend">
+            <el-form-item label="好友 ID" required>
+              <el-input v-model="newFriend.id"></el-input>
+            </el-form-item>
+            <el-form-item label="验证消息" required>
+              <el-input v-model="newFriend.message"></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="addFriendDialog = false">取消</el-button>
+            <el-button type="primary" @click="addFriend">发送申请</el-button>
+          </span>
+        </el-dialog>
       </el-aside>
+
+      <!-- 新增的群聊列表 -->
+      <el-aside class="group-list" width="250px">
+        <h3>群聊列表</h3>
+        <el-menu>
+          <el-menu-item
+            v-for="group in groups"
+            :key="group.id"
+            @click="selectGroup(group)"
+          >
+            <el-avatar :src="group.avatar" size="large" class="avatar" />
+            {{ group.name }}
+          </el-menu-item>
+        </el-menu>
+        <el-button type="primary" @click="addGroup" class="add-group-btn">创建群聊</el-button>
+      </el-aside>
+
       <el-container>
         <el-header class="chat-header">
           <h3>与 {{ selectedFriend.name }} 的聊天</h3>
@@ -28,7 +61,6 @@
               <span>{{ msg.text }}</span>
             </div>
           </div>
-          <!-- 输入框和发送按钮现在在主体部分 -->
           <div class="input-wrapper">
             <el-input
               v-model="newMessage"
@@ -46,36 +78,86 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref , onMounted } from 'vue';
+import { getUserFriends} from '../../api/user';
 
 const friends = ref([
   { id: 1, name: 'Alice', avatar: 'path/to/alice.jpg' },
   { id: 2, name: 'Bob', avatar: 'path/to/bob.jpg' },
   { id: 3, name: 'Charlie', avatar: 'path/to/charlie.jpg' },
+  { id: 4, name: 'David', avatar: 'path/to/david.jpg' },
 ]);
 
-const selectedFriend = ref(friends.value[0]); // 默认选择第一个好友
-const messages = ref([]); // 聊天记录
-const newMessage = ref(''); // 输入框内容
+const groups = ref([
+  { id: 1, name: '工作群', avatar: 'path/to/group1.jpg' },
+  { id: 2, name: '家庭群', avatar: 'path/to/group2.jpg' },
+  { id: 3, name: '朋友群', avatar: 'path/to/group3.jpg' },
+  { id: 4, name: '同学群', avatar: 'path/to/group4.jpg' },
+]);
+
+const selectedFriend = ref(friends.value[0]);
+console.log("selectedFriend.value", selectedFriend.value);
+const messages = ref([]);
+const newMessage = ref('');
+const addFriendDialog = ref(false);
+const newFriend = ref({ id: '', message: '' });
+
+// const getFriends = async () => {
+//   const result = await getUserFriends();
+//   friends.value = result.data;
+//   console.log("friends.value", friends.value);
+// };
+
 
 // 选择好友
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
-  messages.value = []; // 清空消息记录，实际应用中可以加载该好友的历史消息
+  messages.value = [];
+};
+
+// 选择群聊
+const selectGroup = (group) => {
+  selectedFriend.value = group;
+  messages.value = [];
 };
 
 // 发送消息
 const sendMessage = () => {
   if (newMessage.value.trim()) {
     messages.value.push({ id: messages.value.length + 1, text: newMessage.value, sender: 'me' });
-    newMessage.value = ''; // 清空输入框
+    newMessage.value = '';
   }
 };
+
+// 添加好友
+const addFriend = () => {
+  addFriendDialog.value = true;
+};
+
+// 创建群聊
+const addGroup = () => {
+  const groupName = prompt('请输入群聊的名字:');
+  const avatarPath = prompt('请输入群聊的头像路径:');
+  if (groupName && avatarPath) {
+    const newGroup = {
+      id: groups.value.length + 1,
+      name: groupName,
+      avatar: avatarPath,
+    };
+    groups.value.push(newGroup);
+    alert('群聊创建成功！');
+  } else {
+    alert('请填写群聊的名字和头像路径！');
+  }
+};
+onMounted(() => {
+  // getFriends();
+});
 </script>
 
 <style>
 .chat-layout {
-  height: 100vh;
+  height: 80vh;
   display: flex;
   align-items: stretch;
 }
@@ -90,6 +172,18 @@ const sendMessage = () => {
   border-right: 1px solid #e0e0e0;
 }
 
+.group-list {
+  background-color: #ffffff;
+  border-left: 1px solid #e0e0e0; /* 添加左边框以区分 */
+}
+
+.add-friend-btn,
+.add-group-btn {
+  position: relative;
+  bottom: 265px;
+  left: 90px;
+}
+
 .chat-header {
   background-color: #ffffff;
   text-align: center;
@@ -100,17 +194,17 @@ const sendMessage = () => {
   padding: 10px;
   background-color: #ffffff;
   flex: 1;
-  overflow-y: auto; /* 可滚动 */
+  overflow-y: auto;
   display: flex;
-  flex-direction: column; /* 使消息和输入框垂直排列 */
+  flex-direction: column;
 }
 
 .message-list {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* 消息间距 */
-  flex-grow: 1; /* 使消息列表占用剩余空间 */
-  overflow-y: auto; /* 消息区域可滚动 */
+  gap: 10px;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .message {
@@ -132,14 +226,23 @@ const sendMessage = () => {
 .input-wrapper {
   display: flex;
   align-items: center;
-  margin-top: 10px; /* 增加输入框的上边距 */
-  margin-bottom: 200px; /* 增加输入框的下边距 */
-  margin-left: 10px; /* 增加输入框的左边距 */
+  margin-top: 10px;
+  padding: 10px;
+  margin-bottom: 100px;
 }
 
 .input-message {
-  margin-right: 10px; /* 输入框与按钮间距 */
-  width: 60%; /* 根据需要调整宽度 */
-  margin-left: 220px; /* 增加输入框的左边距 */
+  margin-right: 10px;
+  flex-grow: 1; /* 自适应宽度 */
+}
+
+.avatar {
+  margin-right: 10px; /* 头像与名称间距 */
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

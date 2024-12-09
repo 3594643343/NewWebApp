@@ -35,9 +35,25 @@ export const updateUserPasswordApi = ({ oldPassword, newPassword, confirmPasswor
     return request.put(`/userinfo/change/password?${queryParams.toString()}`);
 }
 
-//获取会议列表
+//获取会议记录列表
 export const getMeetingRecordService = () =>
     request.get('/record/list')
+
+//获取会议详情
+export const getMeetingDetailService = (recordId) =>
+    request.get('/record/detail', {
+        params: {
+            recordId: recordId // 作为查询参数传递
+        }
+    })
+
+//删除会议记录
+export const deleteMeetingRecordService = (recordId) =>
+    request.delete('/record/delete', {
+        params: {
+            recordId: recordId // 作为查询参数传递
+        }
+    })
 
 //创建会议
 export const bookMeetingService = ({meetingName,meetingStartTime,meetingEndTime,meetingPassword,defaultPermission}) =>
@@ -113,3 +129,58 @@ export const joinScheduleMeeting = ({meetingnumber}) =>
 export const adminGetUserList = () => 
     request.get('/admin/getall')
 
+//管理员重置密码
+export const adminResetPassword = ({userId}) => 
+    request.get('/admin/reset', {
+        params: {
+            userId: userId // 作为查询参数传递
+        }
+    })
+
+//获取用户所有好友id
+export const getUserFriends = () => 
+    request.get('/friend/get/allFriendId')
+
+//获取一个好友信息
+export const getOneFriend = (friendId) => 
+    request.get('/friend/get/friendInfo', {
+        params: {
+            friendId: friendId // 作为查询参数传递
+        }
+    })
+
+//获取所有好友信息
+export const getAllFriends = () => 
+    request.get('/friend/get/allFriendInfo')
+
+//搜索好友
+export const searchFriends = (friendId) => 
+    request.get('/friend/search', {
+        params: {
+            friendId: friendId // 作为查询参数传递
+        }
+    })
+
+//申请添加好友
+export const applyAddFriend = ({friendId,checkPassword}) => 
+    request.post('/friend/apply', {friendId,checkPassword})
+
+//处理添加好友验证
+export const handleAddFriend = ({recordId,friendId,check}) => 
+    request.post('/friend/deal', {recordId,friendId,check})
+
+//删除好友
+export const deleteFriend = ({friendId}) => 
+    request.delete('/friend/delete', {
+        params: {
+            friendId: friendId // 作为查询参数传递
+        }
+    })
+
+//获取与一个好友的聊天记录
+export const getChatRecord = ({friendId}) => 
+    request.get('/friend/record', {
+        params: {
+            friendId: friendId // 作为查询参数传递
+        }
+    })
