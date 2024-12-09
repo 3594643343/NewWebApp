@@ -22,7 +22,9 @@ const activeIndex = ref('')
           alt="Element logo"
         />
       </el-menu-item>
-      
+      <div class="title-container">
+        <h2>管理员页面</h2>
+      </div>
       
     </el-menu>
 </template>
