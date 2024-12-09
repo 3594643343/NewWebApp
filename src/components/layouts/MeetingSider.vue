@@ -20,6 +20,7 @@ const fetchUsers = async () => {
           micStatus: false // 默认麦克风未禁言
         };
       });
+      localStorage.setItem('users', JSON.stringify(users.value)); // 缓存用户列表到本地
     }
   } catch (error) {
     console.error('获取用户列表失败:', error.response ? error.response.data : error.message);
