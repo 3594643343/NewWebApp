@@ -19,41 +19,54 @@ var my_sampleRate = 0;//输出采样率
 // }
 
 onMounted(()=>{
-        beginWS();
+        // beginWS();
+    if (!navigator.getUserMedia) {
+        alert('浏览器不支持音频输入');
+    } else {
+        navigator.getUserMedia(
+        { audio: true },
+        function (mediaStream) {
+            init(new Recorder(mediaStream));
+            beginWS(); // 开始WebSocket连接
+        },
+        function (error) {
+            console.log(error);
+        }
+        );
+    }
 });  
 
 const beginWS = ()=>{
   console.log('开始对讲');
   if(is_begin === 0){
     // var ws = new WebSocket("ws://127.0.0.1:8079/audio/1");
-    ws = new WebSocket("ws://121.37.24.76:8079//meeting/audio/"+localStorage.getItem('userId'));
-            ws.binaryType = 'arraybuffer'; //传输的是 ArrayBuffer 类型的数据
-            ws.onopen = function(event) {
-                console.log('握手成功');
-    
-            };
-            timeInte=setInterval(function(){
-                console.log('readyState'+ws.readyState);
-                if(ws.readyState===1){//ws进入连接状态，则每隔500毫秒发送一包数据
-                    record.start();
-                        //console.log("#######################send Blob start ##############################");
-                    console.log(record.getBlob());
-                    ws.send(record.getBlob());    //发送音频数据
-                       //console.log("#######################send Blob end ##############################");
-                    record.clear(); //每次发送完成则清理掉旧数据
-                }
-            },500);  //每隔500ms发送一次，定时器
-                ///
-            ws.onmessage = function (evt){
-              console.log( "Received Message: " + evt.data);
-              receive(evt.data);
+        ws = new WebSocket("ws://121.37.24.76:8079//meeting/audio/"+localStorage.getItem('userId'));
+        ws.binaryType = 'arraybuffer'; //传输的是 ArrayBuffer 类型的数据
+        ws.onopen = function(event) {
+            console.log('握手成功');
+
+        };
+        timeInte=setInterval(function(){
+            console.log('readyState'+ws.readyState);
+            if(ws.readyState===1){//ws进入连接状态，则每隔500毫秒发送一包数据
+                record.start();
+                    //console.log("#######################send Blob start ##############################");
+                console.log(record.getBlob());
+                ws.send(record.getBlob());    //发送音频数据
+                    //console.log("#######################send Blob end ##############################");
+                record.clear(); //每次发送完成则清理掉旧数据
             }
-                ///
-            is_begin = 1;   
+        },500);  //每隔500ms发送一次，定时器
+            ///
+        ws.onmessage = function (evt){
+            console.log( "Received Message: " + evt.data);
+            receive(evt.data);
         }
-        else{
-            alert("已开启录音!");
-        }
+            ///
+        is_begin = 1;   
+    }else{
+        alert("已开启录音!");
+    }
 }
 
 const endWS = ()=>{

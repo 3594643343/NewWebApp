@@ -1,54 +1,50 @@
-<template>
-    <div class="meeting-footer">
-      <el-button type="primary" @click="InviteVisible = true">邀请</el-button>
-      <el-button type="primary" @click="manageMembers">成员管理</el-button>
-      <el-button type="primary" @click="convertSpeech">语音转文字</el-button>
-      <el-button type="primary" @click="translate">翻译</el-button>
-      <!-- 添加文件输入 -->
-      <input type="file" @change="handleFileUpload" style="display:none" ref="fileInput" />
-      <el-button type="primary" @click="triggerFileInput">文件上传</el-button>
-      <el-button type="primary" @click="settings">设置</el-button>
-      <el-button type="danger" @click="confirmLeaveMeeting">退出会议</el-button>
-  
-      <el-dialog v-model="InviteVisible" title="邀请" width="300" center>
-        <div>
-          <p><strong>会议号:</strong> {{ meetingNumber }}</p>
-          <p><strong>会议密码:</strong> {{ meetingPassword }}</p>
-        </div>
-        <template #footer>
-          <div class="dialog-footer">
-            <el-button @click="InviteVisible = false">取消</el-button>
-            <el-button type="primary" @click="copyToClipboard">复制</el-button>
-          </div>
-        </template>
-      </el-dialog>
-      <el-dialog v-model="confirmLeaveVisible" title="确认退出" width="300" center>
-        <div>
-          <p>您确定要退出会议吗？</p>
-        </div>
-        <template #footer>
-          <div class="dialog-footer">
-            <el-button @click="confirmLeaveVisible = false">取消</el-button>
-            <el-button type="primary" @click="handleLeaveMeeting">确认</el-button>
-          </div>
-        </template>
-      </el-dialog>
-
-    </div>
-  </template>
-  
-  <script setup>
-  import { ref } from 'vue';
+<script setup>
+  import { ref, onMounted  } from 'vue';
   import { useRouter } from 'vue-router';
   import { ElMessage, ElDialog } from 'element-plus';
-  import { uploadFile , leaveMeetingService } from '@/api/user'; // 导入上传文件的接口
+  import { uploadFile, leaveMeetingService, updatePermissionAPI } from '@/api/user'; // 导入上传文件的接口
   
+  // const users = ref([]);// 存储当前会议中的用户列表
+  const users = ref(JSON.parse(localStorage.getItem('users')) || []); // 存储当前会议中的用户列表
+  // const users = ref([]); // 存储当前会议中的用户列表
   const router = useRouter();
   const InviteVisible = ref(false);
+  const confirmLeaveVisible = ref(false); // 确认离开会议弹窗显示状态
+  const manageMembersVisible = ref(false); // 成员管理弹窗显示状态
+  const micStatus = ref(false); // 全局麦克风状态
   const meetingNumber = localStorage.getItem('meetingNumber');
   const meetingPassword = localStorage.getItem('meetingPassword');
+  const userProfileData = JSON.parse(localStorage.getItem('userProfile')); // 用户信息，假设存储的是JSON字符串
+  const userId = localStorage.getItem('userId')
+  // const userId = userProfileData && userProfileData.id ? parseInt(userProfileData.id, 10) : null; // 用户id，确保其为Integer类型
+  const username = userProfileData.username; // 用户名
+  // const signature = userProfileData.signature; // 用户签名
+
   const fileInput = ref(null); // 声明和初始化 fileInput 引用
-  const confirmLeaveVisible = ref(false);
+
+  // 切换麦克风状态
+  const toggleMicStatus = async () => {
+  try {
+    let stream;
+    if (!micStatus.value) {
+      // 请求麦克风访问权限，并获取音频流
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStatus.value = true; // 更新麦克风状态为开启
+      record.start(); // 开始录制
+    } else {
+      // 获取当前音频流并关闭音频轨道
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioTracks = stream.getAudioTracks();
+      audioTracks.forEach(track => track.enabled = !micStatus.value);
+      micStatus.value = false; // 更新麦克风状态为关闭
+      record.stop(); // 停止录制
+    }
+    console.log('切换麦克风状态:', micStatus.value);
+  } catch (error) {
+    console.error('操作麦克风状态失败:', error.message);
+    ElMessage.error('操作麦克风状态失败，请检查您的浏览器设置。');
+  }
+};
 
   //复制会议号与密码到剪贴板
   const copyToClipboard = () => {
@@ -86,15 +82,18 @@
   
   const manageMembers = () => {
     console.log("成员管理功能");
+    const storedUsers = localStorage.getItem('users');
+    users.value = storedUsers ? JSON.parse(storedUsers) : [];
+    manageMembersVisible.value = true; // 显示成员管理弹窗
   };
   
-  const convertSpeech = () => {
-    console.log("语音转文字功能");
-  };
+  // const convertSpeech = () => {
+  //   console.log("语音转文字功能");
+  // };
   
-  const translate = () => {
-    console.log("翻译功能");
-  };
+  // const translate = () => {
+  //   console.log("翻译功能");
+  // };
   
   const settings = () => {
     console.log("设置功能");
@@ -124,8 +123,136 @@
   }
 
   };
+
+  // 更新用户权限的方法
+  const updatePermission = async (userId, newPermission) => {
+    try {
+      const response = await updatePermissionAPI(meetingNumber, userId, newPermission);
+      console.log('会议号：' + meetingNumber + '，用户id：' + userId + '，新权限：' + newPermission);
+      if (response && response.code === 1) {
+        console.log('更新权限成功:', response);
+        // 更新本地用户权限信息
+        const user = users.value.find(user => user.id === userId);
+        if (user) {
+          user.permission = newPermission;
+        }
+        ElMessage.success('用户权限更新成功');
+      } else {
+        ElMessage.error('更新权限失败');
+        console.error('更新权限失败:', response);
+      }
+    } catch (error) {
+      console.error('更新权限失败:', error.message);
+      ElMessage.error('更新权限失败，请重试。');
+    }
+  };
+
+  // 获取当前用户的权限
+  const getPermission = () => {
+    const user = users.value.find(user => user.username === username);
+    if (user) {
+      // console.log('当前用户权限:', user.permission);
+      // console.log('当前用户:', user.username);
+      return user.permission;
+    } else {
+      console.error('当前用户未找到');
+      return null;
+    }
+  };
+
+  const kickUser = (userId) => {
+    console.log('踢除用户:', userId);
+    // 实现踢除用户的逻辑
+  };
   </script>
   
+  <template>
+    <div class="meeting-footer">
+      <el-button type="primary" @click="toggleMicStatus" style="min-width: 110px">
+        <el-icon>
+          <Microphone v-if="micStatus" />
+          <Mute v-else />
+        </el-icon>
+        {{ micStatus ? '取消静音' : '静音' }}
+      </el-button>
+      <el-button type="primary" @click="InviteVisible = true">邀请</el-button>
+      <el-button type="primary" @click="manageMembers">成员管理</el-button>
+      <!-- <el-button type="primary" @click="convertSpeech">语音转文字</el-button>
+      <el-button type="primary" @click="translate">翻译</el-button> -->
+      <!-- 添加文件输入 -->
+      <input type="file" @change="handleFileUpload" style="display:none" ref="fileInput" />
+      <el-button type="primary" @click="triggerFileInput">文件上传</el-button>
+      <el-button type="primary" @click="settings">设置</el-button>
+      <el-button type="danger" @click="confirmLeaveMeeting">退出会议</el-button>
+  
+      <el-dialog v-model="InviteVisible" title="邀请" width="300" center>
+        <div>
+          <p><strong>会议号:</strong> {{ meetingNumber }}</p>
+          <p><strong>会议密码:</strong> {{ meetingPassword }}</p>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="InviteVisible = false">取消</el-button>
+            <el-button type="primary" @click="copyToClipboard">复制</el-button>
+          </div>
+        </template>
+      </el-dialog>
+      <el-dialog v-model="confirmLeaveVisible" title="确认退出" width="300" center>
+        <div>
+          <p>您确定要退出会议吗？</p>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="confirmLeaveVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleLeaveMeeting">确认</el-button>
+          </div>
+        </template>
+      </el-dialog>
+
+      <el-dialog v-model="manageMembersVisible" title="成员管理" width="400" center>
+        <div class="dialog-content" style="min-height: 350px; max-height: 350px; overflow-y: auto;">
+          <div v-if="users.length === 0">
+            <p>当前没有成员在会。</p>
+          </div>
+          <div v-else>
+            <div v-for="user in users" :key="user.id" class="member-item">
+              <el-avatar :src="user.avatar" class="member-avatar" />
+              <!-- <span class="member-name">{{ user.id }}</span> -->
+              <span class="member-name">{{ user.username }}</span>
+              <div class="permission-and-kick" style="display: flex; justify-content: flex-end; align-items: center;">
+                <div v-if="user.permission === 2">
+                <el-button type="primary" disabled style="width: 90px;">创建者</el-button>
+              </div>
+              <div v-else>
+                <el-select 
+                  v-model="user.permission" 
+                  @change="updatePermission(user.id, user.permission)" 
+                  placeholder="选择权限" 
+                  style="width: 90px; margin-right: 10px;"
+                  :disabled="getPermission() === 0"
+                >
+                  <el-option :value="0" label="与会者" />
+                  <el-option :value="1" label="管理员" />
+                </el-select>
+              </div>
+                <el-button 
+                  type="danger" 
+                  class="kick-button" 
+                  @click="kickUser(user.id)" 
+                  :disabled="user.permission === 2 || getPermission() === 0"
+                >
+                  踢除
+                </el-button>  
+              </div>
+            </div>
+            <span>{{ getPermission() }}</span>
+          </div>
+        </div>
+      </el-dialog>
+
+    </div>
+  </template>
+
   <style scoped>
   .meeting-footer {
     background-color: #f5f7fa;
@@ -133,5 +260,30 @@
     justify-content: space-between;
     padding: 10px;
   }
+  .member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 将内容和按钮放在两端 */
+  margin-bottom: 10px;
+}
+
+.member-avatar {
+  margin-right: 10px;
+}
+
+.member-name {
+  font-size: 16px; /* 增大用户名字体 */
+  font-weight: bold; /* 加粗用户名字体 */
+  margin-right: 90px;
+}
+
+.permission-and-kick {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.kick-button {
+  margin-left: 10px; /* 将踢除按钮放在最右侧 */
+}
   </style>
   

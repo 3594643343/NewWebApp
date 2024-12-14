@@ -76,13 +76,17 @@ export const getInMeetingUsers = (meetingNumber) => {
     });
 };
 
+//修改与会者权限
+export const updatePermissionAPI = ({id,meetingNumber,Permission}) => 
+    request.put('/meeting/permissionchange', {id,meetingNumber,Permission})
+
 //禁言
 export const muteUser = ({userId,meetingNumber}) => 
-    request.post('/meeting/mute', {userId,meetingNumber})
+    request.put('/meeting/mute', {userId,meetingNumber})
 
 //解除禁言
 export const disMuteUser = ({userId,meetingNumber}) => 
-    request.post('/meeting/dismute', {userId,meetingNumber})
+    request.put('/meeting/dismute', {userId,meetingNumber})
 
 //上传文件
 export const uploadFile = (meetingNumber, file) => {
