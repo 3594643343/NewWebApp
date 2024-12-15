@@ -12,6 +12,8 @@ import Record from '@/views/main/Record.vue'
 import Schedule from '@/views/main/Schedule.vue'
 import Setting from '@/views/main/Setting.vue'
 import Friend from '@/views/main/Friend.vue'
+import Chat from '@/views/main/Chat.vue'
+import SearchFriend from '@/components/search/SearchFriend.vue'
 import BookMeeting from '@/views/main/BookMeeting.vue'
 import JoinMeeting from '@/views/main/JoinMeeting.vue'
 import Meeting from '@/views/meeting/Meeting.vue'
@@ -86,6 +88,11 @@ const router = createRouter({
           component: Friend,
         },
         {
+          path: 'chat',
+          name: 'chat',
+          component: Chat,
+        },
+        {
           path: 'bookmeeting',
           name: 'bookmeeting',
           component: BookMeeting,
@@ -96,6 +103,11 @@ const router = createRouter({
           component: JoinMeeting,
         },
       ],
+    },
+    {
+      path: '/searchfriend',
+      name:'searchfriend',
+      component: SearchFriend,
     },
     {
       path: '/meeting',

@@ -107,7 +107,6 @@ const loadUsersInfo = async () => {
         return {
           ...user,
           avatar: user.avatar ? 'data:image/png;base64,' + user.avatar : '',// 格式转换
-          micStatus: false // 默认麦克风未禁言
         };
       });
     console.log('response.data.data:', response);

@@ -154,23 +154,33 @@ export const getAllFriends = () =>
     request.get('/friend/get/allFriendInfo')
 
 //搜索好友
-export const searchFriends = (friendId) => 
-    request.get('/friend/search', {
-        params: {
-            friendId: friendId // 作为查询参数传递
-        }
-    })
+export const searchFriends = ({ friendId }) => {
+    // 将 friendId 转换为整数
+    const intFriendId = parseInt(friendId, 10);
+
+    if (isNaN(intFriendId)) {
+        throw new Error('friendId 必须是一个有效的整数');
+    }
+
+    const queryParams = new URLSearchParams({
+        friendId: intFriendId // 使用转换后的整数
+    });
+    
+    return request.post(`/friend/search?${queryParams.toString()}`);
+}
+
+    
 
 //申请添加好友
-export const applyAddFriend = ({friendId,checkPassword}) => 
-    request.post('/friend/apply', {friendId,checkPassword})
+export const applyAddFriend = ({friendId,checkWords}) => 
+    request.post('/friend/add', {friendId,checkWords})
 
 //处理添加好友验证
 export const handleAddFriend = ({recordId,friendId,check}) => 
     request.post('/friend/deal', {recordId,friendId,check})
 
 //删除好友
-export const deleteFriend = ({friendId}) => 
+export const deleteMyFriend = ({friendId}) => 
     request.delete('/friend/delete', {
         params: {
             friendId: friendId // 作为查询参数传递
@@ -184,3 +194,47 @@ export const getChatRecord = ({friendId}) =>
             friendId: friendId // 作为查询参数传递
         }
     })
+
+
+//搜索群来聊天
+export const searchGroup = ({ groupId }) => {
+    // 将 groupId 转换为整数
+    const intGroupId = parseInt(groupId, 7);
+
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId // 使用转换后的整数
+    });
+    
+    return request.post(`/group/search?${queryParams.toString()}`);
+}
+
+
+   
+
+
+//获取是否在该群聊中
+export const getIsInChat = ({groupId}) => 
+    request.get('/group/get/isin', {
+        params: {
+            groupId: groupId // 作为查询参数传递
+        }
+    })
+
+//创建群聊
+export const createMyGroup = ({groupName,groupAvatar,needCheck}) => 
+    request.post('/group/create', {groupName,groupAvatar,needCheck},
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }
+    )
+
+//加入群聊
+export const joinGroup = ({groupId,groupPassword}) => 
+    request.post('/group/join', {groupId,groupPassword})
+
