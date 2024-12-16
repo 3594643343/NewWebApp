@@ -12,7 +12,7 @@ export const initWschat = () => {
   if (wschat.value) {
     wschat.value.close();
   }
-  wschat.value = new WebSocket('ws://121.37.24.76:8079/meeting/audio/'+localStorage.getItem('userId'));
+  wschat.value = new WebSocket('ws://121.37.24.76:8079/chat/'+localStorage.getItem('userId'));
   wschat.value.onopen = () => {
     console.log('websocket连接成功');
   };
@@ -215,8 +215,16 @@ export const getMyApplyList = () =>
     request.get('/friend/checkmessage')
 
 //处理添加好友验证
-export const handleAddFriend = ({recordId,friendId,check}) => 
-    request.post('/friend/deal', {recordId,friendId,check})
+export const handleAddFriend = ({recordId,friendId,check}) => {
+    const queryParams = new URLSearchParams({
+        recordId,
+        friendId,
+        check,  
+    });
+    
+    return request.post(`/friend/deal?${queryParams.toString()}`);
+}
+    
 
 //删除好友
 export const deleteMyFriend = ({friendId}) => 
