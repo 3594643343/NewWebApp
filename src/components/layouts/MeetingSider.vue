@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { getInMeetingUsers, muteUser, disMuteUser } from '@/api/user'; 
+import { ref, onMounted, onUnmounted } from 'vue';
+import { getInMeetingUsers } from '@/api/user'; 
 
 const users = ref([]);
 const meetingNumber = localStorage.getItem('meetingNumber');
@@ -13,14 +13,22 @@ const fetchUsers = async () => {
     if (response && response.data) {
       console.log('获取的用户数据:', response.data);
       users.value = response.data.map(user => {
+        // const newUsers = response.data.map(user => {
         // 对每个用户的头像进行格式转换
         return {
           ...user,
           avatar: user.avatar ? 'data:image/png;base64,' + user.avatar : '',// 格式转换
-          micStatus: false // 默认麦克风未禁言
         };
       });
       localStorage.setItem('users', JSON.stringify(users.value)); // 缓存用户列表到本地
+      // 比较新获取的用户列表与当前的用户列表
+      // if (JSON.stringify(newUsers) !== JSON.stringify(users.value)) {
+      //   console.log('用户列表发生变化，更新并缓存:', newUsers);
+      //   users.value = newUsers;
+      //   localStorage.setItem('users', JSON.stringify(users.value)); // 缓存用户列表到本地
+      // } else {
+      //   console.log('用户列表没有变化');
+      // }
     }
   } catch (error) {
     console.error('获取用户列表失败:', error.response ? error.response.data : error.message);
@@ -45,16 +53,17 @@ const fetchUsers = async () => {
 //   }
 // };
 
-const toggleMicStatus = (user) => {
-  user.micStatus=!user.micStatus;
-}
-
 const addFriend = () => {
   console.log('添加好友');
 };
 
 onMounted(() => {
   fetchUsers();
+  // fetchInterval = setInterval(fetchUsers, 5000);// 每5秒重新获取一次用户列表
+});
+
+onUnmounted(() => {
+  // clearInterval(fetchInterval); // 清除定时器，避免内存泄漏
 });
 </script>
 
@@ -94,14 +103,14 @@ onMounted(() => {
               </el-popover>
               <div class="user-info">
                 <span class="username">{{ user.username }}</span>
-                <el-icon 
+                <!-- <el-icon 
                   @click="toggleMicStatus(user)" 
                   aria-setsize="18"
                   :style="{'cursor': 'pointer', 'color': user.micStatus ? 'blue' : 'inherit'}" 
                 >
                   <Microphone v-if="user.micStatus" />
                   <Mute v-else />
-                </el-icon>
+                </el-icon> -->
               </div>
             </div>
           </div>
@@ -144,7 +153,7 @@ onMounted(() => {
 
 
 .user-info {
-  justify-content: space-between;
+  justify-content: flex-start;
   flex: 1;
   margin-left: 15px;
 }

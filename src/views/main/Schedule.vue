@@ -8,7 +8,8 @@
           <el-table-column prop="meetingName" label="会议名称" width="180" />
           <el-table-column prop="meetingStartTime" label="开始时间" width="180" />
           <el-table-column prop="meetingEndTime" label="结束时间" width="180" />
-          <el-table-column prop="meetingHost" label="会议主持" />
+          <el-table-column prop="meetingHost" label="会议主持" width="180" />
+          <el-table-column prop="meetingNumber" label="会议号" width="180" />
           <el-table-column label="操作" width="200">
             <template v-slot="scope">
               <div style="display: flex; align-items: center">
@@ -26,7 +27,8 @@
         <el-table :data="endedMeetings" style="width: 100%">
           <el-table-column prop="meetingName" label="会议名称" width="180" />
           <el-table-column prop="meetingStartTime" label="开始时间" width="180" />
-          <el-table-column prop="meetingEndTime" label="结束时间" width="180" />
+          <el-table-column prop="meetingHost" label="会议主持" width="180" />
+          <el-table-column prop="meetingNumber" label="会议号" width="180" />
           <el-table-column prop="meetingHost" label="会议主持" />
           <el-table-column label="操作" width="200">
             <template v-slot="scope">
@@ -45,7 +47,8 @@
           <el-table-column prop="meetingName" label="会议名称" width="180" />
           <el-table-column prop="meetingStartTime" label="开始时间" width="180" />
           <el-table-column prop="meetingEndTime" label="结束时间" width="180" />
-          <el-table-column prop="meetingHost" label="会议主持" />
+          <el-table-column prop="meetingHost" label="会议主持" width="180" />
+          <el-table-column prop="meetingNumber" label="会议号" width="180" />
           <el-table-column label="操作" width="200">
             <template v-slot="scope">
               <div style="display: flex; align-items: center">

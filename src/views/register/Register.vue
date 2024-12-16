@@ -92,7 +92,7 @@ const handleRegister = async () => {
       </el-form>
 
       <p class="text-center login-link">
-        已有账户？<router-link to="/emaillogin">登录</router-link>
+        已有账户？<router-link to="/accountlogin">登录</router-link>
       </p>
     </div>
   </el-card>

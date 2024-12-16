@@ -2,9 +2,12 @@
 import MeetingHeader from '@/components/layouts/MeetingHeader.vue';
 import MeetingSider from '@/components/layouts/MeetingSider.vue';
 import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
-import { ref,onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { exitMeetingService } from '@/api/user';
+import { ElMessage } from 'element-plus';
 
-
+// 使用 ref 创建响应式引用
+// const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
 var is_begin = 0;//是否开始录音
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 var ws = null;//实现WebSocket
@@ -19,41 +22,66 @@ var my_sampleRate = 0;//输出采样率
 // }
 
 onMounted(()=>{
-        beginWS();
+        // beginWS();
+    if (!navigator.getUserMedia) {
+        alert('浏览器不支持音频输入');
+    } else {
+        navigator.getUserMedia(
+        { audio: true },
+        function (mediaStream) {
+            init(new Recorder(mediaStream));
+            // beginWS(); // 开始WebSocket连接
+            // micStatus = localStorage.getItem('micStatus') || false;
+            // console.log(micStatus);
+            // if(micStatus.value){
+                // beginWS();
+            // }
+        },
+        function (error) {
+            console.log(error);
+        }
+        );
+    }
 });  
 
 const beginWS = ()=>{
   console.log('开始对讲');
   if(is_begin === 0){
     // var ws = new WebSocket("ws://127.0.0.1:8079/audio/1");
-    ws = new WebSocket("ws://121.37.24.76:8079//meeting/audio/"+localStorage.getItem('userId'));
-            ws.binaryType = 'arraybuffer'; //传输的是 ArrayBuffer 类型的数据
-            ws.onopen = function(event) {
-                console.log('握手成功');
-    
-            };
-            timeInte=setInterval(function(){
-                console.log('readyState'+ws.readyState);
-                if(ws.readyState===1){//ws进入连接状态，则每隔500毫秒发送一包数据
-                    record.start();
-                        //console.log("#######################send Blob start ##############################");
-                    console.log(record.getBlob());
-                    ws.send(record.getBlob());    //发送音频数据
-                       //console.log("#######################send Blob end ##############################");
-                    record.clear(); //每次发送完成则清理掉旧数据
+        ws = new WebSocket("ws://121.37.24.76:8079//meeting/audio/"+localStorage.getItem('userId'));
+        ws.binaryType = 'arraybuffer'; //传输的是 ArrayBuffer 类型的数据
+        ws.onopen = function(event) {
+            console.log('握手成功');
+
+        };
+        timeInte=setInterval(function(){
+            console.log('readyState'+ws.readyState);
+            if(ws.readyState===1){//ws进入连接状态，则每隔500毫秒发送一包数据
+                record.start();
+                    //console.log("#######################send Blob start ##############################");
+                console.log(record.getBlob());
+                const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
+                if(!micStatus.value){
+                ws.send(record.getBlob());    //发送音频数据
                 }
-            },500);  //每隔500ms发送一次，定时器
-                ///
-            ws.onmessage = function (evt){
-              console.log( "Received Message: " + evt.data);
-              receive(evt.data);
+                    //console.log("#######################send Blob end ##############################");
+                record.clear(); //每次发送完成则清理掉旧数据
             }
-                ///
-            is_begin = 1;   
+        },500);  //每隔500ms发送一次，定时器
+            ///
+        ws.onmessage = function (evt){
+            console.log( "Received Message: " + evt.data);
+            receive(evt.data);
         }
-        else{
-            alert("已开启录音!");
-        }
+            ///
+        is_begin = 1;   
+    }else{
+        // alert("已开启录音!");
+        ElMessage({
+                message: '麦克风已关闭。',
+                type: 'success',
+            })
+    }
 }
 
 const endWS = ()=>{
@@ -65,7 +93,11 @@ const endWS = ()=>{
             is_begin = 0;
         }
         else{
-            alert("已关闭!");
+            // alert("已关闭!");
+            ElMessage({
+                message: '麦克风已关闭。',
+                type: 'success',
+            })
         }
 }    
 
@@ -295,6 +327,11 @@ function init(rec){
             audo.source = audioBufferSouceNode;
             audo.audioContext = audioContext;*/
     }
+
+onBeforeUnmount(() => {
+    endWS(); // 关闭WebSocket连接
+    // exitMeetingService(); // 调用退出会议界面接口
+});
      
 </script>
 
