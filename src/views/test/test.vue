@@ -1,151 +1,9 @@
-<template>
-  <div class="chat-layout">
-    <el-container class="chat-container">
-      <el-aside class="user-list" width="200px">
-        <h3>好友群聊列表</h3>
-        <el-popover placement="right" :width="200" trigger="click" class="circle-plus-btn">
-          <template #reference>
-            <el-button style="margin-right: 16px; position: relative; bottom: 45px; left: 135px; color: #fff; background-color: #409eff;">
-              <el-icon type="plus-circle-o" style="font-size: large;">
-                <CirclePlus />
-              </el-icon>
-            </el-button>
-          </template>
-          <div>
-            <el-button @click="openSearchDialog" type="text">搜索用户</el-button>
-            <br />
-            <el-button @click="addFriend" type="text">加好友</el-button>
-            <br />
-            <el-button @click="createGroup" type="text">创建群聊</el-button>
-            <br />
-            <el-button @click="addGroup" type="text">加入群聊</el-button>
-          </div>
-        </el-popover>
-        <el-menu>
-          <el-menu-item
-            v-for="friend in friends"
-            :key="friend.id"
-            @click="selectFriend(friend)"
-          >
-            <el-avatar :src="friend.avatar" size="large" class="avatar" />
-            {{ friend.name }}
-          </el-menu-item>
-        </el-menu>
-      </el-aside>
-      <el-container>
-        <el-header class="chat-header">
-          <h3>与 {{ selectedFriend.name }} 的聊天</h3>
-        </el-header>
-        <el-main class="chat-main">
-          <div class="message-list">
-            <div
-              v-for="msg in messages"
-              :key="msg.id"
-              :class="['message', msg.sender === 'me' ? 'my-message' : 'friend-message']"
-            >
-              <span>{{ msg.text }}</span>
-            </div>
-          </div>
-          <div class="input-wrapper">
-            <el-input
-              v-model="newMessage"
-              class="input-message"
-              placeholder="输入消息..."
-              @keyup.enter="sendMessage"
-              clearable
-            />
-            <el-button type="primary" @click="sendMessage">发送</el-button>
-          </div>
-        </el-main>
-      </el-container>
-
-      <!-- 搜索好友弹窗 -->
-      <el-dialog title="搜索好友" v-model="searchDialogVisible">
-        <el-input v-model="searchFriendId" placeholder="输入好友 ID" clearable />
-        <el-button type="primary" @click="searchFriend">搜索</el-button>
-
-        <div v-if="searchedFriend">
-          <h4>搜索结果:</h4>
-          <h5>点击头像可以添加好友</h5>
-          <el-avatar :src="searchedFriend.avatar" size="large" class="avatar" @click="openUserProfile" />
-          <span>{{ searchedFriend.name }}</span>
-          
-        </div>
-        
-        <span slot="footer">
-          <el-button @click="searchDialogVisible = false">取消</el-button>
-        </span>
-      </el-dialog>
-
-      <!-- 用户详情弹窗 -->
-      <el-dialog title="用户信息" v-model="userProfileDialogVisible">
-        <el-avatar :src="profileFriend.avatar" size="large" />
-        <h4>用户名：{{ profileFriend.friendName }}</h4>
-        <h4>个性签名：{{ profileFriend.friendSignature }}</h4>
-        <el-input v-model="verificationMessage" placeholder="输入验证消息..." clearable />
-        <span slot="footer">
-          <el-button @click="userProfileDialogVisible = false">关闭</el-button>
-          <el-button type="success" @click="sendAddFriendRequest">添加好友</el-button>
-        </span>
-      </el-dialog>
-
-      <!-- 创建群聊弹窗 -->
-      <el-dialog title="创建群聊" v-model="createGroupDialogVisible">
-        <el-input v-model="groupName" placeholder="输入群聊名称" clearable />
-        <el-upload
-          class="upload-avatar"
-          :action="uploadAvatarUrl"   
-          :on-success="handleAvatarUpload"
-          show-file-list="false"
-        >
-          <el-button size="small" type="primary">上传群聊头像</el-button>
-          <span v-if="groupAvatar">已选择头像</span>
-        </el-upload>
-        <el-switch
-          v-model="needCheck"
-          active-text="需要验证"
-          inactive-text="不需要验证"
-          active-value="1"
-          inactive-value="0"
-        />
-        <span>加群是否需要验证</span>
-
-        <span slot="footer">
-          <el-button @click="createGroup">创建</el-button>
-          <el-button @click="createGroupDialogVisible = false">取消</el-button>
-        </span>
-      </el-dialog>
-      <el-main class="dialog-footer">
-        <router-view />
-      </el-main>
-    </el-container>
-    <!-- 添加申请消息界面 -->
-    <el-container class="request-container">
-      <el-header class="request-header">
-        <h3>好友和群聊申请</h3>
-      </el-header>
-      <el-main class="request-main">
-        <div class="request-list">
-          <div
-            v-for="request in requests"
-            :key="request.id"
-            class="request-item"
-          >
-            <span>{{ request.type === 'friend' ? '好友申请' : '群聊申请' }}：{{ request.from }}</span>
-            <el-button type="success" @click="acceptRequest(request)">接受</el-button>
-            <el-button type="danger" @click="rejectRequest(request)">拒绝</el-button>
-          </div>
-        </div>
-      </el-main>
-    </el-container>
-  </div>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import router from '@/router';
-import { searchFriends, applyAddFriend } from '@/api/user';
+import { searchFriends, applyAddFriend, searchGroup } from '@/api/user';
 
+// 好友列表数据（示例数据，可替换为真实数据获取）
 const friends = ref([
   { id: 1, name: 'Alice', avatar: 'path/to/alice.jpg', signature: 'A lovely friend' },
   { id: 2, name: 'Bob', avatar: 'path/to/bob.jpg', signature: 'Charming personality' },
@@ -154,217 +12,240 @@ const friends = ref([
 ]);
 
 const selectedFriend = ref(friends.value[0]);
-const messages = ref([]);
-const newMessage = ref('');
-const searchDialogVisible = ref(false);
-const searchFriendId = ref(null);
-const searchedFriend = ref(null);
-const createGroupDialogVisible = ref(false);
-const groupName = ref('');
-const groupAvatar = ref(null);
-const needCheck = ref(0);
-const uploadAvatarUrl = 'http://localhost:3000/upload';
+const searchFriendId = ref('');
+const searchedFriend = ref(friends.value); // 初始显示所有好友信息
+const userProfileDetailsVisible = ref(false); // 控制用户详情的显示
+const foruserProfileDetailsVisible = ref(false); // 控制搜索中空白页的显示
+const verificationMessage = ref(''); // 验证消息
+const addFriendDialogVisible = ref(false); // 控制添加好友弹窗的显示
+const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊，false 默认为搜索用户
 
-const userProfileDialogVisible = ref(false);
-const profileFriend = ref({});
-const verificationMessage = ref('');
-const requests = ref([
-  { id: 1, type: 'friend', from: 'Tom', message: '你好，我想加你为好友' },
-  { id: 2, type: 'group', from: 'Jane', message: '你好，我想加入你的群聊' },
-]);
+const messageList = ref([]); // 聊天记录
+const newMessage = ref(''); // 新消息内容
 
-const acceptRequest = (request) => {
-  console.log('接受好友或群聊申请', request);
-  // 接受好友或群聊申请
-  // 刷新请求列表
-  // 刷新聊天列表
-};
-
-const rejectRequest = (request) => {
-  console.log('拒绝好友或群聊申请', request);
-  // 拒绝好友或群聊申请
-  // 刷新请求列表
-  // 刷新聊天列表
-};
-
-const openUserProfile = () => {
-  profileFriend.value = searchedFriend.value; // 将搜索到的好友信息赋值给 profileFriend
-  userProfileDialogVisible.value = true;
-};
-
-const handleAvatarUpload = (file) => {
-  console.log('上传头像成功', file);
-  groupAvatar.value = file.response.data.url;
-};
-
-const createGroup = () => {
-  createGroupDialogVisible.value = true;
-  console.log('创建群聊成功', groupName.value, groupAvatar.value, needCheck.value);
-};
-
-const selectFriend = async (friend) => {
+const selectFriend = (friend) => {
   selectedFriend.value = friend;
-  router.push({ name: 'chat', params: { friendId: friend.id } });
-};
-
-const openSearchDialog = () => {
-  searchDialogVisible.value = true;
-  searchFriendId.value = ''; // 清空输入框
-  searchedFriend.value = null; // 清空搜索结果
+  foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
 };
 
 const searchFriend = async () => {
+  if (!searchFriendId.value.trim()) {
+    searchedFriend.value = friends.value;
+    selectedFriend.value = friends.value[0];
+    userProfileDetailsVisible.value = false; // 隐藏用户详情
+    ifFriendOrGroup.value = true; // 判断是否是群聊
+    return;
+  }
+  const inputValue = searchFriendId.value.trim();
+  foruserProfileDetailsVisible.value = true; // 隐藏用户详情
   try {
-    const response = await searchFriends({
-      friendId: parseInt(searchFriendId.value)
-    });
-
-    if (response && response.data) {
-      console.log('查找好友成功', response.data);
-      
-      // 假设返回的数据结构中包含好友头像和个性签名
-      searchedFriend.value = {
-        ...response.data,
-        avatar: response.data.friendAvatar.startsWith('data:image/') ? response.data.friendAvatar : `data:image/jpeg;base64,${response.data.friendAvatar}`,
-        signature: response.data.signature // 确保后端返回的个性签名字段存在
-      };
+    if (inputValue.length === 9) {
+      // 搜索用户逻辑
+      const response = await searchFriends({ friendId: parseInt(inputValue) });
+      if (response && response.data) {
+        ifFriendOrGroup.value = true; // 判断是否是好友
+        searchedFriend.value = [{
+          ...response.data,
+          avatar: response.data.friendAvatar.startsWith('data:image/') ? response.data.friendAvatar : `data:image/jpeg;base64,${response.data.friendAvatar}`,
+          signature: response.data.friendSignature,
+          name: response.data.friendName
+        }]; // 更新搜索结果为单个好友
+        userProfileDetailsVisible.value = true; // 显示用户详情
+      } else {
+        searchedFriend.value = [];
+      }
+    } else if (inputValue.length === 7) {
+      // 搜索群聊逻辑
+      const response = await searchGroup({ groupId: parseInt(inputValue) });
+      if (response && response.data) {
+        ifFriendOrGroup.value = false; // 判断是否是群聊
+        searchedFriend.value = [{
+          avatar: response.data.groupAvatar.startsWith('data:image/') ? response.data.groupAvatar : `data:image/jpeg;base64,${response.data.groupAvatar}`,
+          groupName: response.data.groupName,
+          ownerName: response.data.creatorName,
+          groupId: response.data.groupId,
+        }];
+      } else {
+        searchedFriend.value = [];
+      }
     } else {
-      console.error('查找好友失败，返回数据格式不正确');
+      searchedFriend.value = [];
     }
   } catch (error) {
-    console.error('查找好友失败:', error);
-    console.log("searchFriendId: ", searchFriendId.value);
+    searchedFriend.value = [];
   }
 };
-
-const sendAddFriendRequest = async () => {
-  try {
-    const response = await applyAddFriend({
-      friendId: parseInt(profileFriend.value.friendId),
-      checkWords: verificationMessage.value
-    });
-
-    if (response) {
-      console.log('发送添加好友请求成功', response.data);
-      // 发送成功后，关闭用户详情弹窗
-      userProfileDialogVisible.value = false;
-    } else {
-      console.error('发送添加好友请求失败，返回数据格式不正确');
-    }
-  } catch (error) {
-    console.error('发送添加好友请求失败:', error);
-  }
-};
-
-
 
 const sendMessage = () => {
   if (newMessage.value.trim()) {
-    messages.value.push({ id: messages.value.length + 1, text: newMessage.value, sender: 'me' });
-    newMessage.value = '';
+    messageList.value.push({
+      id: messageList.value.length + 1,
+      sender: 'me',
+      text: newMessage.value,
+    });
+    newMessage.value = ''; // 清空输入框
   }
 };
-
-const addFriend = () => {
-  // 添加好友逻辑
-};
-
-const addGroup = () => {
-  // 创建群聊逻辑
-};
-
-onMounted(() => {
-  // 执行请求好友列表逻辑等
-});
 </script>
 
-<style>.chat-layout {
-  height: 80vh;
+<template>
+  <div class="chat-layout">
+    <el-container class="chat-container">
+      <el-aside class="user-list" width="300px">
+        <div>
+          <el-input
+            v-model="searchFriendId"
+            class="search-input"
+            placeholder="搜索好友/群聊"
+            @input="searchFriend"
+          />
+        </div>
+
+        <div class="friend-list">
+          <h3>好友/群聊列表</h3>
+          <el-menu v-if="searchedFriend.length > 0">
+            <el-menu-item
+              v-for="item in searchedFriend"
+              :key="item.id"
+              @click="selectFriend(item)"
+            >
+              <el-avatar :src="item.avatar" size="large" class="avatar" />
+              <span v-if="item.name">{{ item.name }}</span>
+              <span v-else-if="item.groupName">{{ item.groupName }}</span>
+              <span v-else>{{ '未知名称' }}</span>
+            </el-menu-item>
+          </el-menu>
+          <div v-else>
+            <p>没有找到匹配的好友/群聊</p>
+          </div>
+        </div>
+      </el-aside>
+
+      <el-container>
+        <el-main class="chat-main">
+          <div v-if="userProfileDetailsVisible && !foruserProfileDetailsVisible && ifFriendOrGroup" class="user-details">
+            <h5 style="margin-bottom: 10px;font-size: large;">用户信息：</h5>
+            <el-avatar :src="selectedFriend.avatar" size="large" />
+            <h4>用户名：{{ selectedFriend.name }}</h4>
+            <p>ID: {{ selectedFriend.id }}</p>
+            <p>个性签名: {{ selectedFriend.signature }}</p>
+            <el-button type="primary" @click="addFriendDialogVisible = true">添加好友</el-button>
+          </div>
+          <div v-else-if="foruserProfileDetailsVisible">
+            <el-empty description="点击搜索好友的头像显示详情" />
+          </div>
+          <div v-else-if="!ifFriendOrGroup" class="user-details">
+            <h5 style="margin-bottom: 10px;font-size: large;">群聊信息：</h5>
+            <el-avatar :src="selectedFriend.avatar" size="large" />
+            <h4>群聊名：{{ selectedFriend.groupName }}</h4>
+            <p>群号: {{ selectedFriend.groupId }}</p>
+            <p>群聊创建者: {{ selectedFriend.ownerName }}</p>
+            <el-button type="primary" @click="addGroup">申请入群</el-button>
+          </div>
+          <div v-else class="chat-header">
+            <el-header class="chat-header">
+              <h3>与 {{ selectedFriend.name }} 的聊天</h3>
+            </el-header>
+            <el-main>
+              <div class="message-list">
+                <div
+                  v-for="msg in messageList"
+                  :key="msg.id"
+                  :class="['message', msg.sender === 'me' ? 'my-message' : 'friend-message']"
+                >
+                  <span>{{ msg.text }}</span>
+                </div>
+              </div>
+              <div class="input-wrapper">
+                <el-input
+                  v-model="newMessage"
+                  class="input-message"
+                  placeholder="输入消息..."
+                  @keyup.enter="sendMessage"
+                  clearable
+                />
+                <el-button type="primary" @click="sendMessage">发送</el-button>
+              </div>
+            </el-main>
+          </div>
+        </el-main>
+      </el-container>
+    </el-container>
+    <!-- 添加好友请求对话框 -->
+    <el-dialog class="add-friend-dialog" title="添加好友" v-model="addFriendDialogVisible">
+      <el-input
+        v-model="verificationMessage"
+        placeholder="输入验证消息..."
+        clearable
+      />
+      <span slot="footer">
+        <el-button @click="addFriendDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="sendAddFriendRequest">发送请求</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<style>
+.chat-layout {
   display: flex;
-  align-items: stretch;
+  flex-direction: row;
+  height: 100vh;
 }
 
 .chat-container {
-  width: 100%;
-  background-color: #f2f2f2;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
 }
 
 .user-list {
-  background-color: #ffffff;
-  border-right: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+  border-right: 1px solid #ccc;
+  height: 100%;
 }
 
-.group-list {
-  background-color: #ffffff;
-  border-left: 1px solid #e0e0e0; /* 添加左边框以区分 */
-}
-
-.add-friend-btn,
-.add-group-btn {
-  position: relative;
-  bottom: 265px;
-  left: 90px;
-}
-
-.chat-header {
-  background-color: #ffffff;
-  text-align: center;
-  padding: 10px;
-}
-
-.chat-main {
-  padding: 10px;
-  background-color: #ffffff;
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+.search-input {
+  width: 60%;
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  margin-top: 10px;
+  margin-left: 15px;
+  font-size: large;
 }
 
 .message-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.message {
-  padding: 10px;
-  border-radius: 5px;
-  max-width: 60%;
+  height: 303px;
+  overflow-y: scroll;
 }
 
 .my-message {
-  background-color: #e0f7fa;
-  align-self: flex-end;
+  background-color: #d1e7dd; /* 自己的消息 */
+  padding: 10px;
+  border-radius: 10px;
+  text-align: right;
 }
 
 .friend-message {
-  background-color: #ffe0b2;
-  align-self: flex-start;
+  background-color: #fff; /* 朋友的消息 */
+  padding: 10px;
+  border-radius: 10px;
+  text-align: left;
 }
 
 .input-wrapper {
   display: flex;
-  align-items: center;
   margin-top: 10px;
-  padding: 10px;
-  margin-bottom: 100px;
 }
 
 .input-message {
-  margin-right: 10px;
-  flex-grow: 1; /* 自适应宽度 */
+  flex: 1;
+  padding: 10px;
 }
 
-.avatar {
-  margin-right: 10px; /* 头像与名称间距 */
-  border-radius: 50%;
-  margin-bottom: 10px;
-}
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
+.add-friend-dialog {
+  width: 300px;
+  margin-top: 100px;
 }
 </style>

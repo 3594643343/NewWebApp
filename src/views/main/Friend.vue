@@ -45,7 +45,7 @@
             <div>
               <span class="message-from">发送人：{{ item.from + ':' }}</span>
               <br>
-              <span class="message-content">验证消息：{{ item.content }}</span>
+              <span class="message-content">验证消息：{{ item.message }}</span>
               <br>
               <span class="message-time">时间：{{ item.time }}</span>
             </div>
@@ -89,7 +89,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import router from '@/router';
-import { createMyGroup,getMyApplyList,getAllFriends } from '@/api/user';
+import { createMyGroup,getMyApplyList,getAllFriends,handleAddFriend } from '@/api/user';
 
 // 友信息示例
 const friends = ref([
@@ -99,17 +99,9 @@ const friends = ref([
   { id: 4, name: 'David', avatar: 'path/to/david.jpg', signature: 'Tech enthusiast' },
 ]);
 
-const message = ref([{
-  id: 1,
-  content: '你好，我是Alice，很高兴认识你！',
-  from: 'Bob',
-  time: '2021-10-10 10:00:00'
-}, {
-  id: 2,
-  content: '你好，我是Bob，很高兴认识你！',
-  from: 'Alice',
-  time: '2021-10-10 10:00:00'
-}]);
+const message = ref([]);
+
+const mygetmessage = ref([]);
 
 
 
@@ -125,6 +117,7 @@ const loadmyApplyList = async () => {
     const res = await getMyApplyList();
     console.log("res",res);
     message.value = res.data;
+    console.log("message",message.value);
   } catch (error) {
     console.error(error);
   }

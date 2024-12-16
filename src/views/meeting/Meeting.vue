@@ -58,9 +58,9 @@ onMounted(()=>{
             // beginWS(); // 开始WebSocket连接
             // micStatus = localStorage.getItem('micStatus') || false;
             // console.log(micStatus);
-            // if(micStatus.value){
+           // if(micStatus.value){
                 beginWS();
-            // }
+            //}
         },
         function (error) {
             console.log(error);

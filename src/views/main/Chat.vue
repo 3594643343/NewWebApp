@@ -11,6 +11,7 @@ const friends = ref([
   { id: 4, name: 'David', avatar: 'path/to/david.jpg', signature: 'Tech enthusiast' },
 ]);
 
+
 const selectedFriend = ref(friends.value[0]);
 const searchFriendId = ref('');
 const searchedFriend = ref(friends.value); // 初始显示所有好友信息
@@ -18,12 +19,19 @@ const userProfileDetailsVisible = ref(false); // 控制用户详情的显示
 const foruserProfileDetailsVisible = ref(false); // 控制搜索中空白页的显示
 const verificationMessage = ref(''); // 验证消息
 const addFriendDialogVisible = ref(false); // 控制添加好友弹窗的显示
-const ifFriendOrGroup = ref(false); // 判断是否是好友或群聊,false默认为搜索用户
+const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认为搜索用户
+
+// onMounted(() => {
+//   initWschat();
+// });
+
+const messageList = ref([]); // 聊天记录
+const newMessage = ref(''); // 新消息内容
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
-  console.log('2:', userProfileDetailsVisible.value, foruserProfileDetailsVisible.value);
+  console.log('2:', userProfileDetailsVisible.value, foruserProfileDetailsVisible.value,ifFriendOrGroup.value);
 };
 
 
@@ -34,6 +42,7 @@ const searchFriend = async () => {
     searchedFriend.value = friends.value;
     selectedFriend.value = friends.value[0];
     userProfileDetailsVisible.value = false; // 隐藏用户详情
+    ifFriendOrGroup.value = true; // 判断是否是群聊
     return;
   }
   const inputValue = searchFriendId.value.trim();
@@ -75,7 +84,7 @@ const searchFriend = async () => {
           ownerName: response.data.creatorName,
           groupId: response.data.groupId,
         }];
-        userProfileDetailsVisible.value = true; // 显示群聊详情
+        // userProfileDetailsVisible.value = true; // 显示群聊详情
       } else {
         console.error('查找群聊失败，返回数据格式不正确');
         console.log(response);
@@ -134,6 +143,17 @@ const sendAddFriendRequest = async () => {
     console.error('发送添加好友请求失败:', error);
   }
 };
+
+const sendMessage = () => {
+  if (newMessage.value.trim()) {
+    messageList.value.push({
+      id: messageList.value.length + 1,
+      sender: 'me',
+      text: newMessage.value,
+    });
+    newMessage.value = ''; // 清空输入框
+  }
+};
 </script>
 <template>
   <div class="chat-layout">
@@ -182,13 +202,39 @@ const sendAddFriendRequest = async () => {
           <div v-else-if="foruserProfileDetailsVisible">
             <el-empty description="点击搜索好友的头像显示详情" />
           </div>
-          <div v-else class="user-details">
+          <div v-else-if="!ifFriendOrGroup" class="user-details">
             <h5 style="margin-bottom: 10px;font-size: large;align-items: center;">群聊信息：</h5>
             <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
             <h4>群聊名：{{ selectedFriend.groupName }}</h4>
             <p>群号: {{ selectedFriend.groupId }}</p>
             <p>群聊创建者: {{ selectedFriend.ownerName }}</p>
             <el-button type="primary" @click="addGroup">申请入群</el-button>
+          </div>
+          <div v-else class="chat-header">
+            <el-header class="chat-header">
+              <h3>与 {{ selectedFriend.name }} 的聊天</h3>
+            </el-header>
+            <el-main>
+              <div class="message-list">
+                <div
+                  v-for="msg in messageList"
+                  :key="msg.id"
+                  :class="['message', msg.sender === 'me' ? 'my-message' : 'friend-message']"
+                >
+                  <span>{{ msg.text }}</span>
+                </div>
+              </div>
+              <div class="input-wrapper">
+                <el-input
+                  v-model="newMessage"
+                  class="input-message"
+                  placeholder="输入消息..."
+                  @keyup.enter="sendMessage"
+                  clearable
+                />
+                <el-button type="primary" @click="sendMessage">发送</el-button>
+              </div>
+            </el-main>
           </div>
         </el-main>
       </el-container>
