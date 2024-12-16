@@ -20,6 +20,10 @@ const verificationMessage = ref(''); // 验证消息
 const addFriendDialogVisible = ref(false); // 控制添加好友弹窗的显示
 const ifFriendOrGroup = ref(false); // 判断是否是好友或群聊,false默认为搜索用户
 
+// onMounted(() => {
+//   initWschat();
+// });
+
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
@@ -34,6 +38,7 @@ const searchFriend = async () => {
     searchedFriend.value = friends.value;
     selectedFriend.value = friends.value[0];
     userProfileDetailsVisible.value = false; // 隐藏用户详情
+    ifFriendOrGroup.value = true; // 判断是否是群聊
     return;
   }
   const inputValue = searchFriendId.value.trim();
@@ -75,7 +80,7 @@ const searchFriend = async () => {
           ownerName: response.data.creatorName,
           groupId: response.data.groupId,
         }];
-        userProfileDetailsVisible.value = true; // 显示群聊详情
+        // userProfileDetailsVisible.value = true; // 显示群聊详情
       } else {
         console.error('查找群聊失败，返回数据格式不正确');
         console.log(response);

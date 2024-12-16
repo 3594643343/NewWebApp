@@ -116,8 +116,8 @@ const message = ref([{
 const currentPage = ref(''); // 当前显示的页面
 onMounted(() => {
   currentPage.value = 'friends';
-  loadFriends();
-  // loadmyApplyList();
+  // loadFriends();
+  loadmyApplyList();
 });
 
 const loadmyApplyList = async () => {
