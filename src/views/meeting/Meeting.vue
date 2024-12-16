@@ -33,9 +33,9 @@ onMounted(()=>{
             // beginWS(); // 开始WebSocket连接
             // micStatus = localStorage.getItem('micStatus') || false;
             // console.log(micStatus);
-            // if(micStatus.value){
-                // beginWS();
-            // }
+           // if(micStatus.value){
+                beginWS();
+            //}
         },
         function (error) {
             console.log(error);
@@ -59,7 +59,7 @@ const beginWS = ()=>{
             if(ws.readyState===1){//ws进入连接状态，则每隔500毫秒发送一包数据
                 record.start();
                     //console.log("#######################send Blob start ##############################");
-                console.log(record.getBlob());
+                //console.log(record.getBlob());
                 const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
                 if(!micStatus.value){
                 ws.send(record.getBlob());    //发送音频数据
