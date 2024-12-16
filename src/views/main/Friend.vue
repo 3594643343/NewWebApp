@@ -6,7 +6,7 @@
         <el-popover placement="bottom" :width="150" trigger="click" class="circle-plus-btn">
           <template #reference>
             <el-button 
-              style="margin-right: 16px; position: relative; bottom: 45px; left: 135px; color: #fff; background-color: #409eff;"
+              style="margin-right: 12px; position: relative; bottom: 45px; left: 190px; color: #fff; background-color: #409eff;"
             >
               <el-icon class="el-icon-plus">
                 <CirclePlus />
@@ -87,9 +87,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import router from '@/router';
-import { createMyGroup } from '@/api/user';
+import { createMyGroup,getMyApplyList,getAllFriends } from '@/api/user';
 
 // 友信息示例
 const friends = ref([
@@ -114,6 +114,45 @@ const message = ref([{
 
 
 const currentPage = ref(''); // 当前显示的页面
+onMounted(() => {
+  currentPage.value = 'friends';
+  loadFriends();
+  // loadmyApplyList();
+});
+
+const loadmyApplyList = async () => {
+  try {
+    const res = await getMyApplyList();
+    console.log(res);
+    message.value = res.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const pendingRequest = ref(false); // 是否有待处理的请求
+
+// 加载好友列表
+const loadFriends = async () => {
+  try {
+    const res = await getAllFriends();
+    console.log(res);
+    friends.value = res.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// // 删除好友
+// const deleteFriend = async (id) => {
+//   try {
+//     await deleteMyFriend(id);
+//     console.log('删除好友成功');
+//     loadFriends();
+//   } catch (error) {
+//     console.error('删除好友失败:', error);
+//   }
+// };
 
 // 创建群聊表单数据
 const groupForm = ref({
@@ -242,6 +281,8 @@ const rejectRequest = () => {
 .circle-plus-btn {
   position: relative;
   top: 10px;
+  margin-right: 10px;
+
 }
 
 .circle-plus-btn-actions {

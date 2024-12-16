@@ -175,6 +175,10 @@ export const searchFriends = ({ friendId }) => {
 export const applyAddFriend = ({friendId,checkWords}) => 
     request.post('/friend/add', {friendId,checkWords})
 
+//获取一个人所有的验证消息
+export const getMyApplyList = () => 
+    request.get('/friend/checkmessage')
+
 //处理添加好友验证
 export const handleAddFriend = ({recordId,friendId,check}) => 
     request.post('/friend/deal', {recordId,friendId,check})
@@ -199,7 +203,7 @@ export const getChatRecord = ({friendId}) =>
 //搜索群来聊天
 export const searchGroup = ({ groupId }) => {
     // 将 groupId 转换为整数
-    const intGroupId = parseInt(groupId, 7);
+    const intGroupId = parseInt(groupId, 10);
 
     if (isNaN(intGroupId)) {
         throw new Error('groupId 必须是一个有效的整数');
