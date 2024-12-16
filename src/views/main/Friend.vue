@@ -45,7 +45,7 @@
             <div>
               <span class="message-from">发送人：{{ item.from + ':' }}</span>
               <br>
-              <span class="message-content">验证消息：{{ item.content }}</span>
+              <span class="message-content">验证消息：{{ item.message }}</span>
               <br>
               <span class="message-time">时间：{{ item.time }}</span>
             </div>
