@@ -1,248 +1,268 @@
 <template>
-  <div class="chat-layout">
-    <el-container class="chat-container">
-      <el-aside class="user-list" width="200px">
-        <h3>好友列表</h3>
-        <el-menu>
-          <el-menu-item
-            v-for="friend in friends"
-            :key="friend.id"
-            @click="selectFriend(friend)"
-          >
-            <el-avatar :src="friend.avatar" size="large" class="avatar" />
-            {{ friend.name }}
-          </el-menu-item>
-        </el-menu>
-        <el-button type="primary" @click="addFriend" class="add-friend-btn">添加好友</el-button>
-        <!-- 添加好友弹窗 -->
-        <el-dialog title="申请添加好友" v-model="addFriendDialog" width="30%">
-          <el-form :model="newFriend">
-            <el-form-item label="好友 ID" required>
-              <el-input v-model="newFriend.id"></el-input>
-            </el-form-item>
-            <el-form-item label="验证消息" required>
-              <el-input v-model="newFriend.message"></el-input>
-            </el-form-item>
-          </el-form>
-          <span slot="footer" class="dialog-footer">
-            <el-button @click="addFriendDialog = false">取消</el-button>
-            <el-button type="primary" @click="addFriend">发送申请</el-button>
-          </span>
-        </el-dialog>
-      </el-aside>
-
-      <!-- 新增的群聊列表 -->
-      <el-aside class="group-list" width="250px">
-        <h3>群聊列表</h3>
-        <el-menu>
-          <el-menu-item
-            v-for="group in groups"
-            :key="group.id"
-            @click="selectGroup(group)"
-          >
-            <el-avatar :src="group.avatar" size="large" class="avatar" />
-            {{ group.name }}
-          </el-menu-item>
-        </el-menu>
-        <el-button type="primary" @click="addGroup" class="add-group-btn">创建群聊</el-button>
-      </el-aside>
-
-      <el-container>
-        <el-header class="chat-header">
-          <h3>与 {{ selectedFriend.name }} 的聊天</h3>
-        </el-header>
-        <el-main class="chat-main">
-          <div class="message-list">
-            <div
-              v-for="msg in messages"
-              :key="msg.id"
-              :class="['message', msg.sender === 'me' ? 'my-message' : 'friend-message']"
+  <el-container class="friend-container">
+    <el-aside width="25%">
+      <el-header>
+        <h3>管理我的好友和群聊</h3>
+        <el-popover placement="bottom" :width="150" trigger="click" class="circle-plus-btn">
+          <template #reference>
+            <el-button 
+              style="margin-right: 16px; position: relative; bottom: 45px; left: 135px; color: #fff; background-color: #409eff;"
             >
-              <span>{{ msg.text }}</span>
+              <el-icon class="el-icon-plus">
+                <CirclePlus />
+              </el-icon>
+            </el-button>
+          </template>
+          <div class="circle-plus-btn-actions">
+            <el-button @click="showMessages" type="primary" class="action-button">我的消息</el-button>
+            <el-button @click="showCreateGroup" type="primary" class="action-button">创建群聊</el-button>
+          </div>
+        </el-popover>
+      </el-header>
+      <el-scrollbar style="height: 400px;">
+        <el-list>
+          <el-list-item 
+            v-for="friend in friends" 
+            :key="friend.id" 
+            class="friend-item"
+          >
+            <el-avatar :src="friend.avatar" class="friend-avatar" size="large" />
+            <span class="friend-name">{{ friend.name }}</span>
+            <div class="friend-actions">
+              <el-button type="primary" @click="goToChat">聊天</el-button>
+              <el-button type="primary" @click="deleteFriend(friend.id)">删除好友</el-button>
             </div>
-          </div>
-          <div class="input-wrapper">
-            <el-input
-              v-model="newMessage"
-              class="input-message"
-              placeholder="输入消息..."
-              @keyup.enter="sendMessage"
-              clearable
-            />
-            <el-button type="primary" @click="sendMessage">发送</el-button>
-          </div>
-        </el-main>
-      </el-container>
-    </el-container>
-  </div>
+          </el-list-item>
+        </el-list>
+      </el-scrollbar>
+    </el-aside>
+
+    <el-main width="70%">
+      <div v-if="currentPage === 'messages'" class="message-box">
+        <h1 style="font-size: large;">我的消息</h1>
+        <el-list>
+          <el-card v-for="item in message" :key="item.id" style="margin-bottom: 10px;">
+            <div>
+              <span class="message-from">发送人：{{ item.from + ':' }}</span>
+              <br>
+              <span class="message-content">验证消息：{{ item.content }}</span>
+              <br>
+              <span class="message-time">时间：{{ item.time }}</span>
+            </div>
+        <el-button @click="acceptRequest" type="primary">同意</el-button>
+        <el-button @click="rejectRequest" type="primary">拒绝</el-button>
+          </el-card>
+        </el-list>
+      </div>
+      <div v-if="currentPage === 'createGroup'" class="create-group-box">
+        <h1 style="font-size: large;">创建群聊</h1>
+        <el-form :model="groupForm" label-width="150px" class="create-group-form">
+          <el-form-item label="群名称：" style="margin-bottom: 10px; margin-left: 0%;">
+            <el-input style="width: 20%;" v-model="groupForm.groupName" placeholder="请输入群名称" />
+          </el-form-item>
+          <el-form-item label="上传群聊头像：" style="margin-bottom: 10px;">
+            <el-upload
+              class="avatar-uploader"
+              action=""
+              :show-file-list="false"
+              @change="handleAvatarChange"
+            >
+              <el-button size="small" type="primary">选择头像</el-button>
+              <!-- <img v-if="groupForm.avatar" :src="groupForm.avatar" class="avatar-preview" /> -->
+            </el-upload>
+          </el-form-item>
+          <el-form-item label="入群是否需要验证：" style="margin-bottom: 10px;">
+            <el-radio-group v-model="groupForm.requireVerification">
+              <el-radio label="是">是</el-radio>
+              <el-radio label="否">否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="createGroup">确认创建</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-main>
+  </el-container>
 </template>
 
 <script setup>
-import { ref , onMounted } from 'vue';
-import { getUserFriends} from '../../api/user';
+import { ref } from 'vue';
+import router from '@/router';
+import { createMyGroup } from '@/api/user';
 
+// 友信息示例
 const friends = ref([
-  { id: 1, name: 'Alice', avatar: 'path/to/alice.jpg' },
-  { id: 2, name: 'Bob', avatar: 'path/to/bob.jpg' },
-  { id: 3, name: 'Charlie', avatar: 'path/to/charlie.jpg' },
-  { id: 4, name: 'David', avatar: 'path/to/david.jpg' },
+  { id: 1, name: 'Alice', avatar: 'path/to/alice.jpg', signature: 'A lovely friend' },
+  { id: 2, name: 'Bob', avatar: 'path/to/bob.jpg', signature: 'Charming personality' },
+  { id: 3, name: 'Charlie', avatar: 'path/to/charlie.jpg', signature: 'Always smiling' },
+  { id: 4, name: 'David', avatar: 'path/to/david.jpg', signature: 'Tech enthusiast' },
 ]);
 
-const groups = ref([
-  { id: 1, name: '工作群', avatar: 'path/to/group1.jpg' },
-  { id: 2, name: '家庭群', avatar: 'path/to/group2.jpg' },
-  { id: 3, name: '朋友群', avatar: 'path/to/group3.jpg' },
-  { id: 4, name: '同学群', avatar: 'path/to/group4.jpg' },
-]);
-
-const selectedFriend = ref(friends.value[0]);
-console.log("selectedFriend.value", selectedFriend.value);
-const messages = ref([]);
-const newMessage = ref('');
-const addFriendDialog = ref(false);
-const newFriend = ref({ id: '', message: '' });
-
-// const getFriends = async () => {
-//   const result = await getUserFriends();
-//   friends.value = result.data;
-//   console.log("friends.value", friends.value);
-// };
+const message = ref([{
+  id: 1,
+  content: '你好，我是Alice，很高兴认识你！',
+  from: 'Bob',
+  time: '2021-10-10 10:00:00'
+}, {
+  id: 2,
+  content: '你好，我是Bob，很高兴认识你！',
+  from: 'Alice',
+  time: '2021-10-10 10:00:00'
+}]);
 
 
-// 选择好友
-const selectFriend = (friend) => {
-  selectedFriend.value = friend;
-  messages.value = [];
-};
 
-// 选择群聊
-const selectGroup = (group) => {
-  selectedFriend.value = group;
-  messages.value = [];
-};
+const currentPage = ref(''); // 当前显示的页面
 
-// 发送消息
-const sendMessage = () => {
-  if (newMessage.value.trim()) {
-    messages.value.push({ id: messages.value.length + 1, text: newMessage.value, sender: 'me' });
-    newMessage.value = '';
-  }
-};
-
-// 添加好友
-const addFriend = () => {
-  addFriendDialog.value = true;
-};
-
-// 创建群聊
-const addGroup = () => {
-  const groupName = prompt('请输入群聊的名字:');
-  const avatarPath = prompt('请输入群聊的头像路径:');
-  if (groupName && avatarPath) {
-    const newGroup = {
-      id: groups.value.length + 1,
-      name: groupName,
-      avatar: avatarPath,
-    };
-    groups.value.push(newGroup);
-    alert('群聊创建成功！');
-  } else {
-    alert('请填写群聊的名字和头像路径！');
-  }
-};
-onMounted(() => {
-  // getFriends();
+// 创建群聊表单数据
+const groupForm = ref({
+  groupName: '',
+  avatar: null,
+  requireVerification: '否'
 });
+
+// 显示我的消息
+const showMessages = () => {
+  currentPage.value = 'messages';
+};
+
+const goToChat = () => {
+  router.push('/main/chat');
+};
+// 显示创建群聊
+const showCreateGroup = () => {
+  currentPage.value = 'createGroup';
+};
+
+// 处理头像上传变化
+const handleAvatarChange = (file) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file.raw);
+  reader.onload = () => {
+    groupForm.value.avatar = file.raw; // 保持为 File 对象以便上传
+  };
+};
+
+// 创建群聊的确认操作
+const createGroup = async () => {
+  const formData = new FormData();
+  formData.append('groupName', groupForm.value.groupName);
+  formData.append('needCheck', groupForm.value.requireVerification === '是' ? 1 : 0); // 内容应为整数
+  const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg'; // 限制选择的文件类型为jpg图片
+    input.onchange = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            formData.append('avatar', file);
+            try {
+                await createMyGroup(formData); // 确保调用时为 FormData
+                 console.log('创建群聊成功');
+                router.push('/main/group'); // 跳转到群聊页面
+                } catch (error) {
+                  console.error('创建群聊失败:', error);
+                }
+             }
+    };
+}
+
+// 处理请求
+const acceptRequest = () => {
+  pendingRequest.value = false;
+};
+
+const rejectRequest = () => {
+  pendingRequest.value = false;
+};
+
 </script>
 
-<style>
-.chat-layout {
-  height: 80vh;
+<style scoped>
+.friend-container {
   display: flex;
-  align-items: stretch;
 }
 
-.chat-container {
-  width: 100%;
-  background-color: #f2f2f2;
-}
-
-.user-list {
-  background-color: #ffffff;
-  border-right: 1px solid #e0e0e0;
-}
-
-.group-list {
-  background-color: #ffffff;
-  border-left: 1px solid #e0e0e0; /* 添加左边框以区分 */
-}
-
-.add-friend-btn,
-.add-group-btn {
-  position: relative;
-  bottom: 265px;
-  left: 90px;
-}
-
-.chat-header {
-  background-color: #ffffff;
-  text-align: center;
-  padding: 10px;
-}
-
-.chat-main {
-  padding: 10px;
-  background-color: #ffffff;
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.message-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.message {
-  padding: 10px;
-  border-radius: 5px;
-  max-width: 60%;
-}
-
-.my-message {
-  background-color: #e0f7fa;
-  align-self: flex-end;
-}
-
-.friend-message {
-  background-color: #ffe0b2;
-  align-self: flex-start;
-}
-
-.input-wrapper {
+.friend-item {
   display: flex;
   align-items: center;
-  margin-top: 10px;
-  padding: 10px;
-  margin-bottom: 100px;
+  margin: 10px 0;
 }
 
-.input-message {
-  margin-right: 10px;
-  flex-grow: 1; /* 自适应宽度 */
-}
-
-.avatar {
-  margin-right: 10px; /* 头像与名称间距 */
+.friend-avatar {
   border-radius: 50%;
-  margin-bottom: 10px;
+  width: 60px;
+  height: 60px;
+  margin-right: 10px;
 }
-.dialog-footer {
+
+.friend-name {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.friend-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.friend-actions button {
+  width: 60px;
+}
+
+.message-box {
+  margin-top: 20px;
+}
+
+.create-group-box {
+  margin-top: 20px;
+}
+
+.create-group-form {
+  margin-top: 100px;
+  align-items: center;
+}
+
+.avatar-uploader {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-preview {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-left: 10px;
+}
+
+.circle-plus-btn {
+  position: relative;
+  top: 10px;
+}
+
+.circle-plus-btn-actions {
+  display: flex;
+  flex-direction: column;
+  position: absolute; /* 修改为绝对定位 */
+  left: 0; /* 使其相对于按钮左侧对齐 */
+  top: 100%; /* 确保在按钮正下方 */
+  width: 100%; /* 适应宽度 */
+  background-color: #f4f0f0; /* 自定义背景色 */
+  z-index: 1000;
+}
+
+.circle-plus-btn-actions .action-button {
+  width: 100%; /* 按钮宽度100% */
+  margin-bottom: 10px;
+  margin-left: 0; /* 左对齐 */
+}
+
+.el-icon-plus {
+  font-size: 22px;
+  color: #f4f6f8;
 }
 </style>

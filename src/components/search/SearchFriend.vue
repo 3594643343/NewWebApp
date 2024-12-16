@@ -119,25 +119,6 @@
         <router-view />
       </el-main>
     </el-container>
-    <!-- 添加申请消息界面 -->
-    <el-container class="request-container">
-      <el-header class="request-header">
-        <h3>好友和群聊申请</h3>
-      </el-header>
-      <el-main class="request-main">
-        <div class="request-list">
-          <div
-            v-for="request in requests"
-            :key="request.id"
-            class="request-item"
-          >
-            <span>{{ request.type === 'friend' ? '好友申请' : '群聊申请' }}：{{ request.from }}</span>
-            <el-button type="success" @click="acceptRequest(request)">接受</el-button>
-            <el-button type="danger" @click="rejectRequest(request)">拒绝</el-button>
-          </div>
-        </div>
-      </el-main>
-    </el-container>
   </div>
 </template>
 
@@ -168,24 +149,6 @@ const uploadAvatarUrl = 'http://localhost:3000/upload';
 const userProfileDialogVisible = ref(false);
 const profileFriend = ref({});
 const verificationMessage = ref('');
-const requests = ref([
-  { id: 1, type: 'friend', from: 'Tom', message: '你好，我想加你为好友' },
-  { id: 2, type: 'group', from: 'Jane', message: '你好，我想加入你的群聊' },
-]);
-
-const acceptRequest = (request) => {
-  console.log('接受好友或群聊申请', request);
-  // 接受好友或群聊申请
-  // 刷新请求列表
-  // 刷新聊天列表
-};
-
-const rejectRequest = (request) => {
-  console.log('拒绝好友或群聊申请', request);
-  // 拒绝好友或群聊申请
-  // 刷新请求列表
-  // 刷新聊天列表
-};
 
 const openUserProfile = () => {
   profileFriend.value = searchedFriend.value; // 将搜索到的好友信息赋值给 profileFriend
