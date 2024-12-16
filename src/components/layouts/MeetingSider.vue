@@ -21,37 +21,12 @@ const fetchUsers = async () => {
         };
       });
       localStorage.setItem('users', JSON.stringify(users.value)); // 缓存用户列表到本地
-      // 比较新获取的用户列表与当前的用户列表
-      // if (JSON.stringify(newUsers) !== JSON.stringify(users.value)) {
-      //   console.log('用户列表发生变化，更新并缓存:', newUsers);
-      //   users.value = newUsers;
-      //   localStorage.setItem('users', JSON.stringify(users.value)); // 缓存用户列表到本地
-      // } else {
-      //   console.log('用户列表没有变化');
-      // }
     }
   } catch (error) {
     console.error('获取用户列表失败:', error.response ? error.response.data : error.message);
   }
 };
 
-// const toggleMicStatus = async (user) => {
-//   try {
-//     let response;
-//     if (user.micStatus) {
-//       // 调用解除禁言接口
-//       response = await disMuteUser({ userId: user.id, meetingNumber });
-//       user.micStatus = false; // 更新状态
-//     } else {
-//       // 调用禁言接口
-//       response = await muteUser({ userId: user.id, meetingNumber });
-//       user.micStatus = true; // 更新状态
-//     }
-//     console.log('切换麦克风状态的API响应:', response); // 打印API响应信息
-//   } catch (error) {
-//     console.error('操作麦克风状态失败:', error.response ? error.response.data : error.message);
-//   }
-// };
 
 const addFriend = () => {
   console.log('添加好友');
@@ -59,7 +34,6 @@ const addFriend = () => {
 
 onMounted(() => {
   fetchUsers();
-  // fetchInterval = setInterval(fetchUsers, 5000);// 每5秒重新获取一次用户列表
 });
 
 onUnmounted(() => {
@@ -74,7 +48,6 @@ onUnmounted(() => {
         <el-scrollbar :style="{ maxHeight: '400px', height: '100%' }">
           <div class="avatar-list">
             <div v-for="(user, index) in users" :key="user.id" class="avatar-item">
-              <!-- 为每个头像添加 el-popover -->
               <el-popover
                 placement="right"
                 trigger="click"
@@ -90,8 +63,8 @@ onUnmounted(() => {
                 <div class="info">
                   <el-avatar :size="60" :src="user.avatar" @error="errorHandler" />
                   <div class="details">
-                    <div class="username">{{ user.username }}</div> <!-- 显示用户名 -->
-                    <div class="signature">{{ user.signature }}</div> <!-- 显示用户签名 -->
+                    <div class="username">{{ user.username }}</div>
+                    <div class="signature">{{ user.signature }}</div>
                   </div>
                 </div>
                 <div class="button-group">
