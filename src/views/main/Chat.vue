@@ -11,6 +11,7 @@ const friends = ref([
   { id: 4, name: 'David', avatar: 'path/to/david.jpg', signature: 'Tech enthusiast' },
 ]);
 
+
 const selectedFriend = ref(friends.value[0]);
 const searchFriendId = ref('');
 const searchedFriend = ref(friends.value); // 初始显示所有好友信息
@@ -23,6 +24,9 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 // onMounted(() => {
 //   initWschat();
 // });
+
+const messageList = ref([]); // 聊天记录
+const newMessage = ref(''); // 新消息内容
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
@@ -139,6 +143,17 @@ const sendAddFriendRequest = async () => {
     console.error('发送添加好友请求失败:', error);
   }
 };
+
+const sendMessage = () => {
+  if (newMessage.value.trim()) {
+    messageList.value.push({
+      id: messageList.value.length + 1,
+      sender: 'me',
+      text: newMessage.value,
+    });
+    newMessage.value = ''; // 清空输入框
+  }
+};
 </script>
 <template>
   <div class="chat-layout">
@@ -197,29 +212,29 @@ const sendAddFriendRequest = async () => {
           </div>
           <div v-else class="chat-header">
             <el-header class="chat-header">
-          <h3>与 {{ selectedFriend.name }} 的聊天</h3>
-        </el-header>
-        <el-main class="chat-main">
-          <div class="message-list">
-            <div
-              v-for="msg in messages"
-              :key="msg.id"
-              :class="['message', msg.sender === 'me' ? 'my-message' : 'friend-message']"
-            >
-              <span>{{ msg.text }}</span>
-            </div>
-          </div>
-          <div class="input-wrapper">
-            <el-input
-              v-model="newMessage"
-              class="input-message"
-              placeholder="输入消息..."
-              @keyup.enter="sendMessage"
-              clearable
-            />
-            <el-button type="primary" @click="sendMessage">发送</el-button>
-          </div>
-        </el-main>
+              <h3>与 {{ selectedFriend.name }} 的聊天</h3>
+            </el-header>
+            <el-main>
+              <div class="message-list">
+                <div
+                  v-for="msg in messageList"
+                  :key="msg.id"
+                  :class="['message', msg.sender === 'me' ? 'my-message' : 'friend-message']"
+                >
+                  <span>{{ msg.text }}</span>
+                </div>
+              </div>
+              <div class="input-wrapper">
+                <el-input
+                  v-model="newMessage"
+                  class="input-message"
+                  placeholder="输入消息..."
+                  @keyup.enter="sendMessage"
+                  clearable
+                />
+                <el-button type="primary" @click="sendMessage">发送</el-button>
+              </div>
+            </el-main>
           </div>
         </el-main>
       </el-container>
