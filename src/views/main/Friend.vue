@@ -6,7 +6,7 @@
         <el-popover placement="bottom" :width="150" trigger="click" class="circle-plus-btn">
           <template #reference>
             <el-button 
-              style="margin-right: 16px; position: relative; bottom: 45px; left: 135px; color: #fff; background-color: #409eff;"
+              style="margin-right: 12px; position: relative; bottom: 45px; left: 190px; color: #fff; background-color: #409eff;"
             >
               <el-icon class="el-icon-plus">
                 <CirclePlus />
@@ -45,7 +45,7 @@
             <div>
               <span class="message-from">发送人：{{ item.from + ':' }}</span>
               <br>
-              <span class="message-content">验证消息：{{ item.content }}</span>
+              <span class="message-content">验证消息：{{ item.message }}</span>
               <br>
               <span class="message-time">时间：{{ item.time }}</span>
             </div>
@@ -87,9 +87,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import router from '@/router';
-import { createMyGroup } from '@/api/user';
+import { createMyGroup,getMyApplyList,getAllFriends } from '@/api/user';
 
 // 友信息示例
 const friends = ref([
@@ -99,21 +99,50 @@ const friends = ref([
   { id: 4, name: 'David', avatar: 'path/to/david.jpg', signature: 'Tech enthusiast' },
 ]);
 
-const message = ref([{
-  id: 1,
-  content: '你好，我是Alice，很高兴认识你！',
-  from: 'Bob',
-  time: '2021-10-10 10:00:00'
-}, {
-  id: 2,
-  content: '你好，我是Bob，很高兴认识你！',
-  from: 'Alice',
-  time: '2021-10-10 10:00:00'
-}]);
+const message = ref([]);
 
 
 
 const currentPage = ref(''); // 当前显示的页面
+onMounted(() => {
+  currentPage.value = 'friends';
+  // loadFriends();
+  loadmyApplyList();
+});
+
+const loadmyApplyList = async () => {
+  try {
+    const res = await getMyApplyList();
+    console.log(res);
+    message.value = res.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const pendingRequest = ref(false); // 是否有待处理的请求
+
+// 加载好友列表
+const loadFriends = async () => {
+  try {
+    const res = await getAllFriends();
+    console.log(res);
+    friends.value = res.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// // 删除好友
+// const deleteFriend = async (id) => {
+//   try {
+//     await deleteMyFriend(id);
+//     console.log('删除好友成功');
+//     loadFriends();
+//   } catch (error) {
+//     console.error('删除好友失败:', error);
+//   }
+// };
 
 // 创建群聊表单数据
 const groupForm = ref({
@@ -242,6 +271,8 @@ const rejectRequest = () => {
 .circle-plus-btn {
   position: relative;
   top: 10px;
+  margin-right: 10px;
+
 }
 
 .circle-plus-btn-actions {

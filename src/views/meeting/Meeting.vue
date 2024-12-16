@@ -3,9 +3,12 @@ import MeetingHeader from '@/components/layouts/MeetingHeader.vue';
 import MeetingSider from '@/components/layouts/MeetingSider.vue';
 import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { exitMeetingService } from '@/api/user';
+// import { exitMeetingService } from '@/api/user';
+import { getInMeetingUsers } from '@/api/user';
 import { ElMessage } from 'element-plus';
 
+const users = ref([]);
+const meetingNumber = localStorage.getItem('meetingNumber');
 // 使用 ref 创建响应式引用
 // const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
 var is_begin = 0;//是否开始录音
@@ -20,6 +23,24 @@ var my_sampleRate = 0;//输出采样率
 // volume.onchange = function () {
 //     record.changeVolume();
 // }
+
+const fetchUsers = async () => {
+  try {
+    const response = await getInMeetingUsers(meetingNumber);
+    if (response && response.data) {
+      console.log('获取的用户数据:', response.data);
+      users.value = response.data.map(user => {
+        return {
+          ...user,
+          avatar: user.avatar ? 'data:image/png;base64,' + user.avatar : '',// 格式转换
+        };
+      });
+      localStorage.setItem('users', JSON.stringify(users.value)); // 缓存用户列表到本地
+    }
+  } catch (error) {
+    console.error('获取用户列表失败:', error.response ? error.response.data : error.message);
+  }
+};
 
 onMounted(()=>{
         // beginWS();
@@ -219,10 +240,16 @@ function init(rec){
      
      
     function receive(data) {
+        //console.log('receive data:'+ data);
         if( data == 'END'){
             console.log('END');
             endWS();
-        }else{
+        }else if(data == 'SomeOneIn'||data == 'ONE_LEAVE'){
+            fetchUsers();
+            // location.reload(); // 页面刷新
+            // beginWS();
+            }
+        else{
             var buffer = (new Response(data)).arrayBuffer();
             buffer.then(function(buf){
                     //console.log("################recv start ####################################");
