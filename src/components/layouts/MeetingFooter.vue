@@ -4,9 +4,7 @@
   import { ElMessage, ElDialog } from 'element-plus';
   import { uploadFile, leaveMeetingService, updatePermissionAPI } from '@/api/user'; // 导入上传文件的接口
   
-  // const users = ref([]);// 存储当前会议中的用户列表
   const users = ref(JSON.parse(localStorage.getItem('users')) || []); // 存储当前会议中的用户列表
-  // const users = ref([]); // 存储当前会议中的用户列表
   const router = useRouter();
   const InviteVisible = ref(false);
   const confirmLeaveVisible = ref(false); // 确认离开会议弹窗显示状态
@@ -22,29 +20,6 @@
 
   const fileInput = ref(null); // 声明和初始化 fileInput 引用
 
-  // 切换麦克风状态
-//   const toggleMicStatus = async () => {
-//   try {
-//     let stream;
-//     if (!micStatus.value) {
-//       // 请求麦克风访问权限，并获取音频流
-//       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-//       micStatus.value = true; // 更新麦克风状态为开启
-//       record.start(); // 开始录制
-//     } else {
-//       // 获取当前音频流并关闭音频轨道
-//       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-//       const audioTracks = stream.getAudioTracks();
-//       audioTracks.forEach(track => track.enabled = !micStatus.value);
-//       micStatus.value = false; // 更新麦克风状态为关闭
-//       record.stop(); // 停止录制
-//     }
-//     console.log('切换麦克风状态:', micStatus.value);
-//   } catch (error) {
-//     console.error('操作麦克风状态失败:', error.message);
-//     ElMessage.error('操作麦克风状态失败，请检查您的浏览器设置。');
-//   }
-// };
 // 切换麦克风状态
   const toggleMicStatus = () => {
     if (!micStatus.value) {
@@ -91,7 +66,7 @@
   };
   
   const manageMembers = () => {
-    console.log("成员管理功能");
+    // console.log("成员管理功能");
     const storedUsers = localStorage.getItem('users');
     users.value = storedUsers ? JSON.parse(storedUsers) : [];
     manageMembersVisible.value = true; // 显示成员管理弹窗

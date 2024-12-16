@@ -116,14 +116,14 @@ const message = ref([{
 const currentPage = ref(''); // 当前显示的页面
 onMounted(() => {
   currentPage.value = 'friends';
-  loadFriends();
-  // loadmyApplyList();
+  // loadFriends();
+  loadmyApplyList();
 });
 
 const loadmyApplyList = async () => {
   try {
     const res = await getMyApplyList();
-    console.log(res);
+    console.log("res",res);
     message.value = res.data;
   } catch (error) {
     console.error(error);

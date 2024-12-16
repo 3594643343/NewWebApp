@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { h, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router';
 
 const router = useRouter();

@@ -3,11 +3,15 @@ import MeetingHeader from '@/components/layouts/MeetingHeader.vue';
 import MeetingSider from '@/components/layouts/MeetingSider.vue';
 import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
 import { ref, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from 'vue-router';
 // import { exitMeetingService } from '@/api/user';
 import { getInMeetingUsers } from '@/api/user';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox  } from 'element-plus';
 
-const users = ref([]);
+// const users = ref([]);
+const router = useRouter(); // 引入 useRouter
+const meetingendVisible = ref(false); // 确认离开会议弹窗显示状态
+const users = ref(JSON.parse(localStorage.getItem('users')) || []); // 存储当前会议中的用户列表
 const meetingNumber = localStorage.getItem('meetingNumber');
 // 使用 ref 创建响应式引用
 // const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
@@ -115,18 +119,17 @@ const endWS = ()=>{
         }
         else{
             // alert("已关闭!");
-            ElMessage({
-                message: '麦克风已关闭。',
-                type: 'success',
-            })
+            // ElMessage({
+            //     message: '麦克风已关闭。',
+            //     type: 'success',
+            // })
+            console.log('麦克风已关闭。')
         }
 }    
 
 function init(rec){
         record = rec;
 }     
-    
-
     if (!navigator.getUserMedia) {
         alert('浏览器不支持音频输入');
     }else{
@@ -244,12 +247,22 @@ function init(rec){
         if( data == 'END'){
             console.log('END');
             endWS();
+            meetingendVisible.value = true; // 显示确认对话框
+            // 弹出确认框
+            // ElMessageBox.confirm('会议已结束，是否返回主页面？', '会议结束', {
+            // confirmButtonText: '确定',
+            // cancelButtonText: '取消',
+            // type: 'warning',
+            // }).then(() => {
+            // router.push('/main/user'); // 用户点击确定后跳转到主页面
+            // }).catch(() => {
+            // router.push('/main/user'); // 用户点击确定后跳转到主页面
+            // });
         }else if(data == 'SomeOneIn'||data == 'ONE_LEAVE'){
             fetchUsers();
             // location.reload(); // 页面刷新
             // beginWS();
-            }
-        else{
+        }else{
             var buffer = (new Response(data)).arrayBuffer();
             buffer.then(function(buf){
                     //console.log("################recv start ####################################");
@@ -355,6 +368,10 @@ function init(rec){
             audo.audioContext = audioContext;*/
     }
 
+const handleLeaveMeeting = () => {
+    console.log('退出会议成功：');
+    router.push('/main/user')
+}
 onBeforeUnmount(() => {
     endWS(); // 关闭WebSocket连接
     // exitMeetingService(); // 调用退出会议界面接口
@@ -380,6 +397,17 @@ onBeforeUnmount(() => {
           </el-container>
         </el-container>
       </el-container>
+      <el-dialog v-model="meetingendVisible" title="会议结束" width="300" center>
+        <div>
+          <p>当前会议已结束。</p>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="meetingendVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleLeaveMeeting">确认</el-button>
+          </div>
+        </template>
+      </el-dialog>
     </div>
 </template>
 

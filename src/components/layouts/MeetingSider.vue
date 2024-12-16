@@ -2,7 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { getInMeetingUsers } from '@/api/user'; 
 
-const users = ref([]);
+// const users = ref([]);
+const users = ref(JSON.parse(localStorage.getItem('users')) || []); // 存储当前会议中的用户列表
 const meetingNumber = localStorage.getItem('meetingNumber');
 
 const errorHandler = () => true;
@@ -32,12 +33,21 @@ const addFriend = () => {
   console.log('添加好友');
 };
 
+const updateMembers = () => {
+  const storedUsers = localStorage.getItem('users');
+  users.value = storedUsers ? JSON.parse(storedUsers) : [];
+};
+// 声明定时器变量
+let fetchInterval;
+
 onMounted(() => {
   fetchUsers();
+  // fetchInterval = setInterval(fetchUsers, 5000); // 每5秒调用一次fetchUsers
+  fetchInterval = setInterval(updateMembers, 5000); // 每5秒调用一次fetchUsers
 });
 
 onUnmounted(() => {
-  // clearInterval(fetchInterval); // 清除定时器，避免内存泄漏
+  clearInterval(fetchInterval); // 清除定时器，避免内存泄漏
 });
 </script>
 
