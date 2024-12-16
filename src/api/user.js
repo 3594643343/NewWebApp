@@ -105,6 +105,10 @@ export const uploadFile = (meetingNumber, file) => {
     });
 };
 
+//退出会议界面
+export const exitMeetingService = () =>
+    request.delete('/exit')
+
 //离开会议
 export const leaveMeetingService = () =>
     request.get('/meeting/leave')

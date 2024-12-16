@@ -53,10 +53,6 @@ const fetchUsers = async () => {
 //   }
 // };
 
-const toggleMicStatus = (user) => {
-  user.micStatus=!user.micStatus;
-}
-
 const addFriend = () => {
   console.log('添加好友');
 };

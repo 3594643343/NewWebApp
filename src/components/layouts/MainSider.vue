@@ -26,7 +26,7 @@
           <el-icon><ChatDotRound /></el-icon>
           <span>好友</span>
         </el-menu-item>
-        <br><br><br><br><br><br><br><br><br><br>
+        <br><br><br><br><br><br><br><br><br><br><br><br><br>
         <el-menu-item index="/main/setting" :class="{ 'active-item': activeItem === '/main/setting' }" >
           <el-icon><setting /></el-icon>
           <span>设置</span>

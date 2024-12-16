@@ -2,9 +2,12 @@
 import MeetingHeader from '@/components/layouts/MeetingHeader.vue';
 import MeetingSider from '@/components/layouts/MeetingSider.vue';
 import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
-import { ref,onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { exitMeetingService } from '@/api/user';
+import { ElMessage } from 'element-plus';
 
-
+// 使用 ref 创建响应式引用
+// const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
 var is_begin = 0;//是否开始录音
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 var ws = null;//实现WebSocket
@@ -27,7 +30,12 @@ onMounted(()=>{
         { audio: true },
         function (mediaStream) {
             init(new Recorder(mediaStream));
-            beginWS(); // 开始WebSocket连接
+            // beginWS(); // 开始WebSocket连接
+            // micStatus = localStorage.getItem('micStatus') || false;
+            // console.log(micStatus);
+            // if(micStatus.value){
+                // beginWS();
+            // }
         },
         function (error) {
             console.log(error);
@@ -52,7 +60,10 @@ const beginWS = ()=>{
                 record.start();
                     //console.log("#######################send Blob start ##############################");
                 console.log(record.getBlob());
+                const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
+                if(!micStatus.value){
                 ws.send(record.getBlob());    //发送音频数据
+                }
                     //console.log("#######################send Blob end ##############################");
                 record.clear(); //每次发送完成则清理掉旧数据
             }
@@ -65,7 +76,11 @@ const beginWS = ()=>{
             ///
         is_begin = 1;   
     }else{
-        alert("已开启录音!");
+        // alert("已开启录音!");
+        ElMessage({
+                message: '麦克风已关闭。',
+                type: 'success',
+            })
     }
 }
 
@@ -78,7 +93,11 @@ const endWS = ()=>{
             is_begin = 0;
         }
         else{
-            alert("已关闭!");
+            // alert("已关闭!");
+            ElMessage({
+                message: '麦克风已关闭。',
+                type: 'success',
+            })
         }
 }    
 
@@ -308,6 +327,11 @@ function init(rec){
             audo.source = audioBufferSouceNode;
             audo.audioContext = audioContext;*/
     }
+
+onBeforeUnmount(() => {
+    endWS(); // 关闭WebSocket连接
+    // exitMeetingService(); // 调用退出会议界面接口
+});
      
 </script>
 

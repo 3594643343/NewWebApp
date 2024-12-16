@@ -22,7 +22,7 @@
       </el-table-column>
       <el-table-column prop="meetingName" label="会议主题" width="180" />
       <el-table-column prop="meetingHost" label="会议主持人" width="150" />
-      <el-table-column label="参与者">
+      <el-table-column label="参与者" width="120" >
         <template #default="scope">
           <el-dropdown>
             <el-button type="text">{{ scope.row.participants.length }} 名参与者</el-button>
@@ -39,6 +39,7 @@
         </template>
       </el-table-column>
     </el-table>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -46,7 +47,9 @@
 import { ref, computed } from 'vue';
 import { getMeetingRecordService,getMeetingDetailService, deleteMeetingRecordService } from '@/api/user';
 import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter(); // 获取 router 实例
 const meetingRecord = ref([]); // 会议记录列表
 const searchType = ref('number'); // 默认搜索类型
 const searchQuery = ref('');
@@ -96,6 +99,9 @@ const viewDetails = async (meeting) => {
     const response = await getMeetingDetailService(meeting.recordId);
     if (response) {
       console.log('获取会议详情成功：', response.data);
+      localStorage.setItem(`meetingDetails-${meeting.recordId}`, JSON.stringify(response.data));
+      // 使用 Vue Router 进行跳转
+      router.push({ name: 'recordDetail', params: { recordId: meeting.recordId } });
     } else {
       console.error('未能获取会议详情');
     }
@@ -103,6 +109,7 @@ const viewDetails = async (meeting) => {
     console.error('获取会议详情失败:', error); // 错误处理
   }
 };
+
 const deleteMeeting = async (meeting) => {
   try {
     const response = await deleteMeetingRecordService(meeting.recordId);

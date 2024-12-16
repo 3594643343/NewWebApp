@@ -23,28 +23,38 @@
   const fileInput = ref(null); // 声明和初始化 fileInput 引用
 
   // 切换麦克风状态
-  const toggleMicStatus = async () => {
-  try {
-    let stream;
+//   const toggleMicStatus = async () => {
+//   try {
+//     let stream;
+//     if (!micStatus.value) {
+//       // 请求麦克风访问权限，并获取音频流
+//       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+//       micStatus.value = true; // 更新麦克风状态为开启
+//       record.start(); // 开始录制
+//     } else {
+//       // 获取当前音频流并关闭音频轨道
+//       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+//       const audioTracks = stream.getAudioTracks();
+//       audioTracks.forEach(track => track.enabled = !micStatus.value);
+//       micStatus.value = false; // 更新麦克风状态为关闭
+//       record.stop(); // 停止录制
+//     }
+//     console.log('切换麦克风状态:', micStatus.value);
+//   } catch (error) {
+//     console.error('操作麦克风状态失败:', error.message);
+//     ElMessage.error('操作麦克风状态失败，请检查您的浏览器设置。');
+//   }
+// };
+// 切换麦克风状态
+  const toggleMicStatus = () => {
     if (!micStatus.value) {
-      // 请求麦克风访问权限，并获取音频流
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micStatus.value = true; // 更新麦克风状态为开启
-      record.start(); // 开始录制
+        micStatus.value = true; // 更新麦克风状态为开启
+        localStorage.setItem('micStatus', JSON.stringify(micStatus.value));
     } else {
-      // 获取当前音频流并关闭音频轨道
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioTracks = stream.getAudioTracks();
-      audioTracks.forEach(track => track.enabled = !micStatus.value);
-      micStatus.value = false; // 更新麦克风状态为关闭
-      record.stop(); // 停止录制
+        micStatus.value = false; // 更新麦克风状态为关闭
+        localStorage.setItem('micStatus', JSON.stringify(micStatus.value));
     }
-    console.log('切换麦克风状态:', micStatus.value);
-  } catch (error) {
-    console.error('操作麦克风状态失败:', error.message);
-    ElMessage.error('操作麦克风状态失败，请检查您的浏览器设置。');
-  }
-};
+  };
 
   //复制会议号与密码到剪贴板
   const copyToClipboard = () => {

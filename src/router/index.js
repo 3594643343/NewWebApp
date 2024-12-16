@@ -9,6 +9,7 @@ import AccountLogin from '@/views/login/AccountLogin.vue'
 import Main from '@/views/main/Main.vue'
 import User from '@/views/main/User.vue'
 import Record from '@/views/main/Record.vue'
+import RecordDetail from '@/views/main/RecordDetail.vue'
 import Schedule from '@/views/main/Schedule.vue'
 import Setting from '@/views/main/Setting.vue'
 import Friend from '@/views/main/Friend.vue'
@@ -69,6 +70,13 @@ const router = createRouter({
           path:'record',
           name:'record',
           component: Record,
+          children: [
+            {
+              path: ':recordId',
+              name: 'recordDetail',
+              component: RecordDetail,
+            },
+          ],
         },
         {
           path:'schedule',
