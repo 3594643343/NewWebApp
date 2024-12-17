@@ -17,6 +17,7 @@
   avatar: '', // 初始头像为空字符串，稍后将更新
   username: '', // 初始昵称为空字符串
   signature: '', // 初始签名为空字符串  
+  needCheck:1, // 初始需要验证为0
   });
   
   const rules = {
@@ -75,6 +76,7 @@ const showUserProfile = async () => {
       userProfile.value.avatar = response.data.avatar; // 这里假设 avatar 是 Base64 字符串
       userProfile.value.username = response.data.username; // 设置昵称
       userProfile.value.signature = response.data.signature; // 设置签名
+      userProfile.value.needCheck = response.data.needCheck; // 设置是否需要验证
       localStorage.setItem('userProfile', JSON.stringify(userProfile.value));
       console.log('获取用户信息成功:', userProfile.value);
     } else {
