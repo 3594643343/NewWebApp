@@ -39,6 +39,7 @@ onMounted(() => {
   width: 100%;
   background-color: #fff;
   padding: 0;
+  height: 60px;
   z-index: 1000; /* 确保头部在其他元素之上 */
 }
 
@@ -55,11 +56,10 @@ onMounted(() => {
 }
 
 .el-main {
-  margin-top: 60px; /* 根据实际需要调整，这里假设头部高度为60px */
-  margin-left: 210px; /* 根据实际需要调整，这里假设侧边栏宽度为210px */
+  margin-top: 50px; /* 根据实际需要调整，这里假设头部高度为60px */
+  margin-left: 200px; /* 根据实际需要调整，这里假设侧边栏宽度为210px */
   background-color: #F6F7F9;
-  overflow-y: auto; /* 垂直滚动条 */
+  overflow-y: auto; /* 垂直滚动条*/
   height: calc(100vh - 60px); /* 根据实际需要调整，这里假设头部高度为60px */
-
 }
 </style>

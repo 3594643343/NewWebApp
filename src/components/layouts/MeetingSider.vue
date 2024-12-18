@@ -10,6 +10,7 @@ const errorHandler = () => true;
 
 const fetchUsers = async () => {
   try {
+    console.log('获取用户列表...',meetingNumber);
     const response = await getInMeetingUsers(meetingNumber);
     if (response && response.data) {
       console.log('获取的用户数据:', response.data);

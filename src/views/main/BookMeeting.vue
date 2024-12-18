@@ -98,7 +98,7 @@ const handleBookMeeting =  async () => {
       console.log("Book meeting:", result.data.token);
       console.log('Book meeting successful');
       alert('会议预定成功');
-      router.push('/main/record');
+      router.push('/main/schedule');
     } else {
       console.log(result.msg); // 输出错误信息
     }

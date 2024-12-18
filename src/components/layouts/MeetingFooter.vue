@@ -230,7 +230,7 @@
                 </el-button>  
               </div>
             </div>
-            <span>{{ getPermission() }}</span>
+            <!-- <span>{{ getPermission() }}</span> -->
           </div>
         </div>
       </el-dialog>

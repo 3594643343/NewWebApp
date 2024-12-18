@@ -8,7 +8,7 @@
           <el-table-column prop="meetingName" label="会议名称" width="180" />
           <el-table-column prop="meetingStartTime" label="开始时间" width="180" />
           <el-table-column prop="meetingEndTime" label="结束时间" width="180" />
-          <el-table-column prop="meetingHost" label="会议主持" width="180" />
+          <el-table-column prop="meetingHost" label="会议主持" width="140" />
           <el-table-column prop="meetingNumber" label="会议号" width="180" />
           <el-table-column label="操作" width="200">
             <template v-slot="scope">
