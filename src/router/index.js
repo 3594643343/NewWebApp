@@ -26,7 +26,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'app',
-      component: App,
+      component: AccountLogin,
     },
     {
       path: '/button',

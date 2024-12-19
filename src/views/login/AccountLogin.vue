@@ -1,17 +1,22 @@
 <script lang="ts" setup>
   import { ref} from 'vue'
+  import { useUserStore } from '@/stores/useUserStore';
   import { ElMessage } from 'element-plus';
   import { useRouter } from 'vue-router';
-  import { userLoginService, fetchUserProfile } from '@/api/user';
+  import { userLoginService, fetchUserProfile,getAllFriends,getUserGroups,getOneGroup } from '@/api/user';
 
   const router = useRouter();
+  const userStore = useUserStore();
 
   const form = ref({
   username: '',
   password: '',
   })
-
+  
+  const friends = ref([]);
   const useremail= ref('');
+  const usergroups= ref([]);
+  const groupid= ref('');
 
   const userProfile = ref({
   avatar: '', // 初始头像为空字符串，稍后将更新
@@ -47,8 +52,12 @@
       console.log("Login:", result.data.token);
       console.log('Login successful');
 
+      userStore.login();  // 更新登录状态为 true
+
       // 假设用户信息在返回中包含其他数据，你可以将其存储在 localStorage
       await showUserProfile();
+      await loadFriends();
+      await loadUserGroups();
        if(result.data.isAdmin===false){
         console.log("普通用户：" + result.data.isAdmin)
         router.push('/main/user');
@@ -87,7 +96,37 @@ const showUserProfile = async () => {
     }
   }
 };
-  
+
+const loadFriends = async () => {
+  try {
+    const res = await getAllFriends();
+    console.log(res);
+    friends.value = res.data;
+    localStorage.setItem('friends', JSON.stringify(friends.value));
+    console.log("获取好友列表成功:friends",friends.value);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const loadUserGroups = async () => {
+  try {
+    const res = await getUserGroups();
+    console.log(res);
+    groupid.value = res.data;
+    console.log("获取用户群号成功:usergroups",groupid.value);
+    for(let i=0;i<groupid.value.length;i++){
+      const res1 = await getOneGroup(groupid.value[i]);
+      console.log(res1);
+      usergroups.value.push(res1.data);
+      console.log("获取用户群信息成功:usergroups",usergroups.value);
+    }
+    localStorage.setItem('usergroups', JSON.stringify(usergroups.value));
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 </script>
   
 <template>

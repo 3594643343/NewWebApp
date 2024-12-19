@@ -1,20 +1,54 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted,onBeforeUnmount } from 'vue';
 import router from '@/router';
-import { searchFriends, applyAddFriend, searchGroup } from '@/api/user';
+import { searchFriends, applyAddFriend, searchGroup, getAllFriends,getUserGroups } from '@/api/user';
+import { initWschat,getWschat,closewschat } from '@/api/user';
 
 // 好友列表数据（示例数据，可替换为真实数据获取）
-const friends = ref([
-  { id: 1, name: 'Alice', avatar: 'path/to/alice.jpg', signature: 'A lovely friend' },
-  { id: 2, name: 'Bob', avatar: 'path/to/bob.jpg', signature: 'Charming personality' },
-  { id: 3, name: 'Charlie', avatar: 'path/to/charlie.jpg', signature: 'Always smiling' },
-  { id: 4, name: 'David', avatar: 'path/to/david.jpg', signature: 'Tech enthusiast' },
-]);
+const friendsAndGroups = ref([]);
+// 友信息示例
+// const friendsData = localStorage.getItem('friends')? JSON.parse(localStorage.getItem('friends')) : [];
 
+const showfriendData = () => {
+  const friendsData = localStorage.getItem('friends')? JSON.parse(localStorage.getItem('friends')) : [];
+  console.log("friendsData", friendsData);
+  friendsData.forEach((friend) => {
+    const newFriend = {
+      avatar: ref(friend.avatar? 'data:image/png;base64,' + friend.avatar : ''),
+      name: ref(friend.username),
+      signature: ref(friend.signature && friend.signature.trim()!== ''? friend.signature : '尚未设置个性签名')
+    };
+    friendsAndGroups.value.push(newFriend);
+  });
+  return friendsData;
+};
 
-const selectedFriend = ref(friends.value[0]);
+const showgroupData = () => {
+  const groupsData = localStorage.getItem('usergroups') ? JSON.parse(localStorage.getItem('usergroups')) : [];
+  console.log("groupsData", groupsData);
+  groupsData.forEach((group) => {
+    const newGroup = {
+      avatar: group.groupAvatar ? `data:image/png;base64,${group.groupAvatar}` : '',
+      groupName: group.groupName,
+      creatorName: group.creatorName,
+      groupId: group.groupId // 确保每个群组都有唯一的ID
+    };
+    friendsAndGroups.value.push(newGroup); // 将群组信息也添加到好友列表
+  });
+};
+
+onMounted(() => {
+  showfriendData();
+  showgroupData();
+  initWschat();
+  if (friendsAndGroups.value.length > 0) {
+    selectedFriend.value = friendsAndGroups.value[0]; // 设置默认选择的好友
+  }
+});
+
+const selectedFriend = ref({}); // 选中的好友
 const searchFriendId = ref('');
-const searchedFriend = ref(friends.value); // 初始显示所有好友信息
+const searchedFriend = ref(friendsAndGroups.value); // 初始显示所有好友信息
 const userProfileDetailsVisible = ref(false); // 控制用户详情的显示
 const foruserProfileDetailsVisible = ref(false); // 控制搜索中空白页的显示
 const verificationMessage = ref(''); // 验证消息
@@ -25,8 +59,7 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 //   initWschat();
 // });
 
-const messageList = ref([]); // 聊天记录
-const newMessage = ref(''); // 新消息内容
+
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
@@ -39,8 +72,8 @@ const selectFriend = (friend) => {
 const searchFriend = async () => {
   if (!searchFriendId.value.trim()) {
     // 如果搜索框为空，显示所有好友
-    searchedFriend.value = friends.value;
-    selectedFriend.value = friends.value[0];
+    searchedFriend.value = friendsAndGroups.value;
+    selectedFriend.value = friendsAndGroups.value[0];
     userProfileDetailsVisible.value = false; // 隐藏用户详情
     ifFriendOrGroup.value = true; // 判断是否是群聊
     return;
@@ -62,7 +95,8 @@ const searchFriend = async () => {
          ...response.data,
           avatar: response.data.friendAvatar.startsWith('data:image/')? response.data.friendAvatar : `data:image/jpeg;base64,${response.data.friendAvatar}`,
           signature: response.data.friendSignature,
-          name: response.data.friendName
+          name: response.data.friendName,
+          friendId: response.data.friendId
         }]; // 更新搜索结果为单个好友
         userProfileDetailsVisible.value = true; // 显示用户详情
       } else {
@@ -111,6 +145,8 @@ const addFriend = async() => {
       console.log('发送添加好友请求成功', response.data);
       // 发送成功后，关闭用户详情弹窗
       addFriendDialogVisible.value = false;
+      loadFriends(); // 刷新好友列表
+      loadUserGroups(); // 刷新群聊列表
     } else {
       console.error('发送添加好友请求失败，返回数据格式不正确');
     }
@@ -133,7 +169,7 @@ const sendAddFriendRequest = async () => {
     });
 
     if (response) {
-      console.log('发送添加好友请求成功', response.data);
+      console.log('发送添加好友请求成功', response);
       // 发送成功后，关闭用户详情弹窗
       addFriendDialogVisible.value = false;
     } else {
@@ -144,16 +180,64 @@ const sendAddFriendRequest = async () => {
   }
 };
 
-const sendMessage = () => {
-  if (newMessage.value.trim()) {
-    messageList.value.push({
-      id: messageList.value.length + 1,
-      sender: 'me',
-      text: newMessage.value,
-    });
-    newMessage.value = ''; // 清空输入框
+
+const friends = ref([]);
+const groupid = ref([]);
+const usergroups = ref([]);
+
+const loadFriends = async () => {
+  try {
+    const res = await getAllFriends();
+    console.log(res);
+    friends.value = res.data;
+    localStorage.setItem('friends', JSON.stringify(friends.value));
+    console.log("获取好友列表成功:friends",friends.value);
+  } catch (error) {
+    console.error(error);
   }
 };
+
+const loadUserGroups = async () => {
+  try {
+    const res = await getUserGroups();
+    console.log(res);
+    groupid.value = res.data;
+    console.log("获取用户群号成功:usergroups",groupid.value);
+    for(let i=0;i<groupid.value.length;i++){
+      const res1 = await getOneGroup(groupid.value[i]);
+      console.log(res1);
+      usergroups.value.push(res1.data);
+      console.log("获取用户群信息成功:usergroups",usergroups.value);
+    }
+    localStorage.setItem('usergroups', JSON.stringify(usergroups.value));
+  } catch (error) {
+    console.error(error);
+  }
+};
+const messages = ref([]); // 聊天记录
+const messageList = ref([]); // 聊天记录
+const newMessage = ref(''); // 新消息内容
+
+const sendMessage = (newMessage) => {
+  console.log('发送消息:', newMessage);
+  if (!newMessage.trim()) return; // 消息不能为空
+  // const message = {
+  //   from: localStorage.getItem('userId'), // 假设你在 localStorage 中有用户名
+  //   to: selectedFriend.value.friendId, // 将消息发送给的好友 ID
+  //   content: newMessage,
+  // };
+  // console.log('发送消息message:', message);
+  const wschat = getWschat(); // 获取 WebSocket 实例
+  if (wschat && wschat.readyState === WebSocket.OPEN) {
+    wschat.send(JSON.stringify(newMessage)); // 发送消息
+    // messages.value.push(message); // 更新聊天记录
+  } else {
+    console.error('WebSocket 未连接或处于关闭状态');
+  }
+};
+onBeforeUnmount(() => {
+  closewschat(); // 组件卸载时关闭 WebSocket 连接
+});
 </script>
 <template>
   <div class="chat-layout">
@@ -212,7 +296,8 @@ const sendMessage = () => {
           </div>
           <div v-else class="chat-header">
             <el-header class="chat-header">
-              <h3>与 {{ selectedFriend.name }} 的聊天</h3>
+              <h3 v-if="selectedFriend.name">与 {{ selectedFriend.name }} 的聊天</h3>
+              <h3 v-else>在 {{ selectedFriend.groupName }} 中的聊天</h3>
             </el-header>
             <el-main>
               <div class="message-list">
@@ -229,10 +314,10 @@ const sendMessage = () => {
                   v-model="newMessage"
                   class="input-message"
                   placeholder="输入消息..."
-                  @keyup.enter="sendMessage"
+                  @keyup.enter="sendMessage(newMessage)"
                   clearable
                 />
-                <el-button type="primary" @click="sendMessage">发送</el-button>
+                <el-button type="primary" @click="sendMessage(newMessage)">发送</el-button>
               </div>
             </el-main>
           </div>
