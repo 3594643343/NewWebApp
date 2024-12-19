@@ -1,6 +1,6 @@
 import request from '../utils/request';
 import { ref } from 'vue';
-const wschat = ref(null); // 聊天websocket实例
+let wschat = ref(null); // 聊天websocket实例
 
 export const closewschat = () => {
   if (wschat.value) {
@@ -9,24 +9,26 @@ export const closewschat = () => {
 };
 // 页面加载完成后，初始化聊天websocket
 export const initWschat = () => {
-  if (wschat.value) {
-    wschat.value.close();
-  }
+    if (wschat.value) {
+      wschat.value.close();
+    }
   wschat.value = new WebSocket('ws://121.37.24.76:8079/chat/'+localStorage.getItem('userId'));
-  wschat.value.onopen = () => {
-    console.log('websocket连接成功');
+    wschat.value.onopen = () => {
+      console.log('websocket连接成功');
+    };
+    wschat.value.onmessage = (event) => {
+      console.log('websocket接收到消息:', event.data);
+    };
+    wschat.value.onclose = () => {
+      console.log('websocket连接关闭');
+    };
+    wschat.value.onerror = () => {
+      console.error('websocket发生错误:', error);
+    };
   };
-  wschat.value.onmessage = (event) => {
-    console.log('websocket接收到消息:', event.data);
-  };
-  wschat.value.onclose = () => {
-    console.log('websocket连接关闭');
-  };
-  wschat.value.onerror = (error) => {
-    console.error('websocket发生错误:', error);
-  };
-};
-export const getWschat = () => wschat.value; // 导出 wschat 让其他模块也能使用
+  
+  
+  export const getWschat = () => wschat.value;
 //用户注册
 export const userRegisterService = ({userName, userEmail, userPassword,checkPassword}) => 
     request.post('/register', {userName, userEmail, userPassword,checkPassword})
