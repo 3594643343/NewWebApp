@@ -6,6 +6,9 @@ import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import piniaPersistedstate from 'pinia-plugin-persistedstate'
 
+import mitt from'mitt';
+const emitter = mitt();
+export default emitter;
 
 
 import App from './App.vue'

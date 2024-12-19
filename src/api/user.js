@@ -1,5 +1,8 @@
 import request from '../utils/request';
 import { ref } from 'vue';
+import emitter from '@/main.js'; // 根据实际路径调整引入
+
+
 let wschat = ref(null); // 聊天websocket实例
 
 export const closewschat = () => {
@@ -17,7 +20,15 @@ export const initWschat = () => {
       console.log('websocket连接成功');
     };
     wschat.value.onmessage = (event) => {
-      console.log('websocket接收到消息:', event.data);
+        console.log('websocket接收到消息:', event.data);
+        try {
+            const receivedMessage = JSON.parse(event.data);
+            // 触发事件总线的消息更新事件，传递接收到的消息数据
+            emitter.emit('messageReceived', receivedMessage);
+        } catch (error) {
+            console.error('解析WebSocket接收的消息出现错误:', error);
+            console.error('接收到的原始消息内容为:', event.data);
+        }
     };
     wschat.value.onclose = () => {
       console.log('websocket连接关闭');
@@ -232,12 +243,20 @@ export const deleteMyFriend = ({friendId}) => {
     return request.delete(`/friend/delete?${queryParams.toString()}`);
 }
 //获取与一个好友的聊天记录
-export const getChatRecord = ({friendId}) => 
-    request.get('/friend/record', {
-        params: {
-            friendId: friendId // 作为查询参数传递
-        }
-    })
+export const getChatRecord = ({friendId}) => {
+    const intFriendId = parseInt(friendId, 10);
+    console.log("intFriendId", intFriendId)
+    console.log("friendId", friendId)
+    if (isNaN(intFriendId)) {
+        throw new Error('friendId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        friendId: intFriendId,
+    });
+    return request.get(`/friend/record?${queryParams.toString()}`);
+}
+
+    
 //搜索群来聊天
 export const searchGroup = ({ groupId }) => {
     // 将 groupId 转换为整数
