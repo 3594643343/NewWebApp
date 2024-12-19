@@ -1,10 +1,12 @@
 <script lang="ts" setup>
   import { ref} from 'vue'
+  import { useUserStore } from '@/stores/useUserStore';
   import { ElMessage } from 'element-plus';
   import { useRouter } from 'vue-router';
   import { userLoginService, fetchUserProfile } from '@/api/user';
 
   const router = useRouter();
+  const userStore = useUserStore();
   
   const form = ref({
   email: '',
@@ -45,6 +47,7 @@
       localStorage.setItem('userId',result.data.userId);
       console.log("Login:", result.data.token);
       console.log('Login successful');
+      userStore.login();  // 更新登录状态为 true
       // 获取用户信息
       await showUserProfile();
       if(result.data.isadmin===true){

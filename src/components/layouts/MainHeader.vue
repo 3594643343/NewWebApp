@@ -2,9 +2,11 @@
 import { ref , onMounted } from 'vue'
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/useUserStore';
 import { quickMeetingService  } from '@/api/user'; 
 
 const router = useRouter();
+const userStore = useUserStore();
 const activeIndex = ref('');
 const errorHandler = () => true;
 const avatarSrc = ref(''); // 初始头像链接
@@ -45,6 +47,7 @@ const goToProfile = () => {
 const logout = () => {
   localStorage.removeItem('userProfile'); // 清除用户数据
   popoverVisible.value = false;
+  userStore.logout();   // 更新登录状态为 false
   router.push('/accountlogin'); // 跳转到登录页面
 };
 

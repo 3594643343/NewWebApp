@@ -22,15 +22,25 @@
       <el-scrollbar style="height: 400px;">
         <el-list>
           <el-list-item 
-            v-for="friend in friends" 
-            :key="friend.id" 
+            v-for="item in friendsAndGroups" 
+            :key="item.id" 
             class="friend-item"
+            @dblclick="showFriendOrGroupDetails(item)"
           >
-            <el-avatar :src="friend.avatar" class="friend-avatar" size="large" />
-            <span class="friend-name">{{ friend.name }}</span>
-            <div class="friend-actions">
+          <el-avatar :src="item.avatar" size="large" class="avatar" />
+              <!-- 根据数据结构判断是用户还是群聊来展示不同内容 -->
+              <span v-if="item.friendName"  >{{ item.friendName }}</span>
+              <span v-else-if="item.groupName">{{ item.groupName }}</span>
+              <span v-else>{{ '未知名称' }}</span>
+          
+
+            <div v-if = "item.friendName" class="friend-actions">
               <el-button type="primary" @click="goToChat">聊天</el-button>
-              <el-button type="primary" @click="deleteFriend(friend.id)">删除好友</el-button>
+              <el-button type="primary" @click="deleteFriend(item.friendId)">删除好友</el-button>
+            </div>
+            <div v-else-if = "item.groupName" class="friend-actions">
+              <el-button type="primary" @click="goToChat">聊天</el-button>
+              <el-button type="primary" @click="deleteGroup(item.groupId)">解散群聊</el-button>
             </div>
           </el-list-item>
         </el-list>
@@ -41,16 +51,20 @@
       <div v-if="currentPage === 'messages'" class="message-box">
         <h1 style="font-size: large;">我的消息</h1>
         <el-list>
-          <el-card v-for="item in message" :key="item.id" style="margin-bottom: 10px;">
+          <el-card v-for="item in messageForm" :key="item.id" style="margin-bottom: 10px;">
             <div>
-              <span class="message-from">发送人：{{ item.from + ':' }}</span>
+              <el-avatar :src="item.messagesederavatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
               <br>
-              <span class="message-content">验证消息：{{ item.message }}</span>
+              <span class="message-from">发送人：{{ item.messagesederusername + ':' }}</span>
+              <br>
+              <span class="message-to">发送人Id：{{ item.messagesenderid + ':' }}</span>
+              <br>
+              <span class="message-content">验证消息：{{ item.messagecontent }}</span>
               <br>
               <span class="message-time">时间：{{ item.time }}</span>
             </div>
-        <el-button @click="acceptRequest" type="primary">同意</el-button>
-        <el-button @click="rejectRequest" type="primary">拒绝</el-button>
+        <el-button @click="handleRequest(1)" type="primary">同意</el-button>
+        <el-button @click="handleRequest(0)" type="primary">拒绝</el-button>
           </el-card>
         </el-list>
       </div>
@@ -63,12 +77,13 @@
           <el-form-item label="上传群聊头像：" style="margin-bottom: 10px;">
             <el-upload
               class="avatar-uploader"
-              action=""
-              :show-file-list="false"
-              @change="handleAvatarChange"
+              :show-file-list="true"
+              :http-request="handleAvatarUpload"
+              :on-success="handleAvatarChange"
+               @change="handleFileChange"
             >
               <el-button size="small" type="primary">选择头像</el-button>
-              <!-- <img v-if="groupForm.avatar" :src="groupForm.avatar" class="avatar-preview" /> -->
+              <img v-if="groupForm.avatar" :src="groupForm.avatar" class="avatar-preview" />
             </el-upload>
           </el-form-item>
           <el-form-item label="入群是否需要验证：" style="margin-bottom: 10px;">
@@ -82,6 +97,22 @@
           </el-form-item>
         </el-form>
       </div>
+      <div v-else class="friendgroup-detail-box">
+        <div v-if="currentPage === 'friendDetail'" >
+          <h5 style="margin-bottom: 10px;font-size: large; align-items: center;">用户信息：</h5>
+          <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
+          <h4>用户名：{{ selectedFriend.friendName }}</h4>
+          <p>ID: {{ selectedFriend.friendId }}</p>
+          <p>个性签名: {{ selectedFriend.signature }}</p>
+        </div>
+        <div v-if="currentPage === 'groupDetail'" >
+          <h5 style="margin-bottom: 10px;font-size: large; align-items: center;">群聊信息：</h5>
+          <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
+          <h4>群聊名：{{ selectedFriend.groupName }}</h4>
+          <p>群号: {{ selectedFriend.groupId }}</p>
+          <p>群聊创建者: {{ selectedFriend.creatorName }}</p>
+        </div>
+      </div>
     </el-main>
   </el-container>
 </template>
@@ -89,27 +120,122 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import router from '@/router';
-import { createMyGroup,getMyApplyList,getAllFriends,handleAddFriend } from '@/api/user';
-
-// 友信息示例
-const friends = ref([
-  { id: 1, name: 'Alice', avatar: 'path/to/alice.jpg', signature: 'A lovely friend' },
-  { id: 2, name: 'Bob', avatar: 'path/to/bob.jpg', signature: 'Charming personality' },
-  { id: 3, name: 'Charlie', avatar: 'path/to/charlie.jpg', signature: 'Always smiling' },
-  { id: 4, name: 'David', avatar: 'path/to/david.jpg', signature: 'Tech enthusiast' },
-]);
-
-const message = ref([]);
-
-const mygetmessage = ref([]);
+import { createMyGroup,getMyApplyList, deleteMyFriend,handleAddFriend,getOneFriend } from '@/api/user';
 
 
+const selectedFriend = ref(); // 选中的好友或群聊
 
-const currentPage = ref(''); // 当前显示的页面
+const friendsAndGroups = ref([]);
+const showfriendData = () => {
+  const friendsData = localStorage.getItem('friends')? JSON.parse(localStorage.getItem('friends')) : [];
+  console.log("friendsData", friendsData);
+  friendsData.forEach((friend) => {
+    const newFriend = {
+      avatar: friend.avatar ? `data:image/png;base64,${friend.avatar}` : '',
+      friendName: ref(friend.username),
+      signature: ref(friend.signature && friend.signature.trim()!== ''? friend.signature : '尚未设置个性签名'),
+      friendId: ref(friend.id)
+    };
+    friendsAndGroups.value.push(newFriend);
+  });
+};
+// 我的申请列表
+const showgroupData = () => {
+  const groupsData = localStorage.getItem('usergroups') ? JSON.parse(localStorage.getItem('usergroups')) : [];
+  console.log("groupsData", groupsData);
+  groupsData.forEach((group) => {
+    const newGroup = {
+      avatar: group.groupAvatar ? `data:image/png;base64,${group.groupAvatar}` : '',
+      groupName: group.groupName,
+      creatorName: group.creatorName,
+      groupId: group.groupId // 确保每个群组都有唯一的ID
+    };
+    friendsAndGroups.value.push(newGroup); // 将群组信息也添加到好友列表
+  });
+};
+
+
+
+const message = ref([]);//id等信息
+const messageForm = ref([]);//消息的发送人名单
+const currentmessage = ref({
+  messagesederavatar: '',
+  messagesenderusername: '',
+  messagereceiverusername: '',
+  messagecontent: '',
+  time: '',
+  messagesenderid: '',
+  messagereceiverid: '',
+  messagesendersignature: '',
+  recordId: ''
+});
+
+//显示请求
+const showRequest = async() => {
+  console.log("message.value.length", message.value.length)
+  for (let i = 0; i < message.value.length; i++) {
+    try {
+      console.log("senderId 类型:", typeof message.value[0].senderId);
+      console.log("message.value[" + i + "].senderId", message.value[i].senderId);
+      const res = await getOneFriend({
+        friendId: message.value[i].senderId
+      });
+      console.log(res);
+      currentmessage.value.messagesederavatar = res.data.avatar ? `data:image/png;base64,${res.data.avatar}` : ''
+      currentmessage.value.messagesederusername = res.data.username;
+      currentmessage.value.messagesenderid = res.data.id;
+      currentmessage.value.messagecontent = message.value[i].message;
+      currentmessage.value.time = new Date().toLocaleString() ;//获取当前时间
+      currentmessage.value.messagereceiverid = message.value[i].receiverId;
+      currentmessage.value.messagesendersignature = res.data.signature;
+      currentmessage.value.recordId = message.value[i].recordId;
+      console.log("currentmessage", currentmessage.value);
+    } catch (error) {
+      console.error(error);
+    }
+    const myId= Number(localStorage.getItem('userId'));
+    console.log("myId", myId);
+    if (message.value[i].receiverId === myId) {
+      messageForm.value.push(currentmessage.value);
+    };
+  }
+  console.log("messageForm", messageForm.value);
+  
+};
+
+
+// 处理请求
+const handleRequest = async(check) => {
+  console.log("check", check);
+  try {
+    const res = await handleAddFriend({
+      recordId: currentmessage.value.recordId,
+      friendId: currentmessage.value.messagesenderid,
+      check: check
+    });
+    console.log(res);
+    console.log("同意或拒绝成功");
+    for (let i = 0; i < messageForm.value.length; i++) {
+      if (messageForm.value[i].messagesenderid === currentmessage.value.messagesenderid) {
+        messageForm.value.splice(i, 1); // 删除已处理的消息
+        console.log("已删除"+ messageForm.value[i].messagesenderid)
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+const currentPage = ref('messages'); // 当前显示的页面
 onMounted(() => {
-  currentPage.value = 'friends';
+  currentPage.value = 'messages';
   // loadFriends();
   loadmyApplyList();
+  showfriendData();
+  showgroupData();
+  showRequest();
+  
 });
 
 const loadmyApplyList = async () => {
@@ -118,6 +244,7 @@ const loadmyApplyList = async () => {
     console.log("res",res);
     message.value = res.data;
     console.log("message",message.value);
+    
   } catch (error) {
     console.error(error);
   }
@@ -126,26 +253,37 @@ const loadmyApplyList = async () => {
 const pendingRequest = ref(false); // 是否有待处理的请求
 
 // 加载好友列表
-const loadFriends = async () => {
+// const loadFriends = async () => {
+//   try {
+//     const res = await getAllFriends();
+//     console.log(res);
+    
+//     console.log("friends",friends.value);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
+
+// 删除好友
+// 删除好友
+const deleteFriend = async (id) => {
   try {
-    const res = await getAllFriends();
-    console.log(res);
-    friends.value = res.data;
+    console.log('删除好友请求参数：', id);
+    await deleteMyFriend({
+      friendId: id
+    });
+    
+    // 删除成功后更新 localStorage
+    const friendsData = localStorage.getItem('friends') ? JSON.parse(localStorage.getItem('friends')) : [];
+    const updatedFriendsData = friendsData.filter(friend => friend.id !== id); // 过滤掉被删除的好友
+    localStorage.setItem('friends', JSON.stringify(updatedFriendsData)); // 更新 localStorage
+    
+    console.log('删除好友成功');
   } catch (error) {
-    console.error(error);
+    console.error('删除好友失败:', error);
   }
 };
 
-// // 删除好友
-// const deleteFriend = async (id) => {
-//   try {
-//     await deleteMyFriend(id);
-//     console.log('删除好友成功');
-//     loadFriends();
-//   } catch (error) {
-//     console.error('删除好友失败:', error);
-//   }
-// };
 
 // 创建群聊表单数据
 const groupForm = ref({
@@ -169,44 +307,65 @@ const showCreateGroup = () => {
 
 // 处理头像上传变化
 const handleAvatarChange = (file) => {
-  const reader = new FileReader();
-  reader.readAsDataURL(file.raw);
-  reader.onload = () => {
-    groupForm.value.avatar = file.raw; // 保持为 File 对象以便上传
-  };
+    const reader = new FileReader();
+    reader.readAsDataURL(file.raw);
+    reader.onload = () => {
+        console.log('文件读取成功，赋值前的groupForm.avatar：', groupForm.value.avatar);
+        groupForm.value.avatar = file.raw; 
+        console.log('文件读取成功，赋值后的groupForm.avatar：', groupForm.value.avatar);
+    };
+    reader.onerror = (error) => {
+        console.error('文件读取出错：', error);
+    };
 };
 
+const handleFileChange = (fileList) => {
+    console.log('进入handleFileChange函数，fileList：', fileList);
+    if (fileList && fileList.raw) {
+        const file = fileList.raw; 
+        console.log('获取到的文件对象：', file);
+        groupForm.value.avatar = file; 
+        console.log('赋值后的groupForm.avatar：', groupForm.value.avatar);
+    } else {
+        console.warn('没有选择文件或fileList为undefined');
+    }
+};
+
+
+
+function handleAvatarUpload(file) {
+  console.log("file",file);
+}
 // 创建群聊的确认操作
 const createGroup = async () => {
-  const formData = new FormData();
-  formData.append('groupName', groupForm.value.groupName);
-  formData.append('needCheck', groupForm.value.requireVerification === '是' ? 1 : 0); // 内容应为整数
-  const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/jpeg'; // 限制选择的文件类型为jpg图片
-    input.onchange = async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            formData.append('avatar', file);
-            try {
-                await createMyGroup(formData); // 确保调用时为 FormData
-                 console.log('创建群聊成功');
-                router.push('/main/group'); // 跳转到群聊页面
-                } catch (error) {
-                  console.error('创建群聊失败:', error);
-                }
-             }
-    };
-}
-
-// 处理请求
-const acceptRequest = () => {
-  pendingRequest.value = false;
+    const formData = new FormData();
+    formData.append('groupName', groupForm.value.groupName);
+    formData.append('groupAvatar', groupForm.value.avatar); // 更改为groupAvatar
+    formData.append('needCheck', groupForm.value.requireVerification === '是' ? 1 : 0); // 将字符串转换为整数
+    console.log("formData", formData);
+    try {
+        const res = await createMyGroup(formData);
+        console.log(res);
+    } catch (error) {
+        console.error(error);
+        console.error('创建群聊失败:', error.response ? error.response.data : error.message);
+    }
 };
 
-const rejectRequest = () => {
-  pendingRequest.value = false;
+ 
+const showFriendOrGroupDetails = (item) => {
+  selectedFriend.value = item;
+  console.log("selectedFriend", selectedFriend.value);
+  if (item.groupId) {
+    currentPage.value = 'groupDetail'; // 设置当前页面为群组详细信息
+  } else {
+    currentPage.value = 'friendDetail'; // 设置当前页面为好友详细信息
+  }
 };
+           
+
+
+
 
 </script>
 
@@ -298,5 +457,12 @@ const rejectRequest = () => {
 .el-icon-plus {
   font-size: 22px;
   color: #f4f6f8;
+}
+
+.friendgroup-detail-box {
+  background-color: #f5f5f5;
+  flex: 1;
+  padding: 10px;
+  margin-left: 300px;
 }
 </style>
