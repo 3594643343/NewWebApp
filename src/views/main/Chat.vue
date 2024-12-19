@@ -14,6 +14,7 @@ const showfriendData = () => {
   console.log("friendsData", friendsData);
   friendsData.forEach((friend) => {
     const newFriend = {
+      friendId: friend.id,
       avatar: ref(friend.avatar? 'data:image/png;base64,' + friend.avatar : ''),
       name: ref(friend.username),
       signature: ref(friend.signature && friend.signature.trim()!== ''? friend.signature : '尚未设置个性签名')
@@ -40,7 +41,7 @@ const showgroupData = () => {
 onMounted(() => {
   showfriendData();
   showgroupData();
-  initWschat();
+  //initWschat();
   if (friendsAndGroups.value.length > 0) {
     selectedFriend.value = friendsAndGroups.value[0]; // 设置默认选择的好友
   }
@@ -64,6 +65,7 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
+  newMessage.value = ''; // 清空输入消息
   console.log('2:', userProfileDetailsVisible.value, foruserProfileDetailsVisible.value,ifFriendOrGroup.value);
 };
 
@@ -218,23 +220,61 @@ const messages = ref([]); // 聊天记录
 const messageList = ref([]); // 聊天记录
 const newMessage = ref(''); // 新消息内容
 
+// const sendMessage = (newMessage) => {
+//   console.log('发送消息:', newMessage);
+//   if (!newMessage.trim()) return; // 消息不能为空
+//   // const message = {
+//   //   from: localStorage.getItem('userId'), // 假设你在 localStorage 中有用户名
+//   //   to: selectedFriend.value.friendId, // 将消息发送给的好友 ID
+//   //   content: newMessage,
+//   // };
+//   // console.log('发送消息message:', message);
+//   const wschat = getWschat(); // 获取 WebSocket 实例
+//   if (wschat && wschat.readyState === WebSocket.OPEN) {
+//     wschat.send(JSON.stringify(newMessage)); // 发送消息
+//     // messages.value.push(message); // 更新聊天记录
+//   } else {
+//     console.error('WebSocket 未连接或处于关闭状态');
+//   }
+// };
+
 const sendMessage = (newMessage) => {
   console.log('发送消息:', newMessage);
   if (!newMessage.trim()) return; // 消息不能为空
-  // const message = {
-  //   from: localStorage.getItem('userId'), // 假设你在 localStorage 中有用户名
-  //   to: selectedFriend.value.friendId, // 将消息发送给的好友 ID
-  //   content: newMessage,
-  // };
-  // console.log('发送消息message:', message);
+
+  // 获取接收者的 ID 和判断是否是群聊
+  const receiverId = (selectedFriend.value.friendId || selectedFriend.value.groupId).toString();
+  const isGroup = selectedFriend.value.groupId ? '1' : '0';
+
+  // 获取当前时间并格式化
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需要加1，并补零
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const time = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+  // 构建 JSON 对象
+  const message = {
+    receiverId: receiverId,
+    isGroup: isGroup,
+    time: time,
+    content: newMessage,
+  };
+
+  console.log('发送消息message:', message);
+
   const wschat = getWschat(); // 获取 WebSocket 实例
   if (wschat && wschat.readyState === WebSocket.OPEN) {
-    wschat.send(JSON.stringify(newMessage)); // 发送消息
+    wschat.send(JSON.stringify(message)); // 发送消息
     // messages.value.push(message); // 更新聊天记录
   } else {
     console.error('WebSocket 未连接或处于关闭状态');
   }
 };
+
 onBeforeUnmount(() => {
   closewschat(); // 组件卸载时关闭 WebSocket 连接
 });
