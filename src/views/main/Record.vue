@@ -1,9 +1,7 @@
 <template>
   <div>
     <div class="fixed-search-bar">
-      <br>
       <h2>会议记录</h2>
-      <br>
       <el-row>
         <el-select v-model="searchType" placeholder="选择搜索类型" style="width: 150px; margin-right: 10px;">
           <el-option label="会议主题" value="subject"></el-option>
@@ -90,6 +88,7 @@ const loadRecordMeetings = async () => {
     if (response && response.data) {
       meetingRecord.value = response.data; // 更新会议列表
       //page.value += 1; // 增加页码以便加载更多数据
+      meetingRecord.value.sort((a, b) => new Date(b.meetingStartTime).getTime() - new Date(a.meetingStartTime).getTime());
       console.log('获取会议记录列表成功：', meetingRecord.value);
     } else {
       console.error('未能获取会议记录');
@@ -111,30 +110,30 @@ function resetSearch() {
 }
 
 // 详细信息
-const viewDetails = async (meeting) => {
-  try {
-    const response = await getMeetingDetailService(meeting.recordId);
-    if (response && response.data) {
-      console.log('获取会议详情成功：', response.data);
-      localStorage.setItem('currentMeeting', JSON.stringify(meeting));
-      console.log('当前会议信息：', meeting);
-      localStorage.setItem('currentMeetingDetails', JSON.stringify(response.data));
-      // console.log('跳转到会议详情页');
-      router.push('/main/detail');
-    } else {
-      console.error('未能获取会议详情');
-    }
-  } catch (error) {
-    console.error('获取会议详情失败:', error);
-  }
-};
-
-// const viewDetails = (meeting) => {
+// const viewDetails = async (meeting) => {
+//   try {
+//     const response = await getMeetingDetailService(meeting.recordId);
+//     if (response && response.data) {
+//       console.log('获取会议详情成功：', response.data);
 //       localStorage.setItem('currentMeeting', JSON.stringify(meeting));
 //       console.log('当前会议信息：', meeting);
+//       localStorage.setItem('currentMeetingDetails', JSON.stringify(response.data));
 //       // console.log('跳转到会议详情页');
 //       router.push('/main/detail');
+//     } else {
+//       console.error('未能获取会议详情');
+//     }
+//   } catch (error) {
+//     console.error('获取会议详情失败:', error);
+//   }
 // };
+
+const viewDetails = (meeting) => {
+      localStorage.setItem('currentMeeting', JSON.stringify(meeting));
+      console.log('当前会议信息：', meeting);
+      // console.log('跳转到会议详情页');
+      router.push('/main/detail');
+};
 
 const deleteMeeting = async (meeting) => {
   try {

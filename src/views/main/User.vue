@@ -283,7 +283,7 @@ const changeNeedCheck = async (value) => {
             </div>
             </div>
             <br>
-            <div>ID: {{ userId }}</div>
+            <div>ID: {{ userId }}</div><br>
             <div class="edit-button-container">
                 <el-button plain type="text" class="edit-button" @click="editProfile">
                     <ElIcon>

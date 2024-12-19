@@ -38,63 +38,107 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+import { getMeetingDetailService } from '@/api/user';
 
 const router = useRouter(); // 获取 router 实例
 const audioPlayer = ref(null);
 const audioProgress = ref(null);
 
-const meetingDetails = ref({ meetingName: '', meetingStartTime: '', meetingEndTime: '', meetingHost: '', participants: [], meetingRecord: '', meetingMinutes: '', meetingTranslation: '', meetingAudio: '' });
+const meetingDetails = ref({
+  meetingName: '',
+  meetingStartTime: '',
+  meetingEndTime: '',
+  meetingHost: '',
+  participants: [],
+  meetingRecord: '',
+  meetingMinutes: '',
+  meetingTranslation: '',
+  meetingAudio: '',
+});
 
 onMounted(() => {
   const meeting = JSON.parse(localStorage.getItem('currentMeeting'))
   if (meeting) {
-    meetingDetails.value.meetingName = meeting.meetingName
-    meetingDetails.value.meetingStartTime = meeting.meetingStartTime
-    meetingDetails.value.meetingEndTime = meeting.meetingEndTime
-    meetingDetails.value.meetingHost = meeting.meetingHost
-    meetingDetails.value.participants = meeting.participants
-    console.log('获取会议详情成功：', meetingDetails.value)
+    meetingDetails.value = {
+      meetingName: meeting.meetingName,
+      meetingStartTime: meeting.meetingStartTime,
+      meetingEndTime: meeting.meetingEndTime,
+      meetingHost: meeting.meetingHost,
+      participants: meeting.participants,
+      meetingRecord: '',
+      meetingMinutes: '',
+      meetingTranslation: '',
+      meetingAudio: '',
+    };
+    console.log('获取会议详情成功：', meetingDetails.value);
   } else {
     console.error('未能获取会议详情')
     router.push({ name:'record' })
   }
-  const meetingData = JSON.parse(localStorage.getItem('currentMeetingDetails'))
-  if (meetingData.meetingRecord) {
-    meetingDetails.value.meetingRecord = meetingData.meetingRecord;
-  }
-  if (meetingData.meetingMinutes) {
-    meetingDetails.value.meetingMinutes = meetingData.meetingMinutes;
-  }
-  if (meetingData.meetingTranslation) {
-    meetingDetails.value.meetingTranslation = meetingData.meetingTranslation;
-  }
-  if (meetingData.meetingAudio) {
-    meetingDetails.value.meetingAudio = meetingData.meetingAudio;
-  }
+  getDetails(meeting);
+  // const meetingData = JSON.parse(localStorage.getItem('currentMeetingDetails'))
+  // if (meetingData.meetingRecord) {
+  //   meetingDetails.value.meetingRecord = meetingData.meetingRecord;
+  // }
+  // if (meetingData.meetingMinutes) {
+  //   meetingDetails.value.meetingMinutes = meetingData.meetingMinutes;
+  // }
+  // if (meetingData.meetingTranslation) {
+  //   meetingDetails.value.meetingTranslation = meetingData.meetingTranslation;
+  // }
+  // if (meetingData.meetingAudio) {
+  //   meetingDetails.value.meetingAudio = meetingData.meetingAudio;
+  // }
 
-  if (meetingDetails.value.meetingName) {
-    console.log('从 localStorage 获取会议详情成功：', meetingDetails.value);
-  } else {
-    console.error('未能从 localStorage 获取会议详情');
-    // 如果没有获取到会议详情，可以重定向回会议列表页面
-    router.push({ name: 'record' });
-  }
-  if (audioPlayer.value) {
-    audioPlayer.value.addEventListener('timeupdate', () => {
-      if (audioPlayer.value.duration) {
-        const progress = (audioPlayer.value.currentTime / audioPlayer.value.duration) * 100;
-        audioProgress.value.textContent = `播放进度: ${progress.toFixed(2)}%`;
-      }
-    });
-  }
-  console.log('会议详情：', meetingDetails.value)
+  // if (meetingDetails.value.meetingName) {
+  //   console.log('从 localStorage 获取会议详情成功：', meetingDetails.value);
+  // } else {
+  //   console.error('未能从 localStorage 获取会议详情');
+  //   // 如果没有获取到会议详情，可以重定向回会议列表页面
+  //   router.push({ name: 'record' });
+  // }
+  // if (audioPlayer.value) {
+  //   audioPlayer.value.addEventListener('timeupdate', () => {
+  //     if (audioPlayer.value.duration) {
+  //       const progress = (audioPlayer.value.currentTime / audioPlayer.value.duration) * 100;
+  //       audioProgress.value.textContent = `播放进度: ${progress.toFixed(2)}%`;
+  //     }
+  //   });
+  // }
+  // console.log('会议详情：', meetingDetails.value)
 });
 
 const goBack = () => {
   router.back(); // 返回上一页
 };
 
+const getDetails = async (meeting) => {
+  try {
+    const response = await getMeetingDetailService(meeting.recordId);
+    if (response && response.data) {
+      console.log('获取会议详情成功：', response.data);
+      // console.log('当前会议信息：', meeting);
+      // localStorage.setItem('currentMeetingDetails', JSON.stringify(response.data));
+      meetingDetails.value = {
+        meetingName: meetingDetails.value.meetingName,
+        meetingStartTime: meetingDetails.value.meetingStartTime,
+        meetingEndTime: meetingDetails.value.meetingEndTime,
+        meetingHost: meetingDetails.value.meetingHost,
+        participants: meetingDetails.value.participants,
+        meetingRecord: response.data.meetingRecord || '',
+        meetingMinutes: response.data.meetingMinutes || '',
+        meetingTranslation: response.data.meetingTranslation || '',
+        meetingAudio: response.data.meetingAudio || '',
+      };
+      console.log('更新后的会议详情：', meetingDetails.value);
+    } else {
+      console.error('未能获取会议详情');
+    }
+  } catch (error) {
+    console.error('获取会议详情失败:', error);
+  }
+};
 </script>
 
 <style>
