@@ -256,7 +256,9 @@ const changeNeedCheck = async (value) => {
 
 <template>
     <div class="user">
+      <br>
         <h2>个人资料</h2>
+        <br>
         <el-card>
             <template #header>
             <div class="card-header">

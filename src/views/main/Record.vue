@@ -1,7 +1,9 @@
 <template>
   <div>
     <div class="fixed-search-bar">
+      <br>
       <h2>会议记录</h2>
+      <br>
       <el-row>
         <el-select v-model="searchType" placeholder="选择搜索类型" style="width: 150px; margin-right: 10px;">
           <el-option label="会议主题" value="subject"></el-option>

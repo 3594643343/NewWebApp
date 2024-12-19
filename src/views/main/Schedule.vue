@@ -1,6 +1,8 @@
 <template>
   <div>
+    <br>
     <h2>我的日程</h2>
+    <br>
     <el-button type="primary" @click="openAddScheduleDialog">添加日程</el-button>
     <el-tabs v-model="activeName" class="demo-tabs">
       <el-tab-pane label="进行中的会议" name="first">
