@@ -55,6 +55,15 @@ export const updateUserPasswordApi = ({ oldPassword, newPassword, confirmPasswor
     });
     return request.put(`/userinfo/change/password?${queryParams.toString()}`);
 }
+
+//修改是否需要验证
+export const updateUserNeedCheckApi = ({ needCheck }) => {
+    const queryParams = new URLSearchParams({
+      needCheck: needCheck // 作为查询参数传递
+    });
+    return request.post(`/userinfo/change/needCheck?${queryParams.toString()}`);
+  };
+
 //获取会议记录列表
 export const getMeetingRecordService = () =>
     request.get('/record/list')

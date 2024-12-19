@@ -72,13 +72,18 @@ const router = createRouter({
           path:'record',
           name:'record',
           component: Record,
-          children: [
-            {
-              path: ':recordId',
-              name: 'recordDetail',
-              component: RecordDetail,
-            },
-          ],
+          // children: [
+          //   {
+          //     path: 'record/:detail',
+          //     name: 'recordDetail',
+          //     component: RecordDetail,
+          //   },
+          // ],
+        },
+        {
+          path:'detail',
+          name:'recordDetail',
+          component: RecordDetail,
         },
         {
           path:'schedule',

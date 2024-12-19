@@ -1,13 +1,16 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { updateUserProfileApi, updateUserPasswordApi, updateUserAvatarApi  } from '@/api/user';
+import { updateUserProfileApi, updateUserPasswordApi, updateUserAvatarApi,updateUserNeedCheckApi  } from '@/api/user';
 // import ProfileChange from '@/components/usersetting/ProfileChange.vue';
 
 const errorHandler = () => true;
 const avatarSrc = ref(''); // 初始头像链接
 const username = ref(''); // 用于存储用户名
 const signature = ref(''); // 用于存储签名
+const needCheck = ref(1);
+const radio = ref();
+const userId = ref(localStorage.getItem('userId') || ''); // 用于存储用户 ID
 
 const dialogChangeProfileVisible = ref(false); // 控制修改个人信息弹窗的显示
 const dialogChangePasswordVisible = ref(false);
@@ -39,6 +42,8 @@ const retrieveUserProfile = () => {
     signature.value = userProfile.signature && userProfile.signature.trim() !== '' 
       ? userProfile.signature 
       : '尚未设置个性签名';
+    needCheck.value = userProfile.needCheck !== undefined ? userProfile.needCheck : 0;
+    radio.value = userProfile.needCheck !== undefined ? userProfile.needCheck : 0;
 } else {
     console.log('没有找到用户信息');
   }
@@ -219,6 +224,34 @@ const changePassword = async () => {
   }
 };
 
+// 修改是否需要验证
+const changeNeedCheck = async (value) => {
+  try {
+    const response = await updateUserNeedCheckApi({ needCheck: value });
+    if (response && response.code === 1) {
+      console.log('好友验证设置更新成功', response.data);
+      ElMessage.success('好友验证设置更新成功');
+      // 更新本地状态
+      needCheck.value = value;
+      radio.value = value;
+      // 更新 localStorage 中的 userProfile
+      const userProfileData = localStorage.getItem('userProfile');
+      if (userProfileData) {
+        const userProfile = JSON.parse(userProfileData);
+        userProfile.needCheck = value;
+        localStorage.setItem('userProfile', JSON.stringify(userProfile));
+      }
+    } else {
+      const msg = response.msg || '好友验证设置更新失败';
+      console.error('好友验证设置更新失败:', msg);
+      ElMessage.error(msg); // 显示返回的错误信息
+    }
+  } catch (error) {
+    const errorMsg = error.response ? error.response.msg || error.message : '更新好友验证设置失败';
+    console.error('更新好友验证设置失败:', errorMsg);
+    ElMessage.error(errorMsg); // 显示错误信息
+  }
+};
 </script>
 
 <template>
@@ -248,6 +281,7 @@ const changePassword = async () => {
             </div>
             </div>
             <br>
+            <div>ID: {{ userId }}</div>
             <div class="edit-button-container">
                 <el-button plain type="text" class="edit-button" @click="editProfile">
                     <ElIcon>
@@ -274,7 +308,14 @@ const changePassword = async () => {
                     </ElIcon>
                     修改密码
                 </el-button>
+                </div>
             </div>
+            <div class="security-info-part">
+                <p class="security-section-title">好友验证</p>
+                <el-radio-group v-model="radio" @change="changeNeedCheck">
+                  <el-radio :value="0">无需验证</el-radio>
+                  <el-radio :value="1">需要验证</el-radio>
+                </el-radio-group>
             </div>
         </el-card>
         <!-- 修改个人信息弹窗 -->

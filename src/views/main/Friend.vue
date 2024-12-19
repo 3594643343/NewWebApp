@@ -241,7 +241,7 @@ onMounted(() => {
 const loadmyApplyList = async () => {
   try {
     const res = await getMyApplyList();
-    console.log(res);
+    console.log("res",res);
     message.value = res.data;
     console.log("message",message.value);
     
