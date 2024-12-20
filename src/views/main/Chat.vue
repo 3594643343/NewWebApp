@@ -1,9 +1,22 @@
 <script setup>
-import { ref, onMounted,onBeforeUnmount } from 'vue';
+import { ref, onMounted,onBeforeUnmount,nextTick } from 'vue';
 import router from '@/router';
-import { searchFriends, applyAddFriend, searchGroup, getAllFriends,getUserGroups } from '@/api/user';
+import { searchFriends, applyAddFriend, searchGroup, getAllFriends,getUserGroups,getChatRecord } from '@/api/user';
 import { initWschat,getWschat,closewschat } from '@/api/user';
+import emitter from '@/main.js'; // 根据实际路径调整引入
 
+emitter.emit('messageReceived', {}); // 初始化时先触发一次，可用于加载历史消息等情况（可选）
+
+emitter.on('messageReceived', (receivedMessage) => {
+    const newMessageItem = {
+        id: receivedMessage.data.senderId,
+        speaker: receivedMessage.data.senderId === parseInt(myUserId)? 'me' : 'friend',
+        text: receivedMessage.data.content,
+        time: receivedMessage.data.time
+    };
+    messageList.value.push(newMessageItem);
+    scrollToBottom();
+});
 // 好友列表数据（示例数据，可替换为真实数据获取）
 const friendsAndGroups = ref([]);
 // 友信息示例
@@ -41,11 +54,14 @@ const showgroupData = () => {
 onMounted(() => {
   showfriendData();
   showgroupData();
-  //initWschat();
+  initWschat(); // 初始化 WebSocket
   if (friendsAndGroups.value.length > 0) {
     selectedFriend.value = friendsAndGroups.value[0]; // 设置默认选择的好友
   }
+  initMessageList();
 });
+
+
 
 const selectedFriend = ref({}); // 选中的好友
 const searchFriendId = ref('');
@@ -64,6 +80,7 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
+  initMessageList();
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
   newMessage.value = ''; // 清空输入消息
   console.log('2:', userProfileDetailsVisible.value, foruserProfileDetailsVisible.value,ifFriendOrGroup.value);
@@ -147,8 +164,6 @@ const addFriend = async() => {
       console.log('发送添加好友请求成功', response.data);
       // 发送成功后，关闭用户详情弹窗
       addFriendDialogVisible.value = false;
-      loadFriends(); // 刷新好友列表
-      loadUserGroups(); // 刷新群聊列表
     } else {
       console.error('发送添加好友请求失败，返回数据格式不正确');
     }
@@ -182,44 +197,59 @@ const sendAddFriendRequest = async () => {
   }
 };
 
+const myUserId = localStorage.getItem('userId'); // 获取当前用户 ID
+const chatRecords = ref([]); // 聊天记录
+// 假设这是您的用户 ID
 
-const friends = ref([]);
-const groupid = ref([]);
-const usergroups = ref([]);
-
-const loadFriends = async () => {
-  try {
-    const res = await getAllFriends();
-    console.log(res);
-    friends.value = res.data;
-    localStorage.setItem('friends', JSON.stringify(friends.value));
-    console.log("获取好友列表成功:friends",friends.value);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const loadUserGroups = async () => {
-  try {
-    const res = await getUserGroups();
-    console.log(res);
-    groupid.value = res.data;
-    console.log("获取用户群号成功:usergroups",groupid.value);
-    for(let i=0;i<groupid.value.length;i++){
-      const res1 = await getOneGroup(groupid.value[i]);
-      console.log(res1);
-      usergroups.value.push(res1.data);
-      console.log("获取用户群信息成功:usergroups",usergroups.value);
-    }
-    localStorage.setItem('usergroups', JSON.stringify(usergroups.value));
-  } catch (error) {
-    console.error(error);
-  }
-};
-const messages = ref([]); // 聊天记录
 const messageList = ref([]); // 聊天记录
+
+const initMessageList = async () => {
+  console.log('初始化聊天记录:', selectedFriend.value.friendId);
+  console.log('初始化聊天记录2:', selectedFriend.value);
+  try {
+    const response = await getChatRecord({
+      friendId: selectedFriend.value.friendId,
+    });
+    if (response && response.data) {
+      console.log('获取聊天记录成功', response.data);
+      chatRecords.value = response.data;
+      messageList.value = response.data.map((item) => {
+        const newItem = {
+          id: item.speakerId,
+          speaker: item.speakerId === parseInt(myUserId) ? 'me' : 'friend',
+          text: item.text,
+          time: item.time,
+        };
+        return newItem;
+      });
+      messageList.value.sort((a, b) => new Date(a.time) - new Date(b.time)); // 按时间排序
+      console.log('初始化聊天记录3:', messageList.value);
+      scrollToBottom(); // 滚动到底部
+    } else {
+      console.error('获取聊天记录失败，返回数据格式不正确');
+    }
+  } catch (error) {
+    console.error('获取聊天记录失败:', error);
+  }
+};
+const messageListElement = ref(null); // 创建对消息列表元素的引用
+const scrollToBottom = () => {
+  nextTick(() => {
+    const messageListElement = document.querySelector('.message-list'); // 获取消息列表 DOM 元素
+    if (messageListElement) {
+      messageListElement.scrollTop = messageListElement.scrollHeight; // 滚动到底部
+    }
+  });
+};
+
+const messages = ref([]); // 聊天记录
+
 const newMessage = ref(''); // 新消息内容
 
+
+const sendMessage = (newmessage) => {
+  console.log('发送消息:', newmessage);
+  if (!newmessage.trim()) return; // 消息不能为空
 // const sendMessage = (newMessage) => {
 //   console.log('发送消息:', newMessage);
 //   if (!newMessage.trim()) return; // 消息不能为空
@@ -267,18 +297,27 @@ const sendMessage = (newMessageContent) => {
     receiverId: receiverId,
     isGroup: isGroup,
     time: time,
+    content: newmessage,
     content: newMessageContent,
   };
   console.log('发送消息message:', message);
-
+  
   const wschat = getWschat(); // 获取 WebSocket 实例
   if (wschat && wschat.readyState === WebSocket.OPEN) {
     wschat.send(JSON.stringify(message)); // 发送消息
     // messages.value.push(message); // 更新聊天记录
+    initMessageList(); // 更新聊天记录
+    console.log('更新聊天记录成功:', messageList.value);
+    console.log('清空前输入消息:', newMessage.value);
+    newMessage.value = ''; // 清空输入消息
+    console.log('清空输入消息:', newMessage.value
+    );
+    
     newMessage.value = ''; // 清空输入框
   } else {
     console.error('WebSocket 未连接或处于关闭状态');
   }
+
 };
 
 // onBeforeUnmount(() => {
@@ -303,7 +342,7 @@ const sendMessage = (newMessageContent) => {
           <el-menu v-if="searchedFriend.length > 0">
             <el-menu-item
               v-for="item in searchedFriend"
-              :key="item.id"
+              :key="item.time"
               @click="selectFriend(item)"
             >
               <el-avatar :src="item.avatar" size="large" class="avatar" />
@@ -346,11 +385,11 @@ const sendMessage = (newMessageContent) => {
               <h3 v-else>在 {{ selectedFriend.groupName }} 中的聊天</h3>
             </el-header>
             <el-main>
-              <div class="message-list">
+              <div class="message-list" ref="messageListElement">
                 <div
                   v-for="msg in messageList"
                   :key="msg.id"
-                  :class="['message', msg.sender === 'me' ? 'my-message' : 'friend-message']"
+                  :class="['message', msg.speaker === 'me' ? 'my-message' : 'friend-message']"
                 >
                   <span>{{ msg.text }}</span>
                 </div>
@@ -425,13 +464,13 @@ const sendMessage = (newMessageContent) => {
 
 .chat-main {
   background-color: #f5f5f5;
-  flex: 1;
-  padding: 10px;
+  /* flex: 1;
+  padding: 10px; */
 }
 
 .message-list {
-  height: 303px;
-  overflow-y: scroll;
+  height: 300px;
+  overflow-y: auto;
 }
 
 .friend-list {
@@ -441,7 +480,7 @@ const sendMessage = (newMessageContent) => {
 
 .my-message {
   display: flex;
-  justify-content: flex-end;
+  /* justify-content: flex-end; */
   align-items: flex-end;
   margin-bottom: 10px;
   padding: 10px;
@@ -451,19 +490,19 @@ const sendMessage = (newMessageContent) => {
 
 .friend-message {
   display: flex;
-  justify-content: flex-start;
+  /* justify-content: flex-start; */
   align-items: flex-start;
   padding: 10px;
   background-color: #fff;
   border-radius: 10px;
 }
 
-.input-wrapper {
+/* .input-wrapper {
   display: flex;
   justify-content: baseline;
   align-items: center;
   background-color: #fff;
-  border-radius: 5px;
+  border-radius: 1px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -475,7 +514,7 @@ const sendMessage = (newMessageContent) => {
   padding: 8px;
   font-size: 16px;
   transition: border-color 0.3s;
-}
+} */
 
 .input-message:focus {
   outline: none;
