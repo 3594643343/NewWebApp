@@ -566,6 +566,8 @@ const sendMessage = async (newmessage) => {
   // 获取接收者的 ID 和判断是否是群聊
   const receiverId = (selectedFriend.value.friendId || selectedFriend.value.groupId).toString();
   const isGroup = selectedFriend.value.groupId ? '1' : '0';
+  console.log('receiverId:', receiverId);
+  console.log('isGroup:', isGroup);
 
   // 获取当前时间并格式化
   const now = new Date();
@@ -576,6 +578,7 @@ const sendMessage = async (newmessage) => {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   const time = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  console.log('time:', time);
 
   // 构建 JSON 对象
   const message = {
@@ -583,8 +586,8 @@ const sendMessage = async (newmessage) => {
     isGroup: isGroup,
     time: time,
     content: newmessage,
+    content: newMessageContent,
   };
-
   console.log('发送消息message:', message);
   
   const wschat = getWschat(); // 获取 WebSocket 实例
@@ -593,18 +596,15 @@ const sendMessage = async (newmessage) => {
     // messages.value.push(message); // 更新聊天记录
     await updateChatRecords(); // 更新聊天记录
     
+    newMessage.value = ''; // 清空输入框
   } else {
     console.error('WebSocket 未连接或处于关闭状态');
   }
 
 };
 
-
-onBeforeUnmount(() => {
-    clearInterval(cacheClearTimer); // 组件卸载时清除定时器
-    closewschat();
-});
 </script>
+
 <template>
   <div class="chat-layout">
     <el-container class="chat-container">
