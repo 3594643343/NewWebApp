@@ -1,6 +1,10 @@
 import request from '../utils/request';
 import { ref } from 'vue';
-const wschat = ref(null); // 聊天websocket实例
+import emitter from '@/main.js'; // 根据实际路径调整引入
+import exp from 'constants';
+
+
+let wschat = ref(null); // 聊天websocket实例
 
 export const closewschat = () => {
   if (wschat.value) {
@@ -9,24 +13,34 @@ export const closewschat = () => {
 };
 // 页面加载完成后，初始化聊天websocket
 export const initWschat = () => {
-  if (wschat.value) {
-    wschat.value.close();
-  }
+    if (wschat.value) {
+      wschat.value.close();
+    }
   wschat.value = new WebSocket('ws://121.37.24.76:8079/chat/'+localStorage.getItem('userId'));
-  wschat.value.onopen = () => {
-    console.log('websocket连接成功');
+    wschat.value.onopen = () => {
+      console.log('websocket连接成功');
+    };
+    wschat.value.onmessage = (event) => {
+        console.log('websocket接收到消息:', event.data);
+        try {
+            const receivedMessage = JSON.parse(event.data);
+            // 触发事件总线的消息更新事件，传递接收到的消息数据
+            emitter.emit('messageReceived', receivedMessage);
+        } catch (error) {
+            console.error('解析WebSocket接收的消息出现错误:', error);
+            console.error('接收到的原始消息内容为:', event.data);
+        }
+    };
+    wschat.value.onclose = () => {
+      console.log('websocket连接关闭');
+    };
+    wschat.value.onerror = () => {
+      console.error('websocket发生错误:', error);
+    };
   };
-  wschat.value.onmessage = (event) => {
-    console.log('websocket接收到消息:', event.data);
-  };
-  wschat.value.onclose = () => {
-    console.log('websocket连接关闭');
-  };
-  wschat.value.onerror = (error) => {
-    console.error('websocket发生错误:', error);
-  };
-};
-export const getWschat = () => wschat.value; // 导出 wschat 让其他模块也能使用
+  
+  
+  export const getWschat = () => wschat.value;
 //用户注册
 export const userRegisterService = ({userName, userEmail, userPassword,checkPassword}) => 
     request.post('/register', {userName, userEmail, userPassword,checkPassword})
@@ -272,12 +286,20 @@ export const deleteMyFriend = ({friendId}) => {
     return request.delete(`/friend/delete?${queryParams.toString()}`);
 }
 //获取与一个好友的聊天记录
-export const getChatRecord = ({friendId}) => 
-    request.get('/friend/record', {
-        params: {
-            friendId: friendId // 作为查询参数传递
-        }
-    })
+export const getChatRecord = ({friendId}) => {
+    const intFriendId = parseInt(friendId, 10);
+    console.log("intFriendId", intFriendId)
+    console.log("friendId", friendId)
+    if (isNaN(intFriendId)) {
+        throw new Error('friendId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        friendId: intFriendId,
+    });
+    return request.get(`/friend/record?${queryParams.toString()}`);
+}
+
+    
 //搜索群来聊天
 export const searchGroup = ({ groupId }) => {
     // 将 groupId 转换为整数
@@ -311,9 +333,40 @@ export const createMyGroup = (formData) => {
         }
     )
 }
-//加入群聊
-export const joinGroup = ({groupId,groupPassword}) => 
-    request.post('/group/join', {groupId,groupPassword})
+//申请加入群聊
+export const applyJoinGroup = ({groupId,checkWords}) => {
+    console.log("groupId", groupId)
+    const intGroupId = parseInt(groupId, 10);
+    console.log("intGroupId", intGroupId)
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    return request.post('/group/add', {
+        groupId: intGroupId,
+        checkWords,
+    });
+}
+    
+//处理加入群聊验证
+export const handleJoinGroup = ({recordId,groupId,userId,check}) => {
+    const intGroupId = parseInt(groupId, 10);
+    const intRecordId = parseInt(recordId, 10);
+    const intuserId = parseInt(userId, 10);
+    const intCheck = parseInt(check, 10);
+
+
+    if (isNaN(intGroupId) || isNaN(intRecordId)|| isNaN(intCheck)|| isNaN(intuserId)) {
+        throw new Error('参数必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        recordId,
+        groupId,
+        userId,
+        check,  
+    });
+    
+    return request.post(`/group/deal?${queryParams.toString()}`);
+}
 //获取用户所有群聊id
 export const getUserGroups = () => 
     request.get('/group/get/allGroupId')
@@ -324,5 +377,30 @@ export const getOneGroup = (groupId) =>
             groupId: groupId // 作为查询参数传递
         }
     })
-//获取所有群聊信息
+
+//获取群聊成员信息
+export const getGroupMembers = ({groupId}) => {
+    console.log("groupId", groupId)
+    const intGroupId = parseInt(groupId, 10);
+    console.log("intGroupId", intGroupId)
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.get(`/group/getGroupMembers?${queryParams.toString()}`);
+}
+//获取一个群的聊天记录
+export const getGroupChatRecord = ({groupId}) => {
+    const intGroupId = parseInt(groupId, 10);
+
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.get(`/group/record?${queryParams.toString()}`);
+}
 
