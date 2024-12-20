@@ -247,26 +247,27 @@ const messages = ref([]); // 聊天记录
 const newMessage = ref(''); // 新消息内容
 
 
-const sendMessage = (newmessage) => {
-  console.log('发送消息:', newmessage);
-  if (!newmessage.trim()) return; // 消息不能为空
-// const sendMessage = (newMessage) => {
-//   console.log('发送消息:', newMessage);
-//   if (!newMessage.trim()) return; // 消息不能为空
-//   // const message = {
-//   //   from: localStorage.getItem('userId'), // 假设你在 localStorage 中有用户名
-//   //   to: selectedFriend.value.friendId, // 将消息发送给的好友 ID
-//   //   content: newMessage,
-//   // };
-//   // console.log('发送消息message:', message);
-//   const wschat = getWschat(); // 获取 WebSocket 实例
-//   if (wschat && wschat.readyState === WebSocket.OPEN) {
-//     wschat.send(JSON.stringify(newMessage)); // 发送消息
-//     // messages.value.push(message); // 更新聊天记录
-//   } else {
-//     console.error('WebSocket 未连接或处于关闭状态');
-//   }
-// };
+// const sendMessage = (newmessage) => {
+//   console.log('发送消息:', newmessage);
+//   if (!newmessage.trim()) return; // 消息不能为空
+// // const sendMessage = (newMessage) => {
+// //   console.log('发送消息:', newMessage);
+// //   if (!newMessage.trim()) return; // 消息不能为空
+// //   // const message = {
+// //   //   from: localStorage.getItem('userId'), // 假设你在 localStorage 中有用户名
+// //   //   to: selectedFriend.value.friendId, // 将消息发送给的好友 ID
+// //   //   content: newMessage,
+// //   // };
+// //   // console.log('发送消息message:', message);
+// //   const wschat = getWschat(); // 获取 WebSocket 实例
+// //   if (wschat && wschat.readyState === WebSocket.OPEN) {
+// //     wschat.send(JSON.stringify(newMessage)); // 发送消息
+// //     // messages.value.push(message); // 更新聊天记录
+// //   } else {
+// //     console.error('WebSocket 未连接或处于关闭状态');
+// //   }
+// // };
+// }
 
 const sendMessage = (newMessageContent) => {
   console.log('发送消息:', newMessageContent);
@@ -308,8 +309,8 @@ const sendMessage = (newMessageContent) => {
     // messages.value.push(message); // 更新聊天记录
     initMessageList(); // 更新聊天记录
     console.log('更新聊天记录成功:', messageList.value);
-    console.log('清空前输入消息:', newMessage.value);
-    newMessage.value = ''; // 清空输入消息
+    //console.log('清空前输入消息:', newMessage.value);
+    //newMessage.value = ''; // 清空输入消息
     console.log('清空输入消息:', newMessage.value
     );
     
@@ -320,10 +321,8 @@ const sendMessage = (newMessageContent) => {
 
 };
 
-// onBeforeUnmount(() => {
-//   closewschat(); // 组件卸载时关闭 WebSocket 连接
-// });
 </script>
+
 <template>
   <div class="chat-layout">
     <el-container class="chat-container">
