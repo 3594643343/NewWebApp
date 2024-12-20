@@ -1,6 +1,7 @@
 import request from '../utils/request';
 import { ref } from 'vue';
 import emitter from '@/main.js'; // 根据实际路径调整引入
+import exp from 'constants';
 
 
 let wschat = ref(null); // 聊天websocket实例
@@ -290,9 +291,40 @@ export const createMyGroup = (formData) => {
         }
     )
 }
-//加入群聊
-export const joinGroup = ({groupId,groupPassword}) => 
-    request.post('/group/join', {groupId,groupPassword})
+//申请加入群聊
+export const applyJoinGroup = ({groupId,checkWords}) => {
+    console.log("groupId", groupId)
+    const intGroupId = parseInt(groupId, 10);
+    console.log("intGroupId", intGroupId)
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    return request.post('/group/add', {
+        groupId: intGroupId,
+        checkWords,
+    });
+}
+    
+//处理加入群聊验证
+export const handleJoinGroup = ({recordId,groupId,userId,check}) => {
+    const intGroupId = parseInt(groupId, 10);
+    const intRecordId = parseInt(recordId, 10);
+    const intuserId = parseInt(userId, 10);
+    const intCheck = parseInt(check, 10);
+
+
+    if (isNaN(intGroupId) || isNaN(intRecordId)|| isNaN(intCheck)|| isNaN(intuserId)) {
+        throw new Error('参数必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        recordId,
+        groupId,
+        userId,
+        check,  
+    });
+    
+    return request.post(`/group/deal?${queryParams.toString()}`);
+}
 //获取用户所有群聊id
 export const getUserGroups = () => 
     request.get('/group/get/allGroupId')
@@ -303,5 +335,30 @@ export const getOneGroup = (groupId) =>
             groupId: groupId // 作为查询参数传递
         }
     })
-//获取所有群聊信息
+
+//获取群聊成员信息
+export const getGroupMembers = ({groupId}) => {
+    console.log("groupId", groupId)
+    const intGroupId = parseInt(groupId, 10);
+    console.log("intGroupId", intGroupId)
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.get(`/group/getGroupMembers?${queryParams.toString()}`);
+}
+//获取一个群的聊天记录
+export const getGroupChatRecord = ({groupId}) => {
+    const intGroupId = parseInt(groupId, 10);
+
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.get(`/group/record?${queryParams.toString()}`);
+}
 

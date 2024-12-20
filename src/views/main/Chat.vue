@@ -1,13 +1,26 @@
 <script setup>
 import { ref, onMounted,onBeforeUnmount,nextTick } from 'vue';
 import router from '@/router';
-import { searchFriends, applyAddFriend, searchGroup, getAllFriends,getUserGroups,getChatRecord } from '@/api/user';
+import { searchFriends, applyAddFriend, searchGroup, getChatRecord,getGroupChatRecord,getGroupMembers,applyJoinGroup,handleJoinGroup } from '@/api/user';
 import { initWschat,getWschat,closewschat } from '@/api/user';
 import emitter from '@/main.js'; // 根据实际路径调整引入
+import { debounce } from 'lodash';
 
-emitter.emit('messageReceived', {}); // 初始化时先触发一次，可用于加载历史消息等情况（可选）
 
-emitter.on('messageReceived', (receivedMessage) => {
+
+
+// emitter.emit('messageReceived', {}); // 初始化时先触发一次，可用于加载历史消息等情况（可选）
+const wschatifFriendOrGroup = ref(true); //发消息的是好友还是群聊,true为好友，false为群聊
+
+emitter.on('messageReceived', async (receivedMessage) => {
+  console.log('接收到消息', receivedMessage);
+   // 判断是好友还是群聊
+   if(receivedMessage.code === 1){
+    wschatifFriendOrGroup.value = true; //发消息的是好友
+   }else if(receivedMessage.code === 2){
+    wschatifFriendOrGroup.value = false; //发消息的是群聊
+   }
+  if (wschatifFriendOrGroup.value) {
     const newMessageItem = {
         id: receivedMessage.data.senderId,
         speaker: receivedMessage.data.senderId === parseInt(myUserId)? 'me' : 'friend',
@@ -16,9 +29,54 @@ emitter.on('messageReceived', (receivedMessage) => {
     };
     messageList.value.push(newMessageItem);
     scrollToBottom();
+  } else {
+    console.log("接收到群聊消息", receivedMessage.data.groupId)
+    const memberInfo = await getGroupmemberInfo(receivedMessage.data.groupId);
+    console.log("memberInfo", memberInfo);
+    // console.log("memberInfo.value", memberInfo.value)
+    console.log("memberInfo.find(member => member.value.userId === receivedMessage.data.senderId).userName", memberInfo.find(member => member.userId === receivedMessage.data.senderId).userName)
+    console.log("memberInfo.find(member => member.value.userId === receivedMessage.data.senderId).userAvatar", memberInfo.find(member => member.userId === receivedMessage.data.senderId).userAvatar)
+    const newMessageItem = {
+      id: receivedMessage.data.senderId,
+      text: receivedMessage.data.content,
+      time: receivedMessage.data.time,
+      speaker: receivedMessage.data.speakerId === parseInt(myUserId)? 'me' : 'friend',
+      speakername: memberInfo.find(member => member.userId === receivedMessage.data.senderId).userName,
+      speakerAvatar: memberInfo.find(member => member.userId === receivedMessage.data.senderId).userAvatar ? `data:image/png;base64,${memberInfo.find(member => member.userId === receivedMessage.data.senderId).userAvatar}` : ''
+    };
+    console.log("newMessageItem", newMessageItem);
+    groupMessageList.value.push(newMessageItem);
+    scrollToBottom();
+  }
 });
+
+const cachedGroupMembers = {};
+const getGroupmemberInfo = async (id) => {
+    if (typeof id!== 'number' || isNaN(id)) {
+        console.error('groupId参数不合法，必须是有效的数字');
+        return [];
+    }
+    if (cachedGroupMembers[id]) {
+        return cachedGroupMembers[id];
+    }
+    console.log('getGroupmemberInfo', id);
+    const response = await getGroupMembers({
+        groupId: id
+    });
+    if (response && response.data) {
+        cachedGroupMembers[id] = response.data;
+        return response.data;
+    } else {
+        console.error('获取群成员信息失败，返回数据格式不正确');
+        return [];
+    }
+};
+
 // 好友列表数据（示例数据，可替换为真实数据获取）
 const friendsAndGroups = ref([]);
+const myUserInfo = localStorage.getItem('userProfile')? JSON.parse(localStorage.getItem('userProfile')) : {};
+const myUserAvatar = myUserInfo.avatar ? `data:image/png;base64,${myUserInfo.avatar}` : '';
+
 // 友信息示例
 // const friendsData = localStorage.getItem('friends')? JSON.parse(localStorage.getItem('friends')) : [];
 
@@ -52,6 +110,7 @@ const showgroupData = () => {
 };
 
 onMounted(() => {
+  startCacheClearTimer(); // 启动缓存清理定时器
   showfriendData();
   showgroupData();
   initWschat(); // 初始化 WebSocket
@@ -173,27 +232,43 @@ const addFriend = async() => {
   
 };
 
-const addGroup = () => {
-  // 群聊申请逻辑，暂时不做实现
-  console.log('申请入群');
-};
-
-const sendAddFriendRequest = async () => {
+const addGroup = async() => {
   try {
-    const response = await applyAddFriend({
-      friendId: parseInt(selectedFriend.value.friendId),
+    const response = await applyJoinGroup({
+      groupId: parseInt(selectedFriend.value.groupId),
       checkWords: verificationMessage.value
     });
 
     if (response) {
-      console.log('发送添加好友请求成功', response);
+      console.log('发送加入群聊请求成功', response.data);
       // 发送成功后，关闭用户详情弹窗
       addFriendDialogVisible.value = false;
     } else {
-      console.error('发送添加好友请求失败，返回数据格式不正确');
+      console.error('发送加入群聊请求失败，返回数据格式不正确');
     }
   } catch (error) {
-    console.error('发送添加好友请求失败:', error);
+    console.error('发送加入群聊请求失败:', error);
+  }
+  
+};
+
+const sendAddFriendRequest = async () => {
+  try {
+    console.log('发送申请群聊请求:', selectedFriend.value.groupId, verificationMessage.value)
+    const response = await applyJoinGroup({
+      groupId: selectedFriend.value.groupId,
+      checkWords: verificationMessage.value
+    });
+
+    if (response) {
+      console.log('发送申请入群请求成功', response);
+      // 发送成功后，关闭用户详情弹窗
+      addFriendDialogVisible.value = false;
+    } else {
+      console.error('发送申请入群请求失败，返回数据格式不正确');
+    }
+  } catch (error) {
+    console.error('发送申请入群请求失败:', error);
   }
 };
 
@@ -201,36 +276,267 @@ const myUserId = localStorage.getItem('userId'); // 获取当前用户 ID
 const chatRecords = ref([]); // 聊天记录
 // 假设这是您的用户 ID
 
-const messageList = ref([]); // 聊天记录
+const messageList = ref([]); // 好友聊天记录
+const groupMessageList = ref([]); // 群聊聊天记录
 
+// const initMessageList = async () => {
+//   console.log('初始化聊天记录:', selectedFriend.value.friendId);
+//   console.log('初始化聊天记录2:', selectedFriend.value);
+//   if (selectedFriend.value.friendId) {
+//   try {
+//     const response = await getChatRecord({
+//       friendId: selectedFriend.value.friendId,
+//     });
+//     if (response && response.data) {
+//       console.log('获取聊天记录成功', response.data);
+//       chatRecords.value = response.data;
+//       messageList.value = response.data.map((item) => {
+//         const newItem = {
+//           id: item.speakerId,
+//           speaker: item.speakerId === parseInt(myUserId) ? 'me' : 'friend',
+//           text: item.text,
+//           time: item.time,
+//         };
+//         return newItem;
+//       });
+//       messageList.value.sort((a, b) => new Date(a.time) - new Date(b.time)); // 按时间排序
+//       console.log('初始化聊天记录3:', messageList.value);
+//       scrollToBottom(); // 滚动到底部
+//     } else {
+//       console.error('获取聊天记录失败，返回数据格式不正确');
+//     }
+//   } catch (error) {
+//     console.error('获取聊天记录失败:', error);
+//   }
+//   } else {
+//     try {
+//       const response = await getGroupChatRecord({
+//         groupId: selectedFriend.value.groupId,
+//       });
+//       if (response && response.data) {
+//         console.log('获取群聊记录成功', response.data);
+//         chatRecords.value = response.data;
+//         const items = response.data.map(async (item) => {
+//         const memberInfo = await getGroupmemberInfo(selectedFriend.value.groupId);
+//         const newItem = {
+//           id: item.speakerId,
+//           text: item.text,
+//           time: item.time,
+//           speaker: item.speakerId === parseInt(myUserId)? 'me' : 'friend',
+//           speakername: memberInfo.find(member => member.userId === item.speakerId).userName,
+//           speakerAvatar: memberInfo.find(member => member.userId === item.speakerId).userAvatar ? `data:image/png;base64,${memberInfo.find(member => member.userId === item.speakerId).userAvatar}` : ''
+//         };
+//         return newItem;
+//       });
+//         groupMessageList.value = await Promise.all(items);
+//         groupMessageList.value.sort((a, b) => new Date(a.time) - new Date(b.time)); // 按时间排序
+//         console.log('初始化群聊记录3:', groupMessageList.value);
+//         console.log('初始化群聊记录4:', messageList.value)
+//         scrollToBottom(); // 滚动到底部
+//       } else {
+//         console.error('获取群聊记录失败，返回数据格式不正确');
+//       }
+//     } catch (error) {
+//       console.error('获取群聊记录失败:', error);
+//     }
+//   }
+// };
+
+let cachedGroupChatRecords = {};
+let cacheClearTimer;
+
+const startCacheClearTimer = () => {
+    cacheClearTimer = setInterval(() => {
+        cachedGroupChatRecords = {}; // 清除缓存数据
+    }, 1 * 60 * 1000); // 每5分钟清除一次缓存，单位毫秒
+};
+
+
+// const initMessageList = async () => {
+//     console.log('初始化聊天记录:', selectedFriend.value.friendId);
+//     console.log('初始化聊天记录2:', selectedFriend.value);
+//     if (selectedFriend.value.friendId) {
+//         // 好友聊天记录获取逻辑不变，省略部分代码...
+//         try {
+//             const response = await getChatRecord({
+//                 friendId: selectedFriend.value.friendId,
+//             });
+//             if (response && response.data) {
+//                 console.log('获取聊天记录成功', response.data);
+//                 chatRecords.value = response.data;
+//                 messageList.value = response.data.map((item) => {
+//                     const newItem = {
+//                         id: item.speakerId,
+//                         speaker: item.speakerId === parseInt(myUserId)? 'me' : 'friend',
+//                         text: item.text,
+//                         time: item.time,
+//                     };
+//                     return newItem;
+//                 });
+//                 messageList.value.sort((a, b) => new Date(a.time) - new Date(b.time));
+//                 console.log('初始化聊天记录3:', messageList.value);
+//                 scrollToBottom(); // 滚动到底部
+//             } else {
+//                 console.error('获取聊天记录失败，返回数据格式不正确');
+//             }
+//         } catch (error) {
+//             console.error('获取聊天记录失败:', error);
+//         }
+//     } else {
+//         const groupId = selectedFriend.value.groupId;
+//         console.log('初始化群聊记录:', groupId);
+//         console.log('是否有缓存数据:', cachedGroupChatRecords[groupId]);
+//         console.log('缓存数据:', cachedGroupChatRecords);
+//         if (cachedGroupChatRecords[groupId]) {
+//             chatRecords.value = cachedGroupChatRecords[groupId];
+//             // 后续根据已有的记录数据构建聊天记录列表等操作，避免再次发起请求
+//             console.log('使用缓存数据:', chatRecords.value);
+//             const items = chatRecords.value.map(async (item) => {
+//                 const memberInfo = await getGroupmemberInfo(groupId);
+//                 const newItem = {
+//                     id: item.speakerId,
+//                     text: item.text,
+//                     time: item.time,
+//                     speaker: item.speakerId === parseInt(myUserId)? 'me' : 'friend',
+//                     speakername: memberInfo.find(member => member.userId === item.speakerId).userName,
+//                     speakerAvatar: memberInfo.find(member => member.userId === item.speakerId).userAvatar? `data:image/png;base64,${memberInfo.find(member => member.userId === item.speakerId).userAvatar}` : ''
+//                 };
+//                 return newItem;
+//             });
+//             groupMessageList.value = await Promise.all(items);
+//             groupMessageList.value.sort((a, b) => new Date(a.time) - new Date(b.time));
+//             console.log('初始化群聊记录3:', groupMessageList.value);
+//             console.log('初始化群聊记录4:', messageList.value);
+//             scrollToBottom();
+//             return;
+//         }
+//         try {
+//             const response = await getGroupChatRecord({
+//                 groupId: groupId,
+//             });
+//             if (response && response.data) {
+//                 console.log('获取群聊记录成功', response.data);
+//                 chatRecords.value = response.data;
+//                 cachedGroupChatRecords[groupId] = response.data; // 缓存记录数据
+//                 console.log('缓存群聊记录:', cachedGroupChatRecords);
+//                 const items = response.data.map(async (item) => {
+//                     const memberInfo = await getGroupmemberInfo(groupId);
+//                     const newItem = {
+//                         id: item.speakerId,
+//                         text: item.text,
+//                         time: item.time,
+//                         speaker: item.speakerId === parseInt(myUserId)? 'me' : 'friend',
+//                         speakername: memberInfo.find(member => member.userId === item.speakerId).userName,
+//                         speakerAvatar: memberInfo.find(member => member.userId === item.speakerId).userAvatar? `data:image/png;base64,${memberInfo.find(member => member.userId === item.speakerId).userAvatar}` : ''
+//                     };
+//                     return newItem;
+//                 });
+//                 groupMessageList.value = await Promise.all(items);
+//                 groupMessageList.value.sort((a, b) => new Date(a.time) - new Date(b.time));
+//                 console.log('初始化群聊记录3:', groupMessageList.value);
+//                 console.log('初始化群聊记录4:', messageList.value);
+//                 scrollToBottom(); // 滚动到底部
+//             } else {
+//                 console.error('获取群聊记录失败，返回数据格式不正确');
+//             }
+//         } catch (error) {
+//             console.error('获取群聊记录失败:', error);
+//         }
+//     }
+// };
 const initMessageList = async () => {
-  console.log('初始化聊天记录:', selectedFriend.value.friendId);
-  console.log('初始化聊天记录2:', selectedFriend.value);
-  try {
-    const response = await getChatRecord({
-      friendId: selectedFriend.value.friendId,
-    });
-    if (response && response.data) {
-      console.log('获取聊天记录成功', response.data);
-      chatRecords.value = response.data;
-      messageList.value = response.data.map((item) => {
-        const newItem = {
-          id: item.speakerId,
-          speaker: item.speakerId === parseInt(myUserId) ? 'me' : 'friend',
-          text: item.text,
-          time: item.time,
-        };
-        return newItem;
-      });
-      messageList.value.sort((a, b) => new Date(a.time) - new Date(b.time)); // 按时间排序
-      console.log('初始化聊天记录3:', messageList.value);
-      scrollToBottom(); // 滚动到底部
+    console.log('初始化聊天记录:', selectedFriend.value.friendId);
+    console.log('初始化聊天记录2:', selectedFriend.value);
+    if (selectedFriend.value.friendId) {
+        // 好友聊天记录获取逻辑
+        try {
+            const response = await getChatRecord({
+                friendId: selectedFriend.value.friendId,
+            });
+            if (response && response.data) {
+                console.log('获取好友聊天记录成功', response.data);
+                chatRecords.value = response.data;
+                messageList.value = response.data.map((item) => {
+                    const newItem = {
+                        id: item.speakerId,
+                        speaker: item.speakerId === parseInt(myUserId)? 'me' : 'friend',
+                        text: item.text,
+                        time: item.time,
+                    };
+                    return newItem;
+                });
+                messageList.value.sort((a, b) => new Date(a.time) - new Date(b.time));
+                console.log('初始化好友聊天记录3:', messageList.value);
+                scrollToBottom();
+            } else {
+                console.error('获取好友聊天记录失败，返回数据格式不正确');
+            }
+        } catch (error) {
+            console.error('获取好友聊天记录失败:', error);
+        }
     } else {
-      console.error('获取聊天记录失败，返回数据格式不正确');
+        const groupId = selectedFriend.value.groupId;
+        console.log('初始化群聊记录:', groupId);
+        console.log('是否有缓存数据:', cachedGroupChatRecords[groupId]);
+        console.log('缓存数据:', cachedGroupChatRecords);
+
+        try {
+            let response;
+            if (cachedGroupChatRecords[groupId]) {
+                const cachedData = cachedGroupChatRecords[groupId];
+                const cachedTime = cachedData[0]?.lastUpdateTime;
+                response = await getGroupChatRecord({
+                    groupId: groupId,
+                });
+                if (response && response.data) {
+                    const serverTime = response.data[0].lastUpdateTime;
+                    if (cachedTime < serverTime) {
+                        console.log('缓存数据已过期，更新缓存并重新获取最新群聊记录');
+                        chatRecords.value = response.data;
+                        cachedGroupChatRecords[groupId] = response.data;
+                    } else {
+                        console.log('使用缓存数据，缓存仍有效');
+                        chatRecords.value = cachedData;
+                    }
+                } else {
+                    console.error('获取群聊记录失败，返回数据格式不正确');
+                }
+            } else {
+                response = await getGroupChatRecord({
+                    groupId: groupId,
+                });
+                if (response && response.data) {
+                    console.log('获取群聊记录成功', response.data);
+                    chatRecords.value = response.data;
+                    cachedGroupChatRecords[groupId] = response.data;
+                } else {
+                    console.error('获取群聊记录失败，返回数据格式不正确');
+                }
+            }
+
+            if (response && response.data) {
+                const items = response.data.map(async (item) => {
+                    const memberInfo = await getGroupmemberInfo(groupId);
+                    const newItem = {
+                        id: item.speakerId,
+                        text: item.text,
+                        time: item.time,
+                        speaker: item.speakerId === parseInt(myUserId)? 'me' : 'friend',
+                        speakername: memberInfo.find(member => member.userId === item.speakerId).userName,
+                        speakerAvatar: memberInfo.find(member => member.userId === item.speakerId).userAvatar? `data:image/png;base64,${memberInfo.find(member => member.userId === item.speakerId).userAvatar}` : ''
+                    };
+                    return newItem;
+                });
+                groupMessageList.value = await Promise.all(items);
+                groupMessageList.value.sort((a, b) => new Date(a.time) - new Date(b.time));
+                console.log('初始化群聊记录3:', groupMessageList.value);
+                console.log('初始化群聊记录4:', messageList.value);
+                scrollToBottom();
+            }
+        } catch (error) {
+            console.error('获取群聊记录失败:', error);
+        }
     }
-  } catch (error) {
-    console.error('获取聊天记录失败:', error);
-  }
 };
 const messageListElement = ref(null); // 创建对消息列表元素的引用
 const scrollToBottom = () => {
@@ -245,9 +551,15 @@ const scrollToBottom = () => {
 const messages = ref([]); // 聊天记录
 
 const newMessage = ref(''); // 新消息内容
+const updateChatRecords = debounce(async () => {
+    await initMessageList();
+    console.log('更新聊天记录成功:', messageList.value);
+    console.log('清空前输入消息:', newMessage.value);
+    newMessage.value = '';
+    console.log('清空输入消息:', newMessage.value);
+}, 100); // 这里设置节流时间间隔为1秒，即1秒内多次发送消息只会执行一次更新操作
 
-
-const sendMessage = (newmessage) => {
+const sendMessage = async (newmessage) => {
   console.log('发送消息:', newmessage);
   if (!newmessage.trim()) return; // 消息不能为空
 
@@ -279,12 +591,7 @@ const sendMessage = (newmessage) => {
   if (wschat && wschat.readyState === WebSocket.OPEN) {
     wschat.send(JSON.stringify(message)); // 发送消息
     // messages.value.push(message); // 更新聊天记录
-    initMessageList(); // 更新聊天记录
-    console.log('更新聊天记录成功:', messageList.value);
-    console.log('清空前输入消息:', newMessage.value);
-    newMessage.value = ''; // 清空输入消息
-    console.log('清空输入消息:', newMessage.value
-    );
+    await updateChatRecords(); // 更新聊天记录
     
   } else {
     console.error('WebSocket 未连接或处于关闭状态');
@@ -293,28 +600,9 @@ const sendMessage = (newmessage) => {
 };
 
 
-
-
-// // 处理接收到的消息
-// const receiveMessage = (event) => {
-//   console.log('接收到消息:', event.data);
-//   try {
-//     const receivedMessage = JSON.parse(event.data); // 解析消息
-//     const newMessageItem = {
-//       id: receivedMessage.senderId,
-//       speaker: receivedMessage.senderId === parseInt(myUserId) ? 'friend' :'me',
-//       text: receivedMessage.content,
-//       time: receivedMessage.time,
-//     };
-
-//     messageList.value.push(newMessageItem); // 更新消息列表
-//     scrollToBottom(); // 滚动到底部
-//   } catch (error) {
-//     console.error('解析消息失败:', error);
-//   }
-// };
 onBeforeUnmount(() => {
-  closewschat(); // 组件卸载时关闭 WebSocket 连接
+    clearInterval(cacheClearTimer); // 组件卸载时清除定时器
+    closewschat();
 });
 </script>
 <template>
@@ -370,7 +658,7 @@ onBeforeUnmount(() => {
             <h4>群聊名：{{ selectedFriend.groupName }}</h4>
             <p>群号: {{ selectedFriend.groupId }}</p>
             <p>群聊创建者: {{ selectedFriend.ownerName }}</p>
-            <el-button type="primary" @click="addGroup">申请入群</el-button>
+            <el-button type="primary" @click="addGroup;addFriendDialogVisible=true">申请入群</el-button>
           </div>
           <div v-else class="chat-header">
             <el-header class="chat-header">
@@ -378,13 +666,37 @@ onBeforeUnmount(() => {
               <h3 v-else>在 {{ selectedFriend.groupName }} 中的聊天</h3>
             </el-header>
             <el-main>
-              <div class="message-list" ref="messageListElement">
+              <div v-if="selectedFriend.name" class="message-list" ref="messageListElement">
                 <div
                   v-for="msg in messageList"
-                  :key="msg.id"
                   :class="['message', msg.speaker === 'me' ? 'my-message' : 'friend-message']"
                 >
-                  <span>{{ msg.text }}</span>
+                  <div v-if="msg.speaker === 'friend'">
+                    <el-avatar :src="selectedFriend.avatar" size="medium" class="avatar" />
+                    <span class="text">{{ msg.text }}</span>
+                  </div>
+                  <div v-else>
+                    <span class="text">{{ msg.text }}</span>
+                    <el-avatar :src="myUserAvatar" size="medium" class="avatar" />
+                  </div>
+                </div>
+              </div>
+              <div v-else class="message-list" ref="messageListElement">
+                <div
+                  v-for="msg in groupMessageList"
+                  :class="['message', msg.speaker === 'me' ? 'my-message' : 'friend-message']"
+                >
+                  <div v-if="msg.speaker === 'friend'">
+                    <span class="name">{{ msg.speakername }}</span>
+                    <el-avatar :src="msg.speakerAvatar" size="medium" class="avatar" />
+                    <span class="text">{{ msg.text }}</span>
+                    
+                  </div>
+                  <div v-else>
+                    <span class="text">{{ msg.text }}</span>
+                    <el-avatar :src="myUserAvatar" size="medium" class="avatar" />
+                    <span style="margin-top: 10px;font-size: smaller;">{{ msg.speakername }}</span>
+                  </div>
                 </div>
               </div>
               <div class="input-wrapper">
@@ -473,22 +785,39 @@ onBeforeUnmount(() => {
 
 .my-message {
   display: flex;
-  /* justify-content: flex-end; */
-  align-items: flex-end;
+  justify-content: flex-end; /* 使自己的消息右对齐 */
+  align-items: center; /* 使用 center 使头像与消息垂直居中 */
   margin-bottom: 10px;
   padding: 10px;
   background-color: #f5f5f5;
   border-radius: 10px;
+  margin-right: 20px; /* 添加右边距，使消息距离右边框远一些 */
+}
+
+.my-message .avatar {
+  margin-left: 10px; /* 头像与文本之间的间距 */
+  /* margin-right: 10px; 不需要左边距和右边距 */
 }
 
 .friend-message {
   display: flex;
-  /* justify-content: flex-start; */
-  align-items: flex-start;
+  justify-content: flex-start; /* 使朋友的消息左对齐 */
+  align-items: center; /* 使用 center 使头像与消息垂直居中 */
   padding: 10px;
-  background-color: #fff;
+  background-color: #f5f5f5;
   border-radius: 10px;
+  margin-left: 20px; /* 添加左边距，使消息距离左边框远一些 */
 }
+
+.friend-message .avatar {
+  margin-right: 10px; /* 头像与文本之间的间距 */
+  /* margin-left: 10px; 不需要左边距 */
+}
+
+
+
+
+
 
 /* .input-wrapper {
   display: flex;

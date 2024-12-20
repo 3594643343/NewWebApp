@@ -121,9 +121,12 @@
 import { onMounted, ref } from 'vue';
 import router from '@/router';
 import { createMyGroup,getMyApplyList, deleteMyFriend,handleAddFriend,getOneFriend } from '@/api/user';
+import emitter from '@/main.js'; // 根据实际路径调整引入
+emitter.on('messageReceived', (receivedMessage) => {
+  console.log('接收到消息', receivedMessage);
+  
 
-
-const selectedFriend = ref(); // 选中的好友或群聊
+});
 
 const friendsAndGroups = ref([]);
 const showfriendData = () => {
@@ -345,7 +348,7 @@ const createGroup = async () => {
     console.log("formData", formData);
     try {
         const res = await createMyGroup(formData);
-        console.log(res);
+        console.log("创建群聊成功", res);
     } catch (error) {
         console.error(error);
         console.error('创建群聊失败:', error.response ? error.response.data : error.message);
