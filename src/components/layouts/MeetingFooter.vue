@@ -3,6 +3,7 @@
   import { useRouter } from 'vue-router';
   import { ElMessage, ElDialog } from 'element-plus';
   import { uploadFile, leaveMeetingService, updatePermissionAPI, getCurrentMeetingFileList, downloadCurrentMeetingFile, kickUserService } from '@/api/user'; // 导入上传文件的接口
+  import axios from 'axios';
   
   const users = ref(JSON.parse(localStorage.getItem('users')) || []); // 存储当前会议中的用户列表
   const router = useRouter();
@@ -171,20 +172,26 @@ const files = ref([]); // 存储当前会议的文件列表
 
   // 下载文件
   const handleDownloadFile = async (fileId) => {
-    try {
-      const blob = await downloadCurrentMeetingFile(fileId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = files.value.find(file => file.id === fileId).name; // 设置文件名
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('下载文件失败:', error.response ? error.response.data : error.message);
-    }
-  };
+  console.log('下载文件id:', fileId);
+  //var axios = require('axios');
+  var config = {
+   method: 'get',
+   url: 'http://121.37.24.76:8079/meeting/download?fileId='+fileId,
+   headers: { 
+    "token" : localStorage.getItem('token')
+   }
+};
+
+axios(config)
+.then(function (response) {
+   //console.log(JSON.stringify(response.data));
+   TODO //将文件显示在屏幕上
+})
+.catch(function (error) {
+   console.log(error);
+});
+
+};
 
   // 初始化文件列表
   // onMounted(() => {
@@ -311,11 +318,11 @@ const files = ref([]); // 存储当前会议的文件列表
         <div>
           <el-button type="primary" @click="triggerFileInput">上传文件</el-button>
           <el-table :data="files" style="width: 100%">
-            <el-table-column prop="name" label="文件名" width="300" />
-            <el-table-column prop="type" label="文件类型" width="100" />
+            <el-table-column prop="fileName" label="文件名" width="300" />
+            <el-table-column prop="fileType" label="文件类型" width="100" />
             <el-table-column label="操作" width="100">
               <template #default="scope">
-                <el-button size="small" @click="handleDownloadFile(scope.row.id)">下载</el-button>
+                <el-button size="small" @click="handleDownloadFile(scope.row.fileId)">下载</el-button>
               </template>
             </el-table-column>
           </el-table>

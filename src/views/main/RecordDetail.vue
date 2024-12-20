@@ -52,6 +52,7 @@ import { useRouter } from 'vue-router'
 import { getMeetingDetailService, getMeetingFileListService, downloadMeetingFileService  } from '@/api/user';
 import { ArrowLeftBold, Download } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import axios from 'axios';
 
 const router = useRouter(); // 获取 router 实例
 const audioPlayer = ref(null);
@@ -144,30 +145,59 @@ const getFileList = async (meeting) => {
 };
 
 const downloadFile = async (fileId: string, fileName: string) => {
-  try {
-    const response = await downloadMeetingFileService(fileId);
-    if (response && response.data) {
-      // const blob = new Blob([response.data], { type: `application/${fileName.split('.').pop()}` });
-      // const url = window.URL.createObjectURL(blob);
-      // const link = document.createElement('a');
-      // link.href = url;
-      // link.download = fileName;
-      // document.body.appendChild(link);
-      // link.click();
-      // document.body.removeChild(link);
-      // window.URL.revokeObjectURL(url);
-      ElMessage.success('文件下载成功');
-      // console.log('文件下载:', response.data);
-    } else {
-      console.error('未能获取文件数据');
-      ElMessage.error('未能获取文件数据');
-    }
-  } catch (error) {
-    console.error('文件下载失败:', error);
-    ElMessage.error('文件下载失败');
-  }
-};
+  console.log('下载文件id:', fileId);
+  var config = {
+    method: 'get',
+    url: 'http://121.37.24.76:8079/record/download?fileId=' + fileId,
+    headers: { 
+      "token": localStorage.getItem('token') || ''
+    },
+    responseType: 'blob' as const // 使用常量断言确保类型正确
+  };
 
+  axios(config)
+    .then(function (response) {
+      const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
+      const fileUrl = URL.createObjectURL(fileBlob);
+
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileName; // 使用传递的文件名
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(fileUrl); // 释放内存
+      console.log('文件下载成功');
+      
+
+    })
+    .catch(function (error) {
+      console.error('下载文件失败:', error.response ? error.response.data : error.message);
+    });
+};
+// try {
+  //   const response = await downloadMeetingFileService(fileId);
+  //   if (response && response.data) {
+  //     // const blob = new Blob([response.data], { type: `application/${fileName.split('.').pop()}` });
+  //     // const url = window.URL.createObjectURL(blob);
+  //     // const link = document.createElement('a');
+  //     // link.href = url;
+  //     // link.download = fileName;
+  //     // document.body.appendChild(link);
+  //     // link.click();
+  //     // document.body.removeChild(link);
+  //     // window.URL.revokeObjectURL(url);
+  //     ElMessage.success('文件下载成功');
+  //     // console.log('文件下载:', response.data);
+  //   } else {
+  //     console.error('未能获取文件数据');
+  //     ElMessage.error('未能获取文件数据');
+  //   }
+  // } catch (error) {
+  //   console.error('文件下载失败:', error);
+  //   ElMessage.error('文件下载失败');
+  // }
 
 </script>
 
