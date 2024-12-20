@@ -281,9 +281,9 @@ const sendMessage = (newMessageContent) => {
   }
 };
 
-onBeforeUnmount(() => {
-  closewschat(); // 组件卸载时关闭 WebSocket 连接
-});
+// onBeforeUnmount(() => {
+//   closewschat(); // 组件卸载时关闭 WebSocket 连接
+// });
 </script>
 <template>
   <div class="chat-layout">
