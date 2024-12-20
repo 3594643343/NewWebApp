@@ -176,8 +176,8 @@ export const downloadCurrentMeetingFile = (fileId) =>
         },
         responseType: 'blob' // 下载文件需设置 responseType 为 blob
     })
-//退出会议界面
-export const exitMeetingService = () =>
+//退出系统
+export const exitSystem = () =>
     request.delete('/exit')
 //会议中踢人
 export const kickUserService = ({ id, meetingNumber }) => 

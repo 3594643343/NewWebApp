@@ -29,9 +29,9 @@
         <p v-else>暂无音频</p>
       </div>
       <!-- <p v-else>暂无音频</p> -->
-      <p><strong>会议记录:</strong> {{ meetingDetails.meetingRecord || '暂无记录' }}</p>
+      <!-- <p><strong>会议记录:</strong> {{ meetingDetails.meetingRecord || '暂无记录' }}</p>
       <p><strong>会议纪要:</strong> {{ meetingDetails.meetingMinutes || '暂无纪要' }}</p>
-      <p><strong>会议翻译:</strong> {{ meetingDetails.meetingTranslation || '暂无翻译' }}</p>
+      <p><strong>会议翻译:</strong> {{ meetingDetails.meetingTranslation || '暂无翻译' }}</p> -->
       <p><strong>会议文件:</strong></p>
         <el-table :data="meetingFiles" style="width: 100%;" class="file-table">
           <el-table-column prop="fileName" label="文件名" width="600" />
@@ -90,7 +90,7 @@ onMounted(() => {
     console.error('未能获取会议详情')
     router.push({ name:'record' })
   }
-  // getDetails(meeting);
+  getDetails(meeting);
   getFileList(meeting);
 });
 

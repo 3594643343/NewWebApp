@@ -3,7 +3,7 @@ import { ref , onMounted } from 'vue'
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/useUserStore';
-import { quickMeetingService  } from '@/api/user'; 
+import { quickMeetingService, exitSystem  } from '@/api/user'; 
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -44,11 +44,23 @@ const goToProfile = () => {
   router.push('/main/user'); // 替换为个人资料的实际路由
 };
 
-const logout = () => {
-  localStorage.removeItem('userProfile'); // 清除用户数据
-  popoverVisible.value = false;
-  userStore.logout();   // 更新登录状态为 false
-  router.push('/accountlogin'); // 跳转到登录页面
+// const logout = () => {
+//   localStorage.removeItem('userProfile'); // 清除用户数据
+//   popoverVisible.value = false;
+//   userStore.logout();   // 更新登录状态为 false
+//   router.push('/accountlogin'); // 跳转到登录页面
+// };
+
+const logout = async () => {
+  try {
+    await exitSystem(); // 退出系统
+    localStorage.removeItem('userProfile'); // 清除用户数据
+    popoverVisible.value = false;
+    userStore.logout();   // 更新登录状态为 false
+    router.push('/accountlogin'); // 跳转到登录页面
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const quickMeeting = async() => {

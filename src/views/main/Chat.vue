@@ -212,6 +212,7 @@ const searchFriend = async () => {
   }
 };
 
+//添加好友
 const addFriend = async() => {
   try {
     const response = await applyAddFriend({
@@ -252,25 +253,26 @@ const addGroup = async() => {
   
 };
 
-const sendAddFriendRequest = async () => {
-  try {
-    console.log('发送申请群聊请求:', selectedFriend.value.groupId, verificationMessage.value)
-    const response = await applyJoinGroup({
-      groupId: selectedFriend.value.groupId,
-      checkWords: verificationMessage.value
-    });
+// const sendAddFriendRequest = async () => {
+//   try {
+//     console.log('发送申请群聊请求:', selectedFriend.value.groupId, verificationMessage.value)
+//     const response = await applyJoinGroup({
+//       groupId: selectedFriend.value.groupId,
+//       checkWords: verificationMessage.value
+//     });
 
-    if (response) {
-      console.log('发送申请入群请求成功', response);
-      // 发送成功后，关闭用户详情弹窗
-      addFriendDialogVisible.value = false;
-    } else {
-      console.error('发送申请入群请求失败，返回数据格式不正确');
-    }
-  } catch (error) {
-    console.error('发送申请入群请求失败:', error);
-  }
-};
+//     if (response) {
+//       console.log('发送申请入群请求成功', response);
+
+//       // 发送成功后，关闭用户详情弹窗
+//       addFriendDialogVisible.value = false;
+//     } else {
+//       console.error('发送申请入群请求失败，返回数据格式不正确');
+//     }
+//   } catch (error) {
+//     console.error('发送申请入群请求失败:', error);
+//   }
+// };
 
 const myUserId = localStorage.getItem('userId'); // 获取当前用户 ID
 const chatRecords = ref([]); // 聊天记录
@@ -586,7 +588,7 @@ const sendMessage = async (newmessage) => {
     isGroup: isGroup,
     time: time,
     content: newmessage,
-    content: newMessageContent,
+    // content: newMessageContent,
   };
   console.log('发送消息message:', message);
   
@@ -647,7 +649,7 @@ const sendMessage = async (newmessage) => {
             <h4>用户名：{{ selectedFriend.friendName }}</h4>
             <p>ID: {{ selectedFriend.friendId }}</p>
             <p>个性签名: {{ selectedFriend.signature }}</p>
-            <el-button type="primary" @click="addFriend;addFriendDialogVisible=true">添加好友</el-button>
+            <el-button type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
           </div>
           <div v-else-if="foruserProfileDetailsVisible">
             <el-empty description="点击搜索好友的头像显示详情" />
@@ -723,7 +725,7 @@ const sendMessage = async (newmessage) => {
       />
       <span slot="footer">
         <el-button @click="addFriendDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="sendAddFriendRequest">发送请求</el-button>
+        <el-button type="primary" @click="addFriend">发送请求</el-button>
       </span>
     </el-dialog>
   </div>
