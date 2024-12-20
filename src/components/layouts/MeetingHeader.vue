@@ -1,10 +1,37 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router';
+import { getMeetingName } from '@/api/user';
 
 const router = useRouter();
-  
-const activeIndex = ref('')
+const meetingNumber = localStorage.getItem('meetingNumber');
+const activeIndex = ref('');
+const meetingTitle = ref('会议标题');
+
+
+const getMeetingTitle = async () => {
+  try {
+    const response = await getMeetingName(meetingNumber);
+    if (response && response.data) {
+      console.log('获取会议名称成功:', response.data);
+      meetingTitle.value = response.data; // 更新会议标题
+    } else {
+      console.error('未能获取会议名称');
+    }
+  } catch (error) {
+    console.error('获取会议名称失败:', error);
+  }
+};
+
+const handleClick = (index: string) => {
+  activeIndex.value = index;
+  router.push(index);
+}
+
+onMounted(() => {
+  getMeetingTitle();
+  activeIndex.value = router.currentRoute.value.path;
+})
 </script>
 
 <template>
@@ -23,8 +50,8 @@ const activeIndex = ref('')
         />
       </el-menu-item>
       
-      <div class="title-container">  <!-- 新增的容器 -->
-        <h1>会议标题</h1>
+      <div class="title-container">
+        <h1>{{ meetingTitle }}</h1>
       </div>
       
     </el-menu>
