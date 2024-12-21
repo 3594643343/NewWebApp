@@ -64,7 +64,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/useUserStore';
-import { closewschat } from '@/api/user';
+import { closewschat, exitSystem } from '@/api/user';
 
 
 const router = useRouter();
@@ -85,16 +85,25 @@ watch(
   { immediate: true } // 立即执行一次以设置初始值
 );
 
-const logout = () => {
-  closewschat(); // 关闭弹窗
-  localStorage.removeItem('userProfile'); // 清除用户数据
-  userStore.logout();   // 更新登录状态为 false
-  router.push('/accountlogin'); // 跳转到登录页面
+const logout = async () => {
+  try {
+    await exitSystem(); // 退出系统
+    await closewschat(); // 关闭弹窗
+    localStorage.removeItem('userProfile'); // 清除用户数据
+    userStore.logout();   // 更新登录状态为 false
+    router.push('/accountlogin'); // 跳转到登录页面
+  } catch (error) {
+    console.log(error);
+  }
+};
+  // closewschat(); // 关闭弹窗
+  // localStorage.removeItem('userProfile'); // 清除用户数据
+  // userStore.logout();   // 更新登录状态为 false
+  // router.push('/accountlogin'); // 跳转到登录页面
   // 注意：这里你可能需要重置 activeItem 到一个默认值，比如 '/main/user' 或 '/accountlogin'（取决于你的设计）
   // activeItem.value = '/accountlogin'; // 如果你想在登出后显示登录页面的菜单项作为激活状态（如果有的话）
   // 但是，由于登出后用户可能会看到登录页面，而没有侧边栏菜单，所以这可能不是必要的
-
-};
+// };
 </script>
 
 <style lang="scss" scoped>

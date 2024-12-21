@@ -53,6 +53,7 @@ const files = ref([]); // 存储当前会议的文件列表
         if (response && response.code === 1) {
           console.log('文件上传成功:', response);
           ElMessage.success('文件上传成功');
+          fetchFiles();
         } else {
             ElMessage.error('文件上传失败');
         }
@@ -318,7 +319,7 @@ axios(config)
         <div>
           <el-button type="primary" @click="triggerFileInput">上传文件</el-button>
           <el-table :data="files" style="width: 100%">
-            <el-table-column prop="fileName" label="文件名" width="300" />
+            <el-table-column prop="fileName" label="文件名" width="400" />
             <el-table-column prop="fileType" label="文件类型" width="100" />
             <el-table-column label="操作" width="100">
               <template #default="scope">

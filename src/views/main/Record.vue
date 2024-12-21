@@ -16,38 +16,38 @@
       </el-row>
     </div>
     <div class="content">
-    <el-table :data="filteredMeetings" style="width: 100%;" height="520" class="custom-table">
-      <el-table-column prop="meetingName" label="会议主题" width="200" />
-      <el-table-column prop="meetingHost" label="会议创建者" width="150" />
-      <el-table-column label="会议时间" width="350">
-        <template #default="scope">
-          {{ scope.row.meetingStartTime }} - {{ scope.row.meetingEndTime }}
-        </template>
-      </el-table-column>
-      <el-table-column label="参与者" width="120">
+      <el-table :data="filteredMeetings" style="width: 100%;" height="520" class="custom-table">
+        <el-table-column prop="meetingName" label="会议主题" width="200" />
+        <el-table-column prop="meetingHost" label="会议创建者" width="150" />
+        <el-table-column label="会议时间" width="350">
           <template #default="scope">
-            <el-button type="text" @click="handleCommand(scope.row)">{{ scope.row.participants.length }} 名参与者</el-button>
+            {{ scope.row.meetingStartTime }} - {{ scope.row.meetingEndTime }}
           </template>
         </el-table-column>
-      <el-table-column label="操作" width="300">
-        <template #default="scope">
-          <el-button type="primary" @click="viewDetails(scope.row)">详细信息</el-button>
-          <el-button type="danger" @click="confirmDelete(scope.row)">删除会议记录</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-dialog :title="`${currentMeeting.meetingName} - 参会人员`" v-model="dialogVisible" width="30%">
-      <el-table :data="currentMeeting.participants" style="width: 100%;">
-        <el-table-column label="用户名">
+        <el-table-column label="参与者" width="120">
+            <template #default="scope">
+              <el-button type="text" @click="handleCommand(scope.row)">{{ scope.row.participants.length }} 名参与者</el-button>
+            </template>
+          </el-table-column>
+        <el-table-column label="操作" width="300">
           <template #default="scope">
-            {{ scope.row }}
+            <el-button type="primary" @click="viewDetails(scope.row)">详细信息</el-button>
+            <el-button type="danger" @click="confirmDelete(scope.row)">删除会议记录</el-button>
           </template>
         </el-table-column>
       </el-table>
-    </el-dialog>
-    <!-- <router-view></router-view> -->
+      <el-dialog :title="`${currentMeeting.meetingName} - 参会人员`" v-model="dialogVisible" width="30%">
+        <el-table :data="currentMeeting.participants" style="width: 100%;">
+          <el-table-column label="用户名">
+            <template #default="scope">
+              {{ scope.row }}
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-dialog>
+      <!-- <router-view></router-view> -->
+    </div>
   </div>
-</div>
 </template>
 
 <script lang="ts" setup>
