@@ -2,6 +2,8 @@
 import MeetingHeader from '@/components/layouts/MeetingHeader.vue';
 import MeetingSider from '@/components/layouts/MeetingSider.vue';
 import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
+import MeetingMain from '@/components/layouts/MeetingMain.vue';
+
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from 'vue-router';
 // import { exitMeetingService } from '@/api/user';
@@ -55,9 +57,7 @@ onMounted(()=>{
         { audio: true },
         function (mediaStream) {
             init(new Recorder(mediaStream));
-
-                // beginWS();
-                
+                beginWS();
         },
         function (error) {
             console.log(error);
@@ -369,8 +369,10 @@ const handleLeaveMeeting = () => {
     console.log('退出会议成功：');
     router.push('/main/user')
 }
+
 onBeforeUnmount(() => {
     endWS(); // 关闭WebSocket连接
+    localStorage.removeItem('fileId'); // 移除 fileId
     // exitMeetingService(); // 调用退出会议界面接口
 });
      
@@ -379,16 +381,18 @@ onBeforeUnmount(() => {
 <template>
     <div class="common-layout">
       <el-container>
-        <el-header>
-            <MeetingHeader />
+        <el-header class="fixed-header">
+          <MeetingHeader />
         </el-header>
         <el-container>
-          <el-aside width="250px" hegiht="100%">
+          <el-aside class="fixed-aside" width="250px">
             <MeetingSider />
           </el-aside>
           <el-container>
-            <el-main>Main</el-main>
-            <el-footer class="footer">
+            <el-main>
+              <MeetingMain />
+            </el-main>
+            <el-footer class="fixed-footer footer">
               <MeetingFooter />
             </el-footer>
           </el-container>
@@ -406,13 +410,51 @@ onBeforeUnmount(() => {
         </template>
       </el-dialog>
     </div>
-</template>
+  </template>
 
 
 <style lang="scss" scoped>
-  .footer {
-    font-size: 14px;
-    color: #666;
-  }
+.common-layout {
+  height: 100vh; // 设置布局高度为视口高度
+  position: relative;
+}
 
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: #fff; // 可以根据需要调整背景颜色
+}
+
+.fixed-aside {
+  position: fixed;
+  top: 60px; // 根据 header 的高度调整
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+  background-color: #f0f2f5; // 可以根据需要调整背景颜色
+}
+
+.el-main {
+    height: auto;
+    margin-top: 60px; // 根据 header 的高度调整
+    margin-left: 250px; // 根据 aside 的宽度调整
+}
+
+.fixed-footer {
+  position: fixed;
+  bottom: 0;
+  left: 250px; // 根据 aside 的宽度调整
+  right: 0;
+  z-index: 998;
+  background-color: #fff; // 可以根据需要调整背景颜色
+}
+
+.footer {
+  font-size: 14px;
+  color: #666;
+  padding: 10px; // 可以根据需要调整内边距
+}
 </style>

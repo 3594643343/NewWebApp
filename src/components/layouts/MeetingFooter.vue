@@ -10,7 +10,7 @@
   const InviteVisible = ref(false);
   const confirmLeaveVisible = ref(false); // 确认离开会议弹窗显示状态
   const manageMembersVisible = ref(false); // 成员管理弹窗显示状态
-  const micStatus = ref(false); // 全局麦克风状态
+  const micStatus = ref(true); // 全局麦克风状态
   const meetingNumber = localStorage.getItem('meetingNumber');
   const meetingPassword = localStorage.getItem('meetingPassword');
   const userProfileData = JSON.parse(localStorage.getItem('userProfile')); // 用户信息，假设存储的是JSON字符串
@@ -21,7 +21,7 @@
 
   const fileInput = ref(null); // 声明和初始化 fileInput 引用
   const fileListVisible = ref(false); // 文件列表弹窗显示状态
-const files = ref([]); // 存储当前会议的文件列表
+  const files = ref([]); // 存储当前会议的文件列表
 
 // 切换麦克风状态
   const toggleMicStatus = () => {
@@ -100,6 +100,7 @@ const files = ref([]); // 存储当前会议的文件列表
     console.log('退出会议结果:', response);
     if (response && response.code === 1) {
       console.log('退出会议成功：');
+      localStorage.removeItem('fileId');
       router.push('/main/user')
 
     } else {
@@ -116,7 +117,7 @@ const files = ref([]); // 存储当前会议的文件列表
   // 更新用户权限
   const updatePermission = async (userId, newPermission) => {
     try {
-      const response = await updatePermissionAPI(meetingNumber, userId, newPermission);
+      const response = await updatePermissionAPI( userId, meetingNumber, newPermission);
       console.log('会议号：' + meetingNumber + '，用户id：' + userId + '，新权限：' + newPermission);
       if (response && response.code === 1) {
         console.log('更新权限成功:', response);
@@ -171,29 +172,34 @@ const files = ref([]); // 存储当前会议的文件列表
     }
   };
 
-  // 下载文件
-  const handleDownloadFile = async (fileId) => {
+// const handleDownloadFile = async (fileId) => {
+//   console.log('下载文件id:', fileId);
+//   const config = {
+//     method: 'get',
+//     url: 'http://121.37.24.76:8079/meeting/download?fileId=' + fileId,
+//     headers: { 
+//       "token" : localStorage.getItem('token')
+//     },
+//     responseType: 'json'
+//   };
+//   axios(config)
+//     .then(function (response) {
+//       console.log(JSON.stringify(response.data));
+//       const base64data = response.data; // 获取 Base64 编码的图片列表
+//       console.log('Base64 数据:', base64data);
+//     })
+//     .catch(function (error) {
+//       console.error('下载文件失败:', error.response ? error.response.data : error.message);
+//       ElMessage.error('下载文件失败: ' + error.message);
+//     });
+// };
+const handleDownloadFile = (fileId) => {
+  localStorage.setItem('fileId', fileId);
   console.log('下载文件id:', fileId);
-  //var axios = require('axios');
-  var config = {
-   method: 'get',
-   url: 'http://121.37.24.76:8079/meeting/download?fileId='+fileId,
-   headers: { 
-    "token" : localStorage.getItem('token')
-   }
+  fileListVisible.value = false; // 关闭文件列表弹窗
+  //刷新页面
+  window.location.reload();
 };
-
-axios(config)
-.then(function (response) {
-   //console.log(JSON.stringify(response.data));
-   TODO //将文件显示在屏幕上
-})
-.catch(function (error) {
-   console.log(error);
-});
-
-};
-
   // 初始化文件列表
   // onMounted(() => {
   //   fetchFiles();
@@ -233,8 +239,10 @@ axios(config)
     <div class="meeting-footer">
       <el-button type="primary" @click="toggleMicStatus" style="min-width: 110px">
         <el-icon>
-          <Microphone v-if="micStatus" />
-          <Mute v-else />
+          <!-- <Microphone v-if="micStatus" /> -->
+          <Mute v-if="micStatus" />
+          <!-- <Mute v-else /> -->
+          <Microphone v-else />
         </el-icon>
         {{ micStatus ? '取消静音' : '静音' }}
       </el-button>
@@ -321,9 +329,9 @@ axios(config)
           <el-table :data="files" style="width: 100%">
             <el-table-column prop="fileName" label="文件名" width="400" />
             <el-table-column prop="fileType" label="文件类型" width="100" />
-            <el-table-column label="操作" width="100">
+            <el-table-column label="操作" width="200">
               <template #default="scope">
-                <el-button size="small" @click="handleDownloadFile(scope.row.fileId)">下载</el-button>
+                <el-button size="small" @click="handleDownloadFile(scope.row.fileId)">查看</el-button>
               </template>
             </el-table-column>
           </el-table>
