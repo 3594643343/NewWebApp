@@ -18,10 +18,10 @@ export const initWschat = () => {
     }
   wschat.value = new WebSocket('ws://121.37.24.76:8079/chat/'+localStorage.getItem('userId'));
     wschat.value.onopen = () => {
-      console.log('websocket连接成功');
+      console.log('websocketChat连接成功');
     };
     wschat.value.onmessage = (event) => {
-        console.log('websocket接收到消息:', event.data);
+        console.log('websocketChat接收到消息:', event.data);
         try {
             const receivedMessage = JSON.parse(event.data);
             // 触发事件总线的消息更新事件，传递接收到的消息数据
@@ -32,10 +32,10 @@ export const initWschat = () => {
         }
     };
     wschat.value.onclose = () => {
-      console.log('websocket连接关闭');
+      console.log('websocketChat连接关闭');
     };
     wschat.value.onerror = () => {
-      console.error('websocket发生错误:', error);
+      console.error('websocketChat发生错误:', error);
     };
   };
   
@@ -142,7 +142,7 @@ export const getInMeetingUsers = (meetingNumber) => {
 };
 //修改与会者权限
 export const updatePermissionAPI = ({id,meetingNumber,Permission}) => 
-    request.put('/meeting/permissionchange', {id,meetingNumber,Permission})
+    request.put('/meeting/permissionchange', {id,meetingNumber,permission:Permission})
 //禁言
 export const muteUser = ({userId,meetingNumber}) => 
     request.put('/meeting/mute', {userId,meetingNumber})

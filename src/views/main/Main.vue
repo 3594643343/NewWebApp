@@ -1,12 +1,7 @@
 <script setup>
 import MainHeader from '@/components/layouts/MainHeader.vue';
 import MainSider from '@/components/layouts/MainSider.vue';
-import { initWschat} from '@/api/user'
-import { onMounted } from 'vue';
 
-onMounted(() => {
-  initWschat()
-})
 </script>
 
 <template>

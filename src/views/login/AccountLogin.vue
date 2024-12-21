@@ -3,7 +3,7 @@
   import { useUserStore } from '@/stores/useUserStore';
   import { ElMessage } from 'element-plus';
   import { useRouter } from 'vue-router';
-  import { userLoginService, fetchUserProfile,getAllFriends,getUserGroups,getOneGroup } from '@/api/user';
+  import { userLoginService, fetchUserProfile,getAllFriends,getUserGroups,getOneGroup,initWschat } from '@/api/user';
 
   const router = useRouter();
   const userStore = useUserStore();
@@ -52,6 +52,8 @@
       localStorage.setItem('userId',result.data.userId);
       console.log("Login:", result.data.token);
       console.log('Login successful');
+
+      initWschat();
 
       userStore.login();  // 更新登录状态为 true
 

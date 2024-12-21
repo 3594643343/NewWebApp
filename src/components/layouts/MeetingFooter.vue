@@ -115,7 +115,7 @@ const files = ref([]); // 存储当前会议的文件列表
   // 更新用户权限
   const updatePermission = async (userId, newPermission) => {
     try {
-      const response = await updatePermissionAPI(meetingNumber, userId, newPermission);
+      const response = await updatePermissionAPI(userId,meetingNumber, newPermission);
       console.log('会议号：' + meetingNumber + '，用户id：' + userId + '，新权限：' + newPermission);
       if (response && response.code === 1) {
         console.log('更新权限成功:', response);
@@ -184,8 +184,8 @@ const files = ref([]); // 存储当前会议的文件列表
 
 axios(config)
 .then(function (response) {
-   //console.log(JSON.stringify(response.data));
-   TODO //将文件显示在屏幕上
+   console.log(JSON.stringify(response.data));
+   //TODO //将文件显示在屏幕上
 })
 .catch(function (error) {
    console.log(error);

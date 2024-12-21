@@ -55,9 +55,7 @@ onMounted(()=>{
         { audio: true },
         function (mediaStream) {
             init(new Recorder(mediaStream));
-
-                // beginWS();
-                
+            beginWS(); 
         },
         function (error) {
             console.log(error);
@@ -84,7 +82,7 @@ const beginWS = ()=>{
                 //console.log(record.getBlob());
                 const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
                 if(!micStatus.value){
-                ws.send(record.getBlob());    //发送音频数据
+                    ws.send(record.getBlob());    //发送音频数据
                 }
                     //console.log("#######################send Blob end ##############################");
                 record.clear(); //每次发送完成则清理掉旧数据
@@ -238,28 +236,33 @@ function init(rec){
         }
     };
      
+    //import { ElMessage, ElMessageBox } from 'element-plus';
      
     function receive(data) {
         //console.log('receive data:'+ data);
         if( data == 'END'){
             console.log('END');
             endWS();
-            meetingendVisible.value = true; // 显示确认对话框
-            // 弹出确认框
-            // ElMessageBox.confirm('会议已结束，是否返回主页面？', '会议结束', {
-            // confirmButtonText: '确定',
-            // cancelButtonText: '取消',
-            // type: 'warning',
-            // }).then(() => {
-            // router.push('/main/user'); // 用户点击确定后跳转到主页面
-            // }).catch(() => {
-            // router.push('/main/user'); // 用户点击确定后跳转到主页面
-            // });
+            //meetingendVisible.value = true; // 显示确认对话框
+            ElMessage({
+                        type: 'info',
+                        message: `会议结束`,
+                    });
+            router.push('/main/user');
         }else if(data == 'SomeOneIn'||data == 'ONE_LEAVE'){
+            console.log(data);
             fetchUsers();
             // location.reload(); // 页面刷新
             // beginWS();
-        }else{
+        }else if(data == 'NEW_FILE'){
+            //提示有新文件
+            ElMessage({
+                showClose: true,
+                message: '有新文件上传',
+            })
+
+        }
+        else{
             var buffer = (new Response(data)).arrayBuffer();
             buffer.then(function(buf){
                     //console.log("################recv start ####################################");
