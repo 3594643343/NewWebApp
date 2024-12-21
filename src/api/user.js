@@ -2,6 +2,7 @@ import request from '../utils/request';
 import { ref } from 'vue';
 import emitter from '@/main.js'; // 根据实际路径调整引入
 import exp from 'constants';
+import { head } from 'lodash';
 
 
 let wschat = ref(null); // 聊天websocket实例
@@ -18,10 +19,10 @@ export const initWschat = () => {
     }
   wschat.value = new WebSocket('ws://121.37.24.76:8079/chat/'+localStorage.getItem('userId'));
     wschat.value.onopen = () => {
-      console.log('websocket连接成功');
+      console.log('websocketChat连接成功');
     };
     wschat.value.onmessage = (event) => {
-        console.log('websocket接收到消息:', event.data);
+        console.log('websocketChat接收到消息:', event.data);
         try {
             const receivedMessage = JSON.parse(event.data);
             // 触发事件总线的消息更新事件，传递接收到的消息数据
@@ -32,10 +33,10 @@ export const initWschat = () => {
         }
     };
     wschat.value.onclose = () => {
-      console.log('websocket连接关闭');
+      console.log('websocketChat连接关闭');
     };
     wschat.value.onerror = () => {
-      console.error('websocket发生错误:', error);
+      console.error('websocketChat发生错误:', error);
     };
   };
   
@@ -141,8 +142,12 @@ export const getInMeetingUsers = (meetingNumber) => {
     });
 };
 //修改与会者权限
-export const updatePermissionAPI = ({id,meetingNumber,Permission}) => 
-    request.put('/meeting/permissionchange', {id,meetingNumber,Permission})
+export const updatePermissionAPI = (id,meetingNumber,Permission) => {
+    return request.put('/meeting/permissionchange', {id,meetingNumber,permission:Permission})
+};
+
+    
+    
 //禁言
 export const muteUser = ({userId,meetingNumber}) => 
     request.put('/meeting/mute', {userId,meetingNumber})
@@ -180,8 +185,11 @@ export const downloadCurrentMeetingFile = (fileId) =>
 export const exitSystem = () =>
     request.delete('/exit')
 //会议中踢人
-export const kickUserService = ({ id, meetingNumber }) => 
-    request.delete('/meeting/kick', {id, meetingNumber });
+export const kickUserService = ( id, meetingNumber ) => {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    return request.delete('/meeting/kick',myHeaders, {id, meetingNumber });
+}
 //离开会议
 export const leaveMeetingService = () =>
     request.get('/meeting/leave')
@@ -403,4 +411,45 @@ export const getGroupChatRecord = ({groupId}) => {
     });
     return request.get(`/group/record?${queryParams.toString()}`);
 }
+
+//解散群聊
+export const dissolveGroup = ({groupId}) => {
+    const intGroupId = parseInt(groupId, 10);
+
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.post(`/group/disband?${queryParams.toString()}`);
+}
+//退出群聊
+export const exitGroup = ({groupId}) => {
+    const intGroupId = parseInt(groupId, 10);
+
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.delete(`/group/delete?${queryParams.toString()}`);
+}
+//踢人
+export const kickUser = ({groupId,userId}) => {
+    const intGroupId = parseInt(groupId, 10);
+    const intuserId = parseInt(userId, 10);
+
+    if (isNaN(intGroupId) || isNaN(intuserId)) {
+        throw new Error('参数必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId,
+        userId,
+    });
+    return request.post(`/group/kick?${queryParams.toString()}`);
+}
+
+
 

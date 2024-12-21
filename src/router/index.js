@@ -1,7 +1,5 @@
 import App from '@/App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import button from '@/views/test/button.vue'
-import plusIcon from '@/views/test/plusIcon.vue'
 import test from '@/views/test/test.vue'
 import Register from '@/views/register/Register.vue'
 import EmailLogin from '@/views/login/EmailLogin.vue'
@@ -27,16 +25,6 @@ const router = createRouter({
       path: '/',
       name: 'app',
       component: AccountLogin,
-    },
-    {
-      path: '/button',
-      name: 'button',
-      component: button,
-    },
-    {
-      path: '/plusIcon',
-      name: 'plusIcon',
-      component: plusIcon,
     },
     {
       path: '/register',

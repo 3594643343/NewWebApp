@@ -1,0 +1,53 @@
+Date : 2024-12-20 23:31:43
+Directory : f:\NewWebApp\src
+Total : 18 files,  622 codes, 32 comments, 49 blanks, all 703 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| vue        |         14 |        504 |          5 |         24 |        533 |
+| JavaScript |          4 |        118 |         27 |         25 |        170 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                  | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                     |         18 |        622 |         32 |         49 |        703 |
+| . (Files)                                             |          1 |          4 |         13 |          3 |         20 |
+| api                                                   |          1 |        102 |          7 |         20 |        129 |
+| components                                            |          4 |        -10 |          1 |          1 |         -8 |
+| components\layouts                                    |          4 |        -10 |          1 |          1 |         -8 |
+| router                                                |          1 |         -2 |          7 |          0 |          5 |
+| stores                                                |          1 |         14 |          0 |          2 |         16 |
+| views                                                 |         10 |        514 |          4 |         23 |        541 |
+| views\login                                           |          2 |          8 |          0 |          1 |          9 |
+| views\main                                            |          7 |        476 |          4 |         24 |        504 |
+| views\meeting                                         |          1 |         30 |          0 |         -2 |         28 |
++-------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                              | language   | code       | comment    | blank      | total      |
++-------------------------------------------------------+------------+------------+------------+------------+------------+
+| f:\NewWebApp\src\api\user.js                          | JavaScript |        102 |          7 |         20 |        129 |
+| f:\NewWebApp\src\components\layouts\MainHeader.vue    | vue        |          3 |          0 |          0 |          3 |
+| f:\NewWebApp\src\components\layouts\MainSider.vue     | vue        |          3 |          0 |          0 |          3 |
+| f:\NewWebApp\src\components\layouts\MeetingFooter.vue | vue        |        -26 |          1 |          0 |        -25 |
+| f:\NewWebApp\src\components\layouts\MeetingSider.vue  | vue        |         10 |          0 |          1 |         11 |
+| f:\NewWebApp\src\main.js                              | JavaScript |          4 |         13 |          3 |         20 |
+| f:\NewWebApp\src\router\index.js                      | JavaScript |         -2 |          7 |          0 |          5 |
+| f:\NewWebApp\src\stores\useUserStore.js               | JavaScript |         14 |          0 |          2 |         16 |
+| f:\NewWebApp\src\views\login\AccountLogin.vue         | vue        |          5 |          0 |          1 |          6 |
+| f:\NewWebApp\src\views\login\EmailLogin.vue           | vue        |          3 |          0 |          0 |          3 |
+| f:\NewWebApp\src\views\main\Chat.vue                  | vue        |        178 |          1 |         19 |        198 |
+| f:\NewWebApp\src\views\main\Friend.vue                | vue        |         30 |          1 |        -17 |         14 |
+| f:\NewWebApp\src\views\main\Main.vue                  | vue        |          1 |          0 |         -1 |          0 |
+| f:\NewWebApp\src\views\main\Record.vue                | vue        |         62 |          1 |          6 |         69 |
+| f:\NewWebApp\src\views\main\RecordDetail.vue          | vue        |        160 |          1 |         17 |        178 |
+| f:\NewWebApp\src\views\main\Schedule.vue              | vue        |          2 |          0 |          0 |          2 |
+| f:\NewWebApp\src\views\main\User.vue                  | vue        |         43 |          0 |          0 |         43 |
+| f:\NewWebApp\src\views\meeting\Meeting.vue            | vue        |         30 |          0 |         -2 |         28 |
+| Total                                                 |            |        622 |         32 |         49 |        703 |
++-------------------------------------------------------+------------+------------+------------+------------+------------+
