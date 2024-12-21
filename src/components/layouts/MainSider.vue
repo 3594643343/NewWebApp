@@ -31,10 +31,10 @@
           <span>消息</span>
         </el-menu-item>
         <br><br><br><br><br><br><br><br><br><br>
-        <el-menu-item index="/main/setting" :class="{ 'active-item': activeItem === '/main/setting' }" >
+        <!-- <el-menu-item index="/main/setting" :class="{ 'active-item': activeItem === '/main/setting' }" >
           <el-icon><setting /></el-icon>
           <span>设置</span>
-        </el-menu-item>
+        </el-menu-item> -->
         <el-menu-item plain @click="logoutDialogVisible = true">
           <el-icon><DArrowLeft /></el-icon>
           <span>退出登录</span>

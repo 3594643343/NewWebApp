@@ -119,12 +119,17 @@ onUnmounted(() => {
   background-color: #f5f7fa;
   padding: 20px;
   overflow: hidden;
+  /* position: fixed; */
+  top: 60px; /* 根据 header 的高度调整 */
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+  width: 250px;
 }
 
 .avatar-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 15px;
 }
 
@@ -132,7 +137,10 @@ onUnmounted(() => {
   cursor: pointer;
   transition: transform 0.2s;
   display: flex; /* 设置为flex布局 */
-  align-items: center; /* 垂直居中 */
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ebeef5;
 }
 
 

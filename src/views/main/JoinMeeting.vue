@@ -17,20 +17,21 @@
     { trigger: 'blur' }
   ],
   meetingPassword: [
-    { required: true, message: '请输入会议密码', trigger: 'blur' },
-    { trigger: 'blur' }
+    // { required: true, message: '请输入会议密码', trigger: 'blur' },
+    // { trigger: 'blur' }
   ],
   }
   
   const handleJoinMeeting = async () => {
-if (!joinMeetingForm.value.meetingNumber.trim()) {
+  if (!joinMeetingForm.value.meetingNumber.trim()) {
     ElMessage.error('会议号不能为空');
     return; // 防止继续执行
   }
   
   if (!joinMeetingForm.value.meetingPassword.trim()) {
-    ElMessage.error('会议密码不能为空');
-    return; // 防止继续执行
+    // ElMessage.error('会议密码不能为空');
+    // return; // 防止继续执行
+    joinMeetingForm.value.meetingPassword = '0';
   }
   try {
     const response = await joinMeetingService({

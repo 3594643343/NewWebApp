@@ -2,6 +2,8 @@
 import MeetingHeader from '@/components/layouts/MeetingHeader.vue';
 import MeetingSider from '@/components/layouts/MeetingSider.vue';
 import MeetingFooter from '@/components/layouts/MeetingFooter.vue';
+import MeetingMain from '@/components/layouts/MeetingMain.vue';
+
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from 'vue-router';
 // import { exitMeetingService } from '@/api/user';
@@ -55,9 +57,7 @@ onMounted(()=>{
         { audio: true },
         function (mediaStream) {
             init(new Recorder(mediaStream));
-
-                // beginWS();
-                
+            beginWS(); 
         },
         function (error) {
             console.log(error);
@@ -84,7 +84,7 @@ const beginWS = ()=>{
                 //console.log(record.getBlob());
                 const micStatus = ref(JSON.parse(localStorage.getItem('micStatus')) || false);
                 if(!micStatus.value){
-                ws.send(record.getBlob());    //发送音频数据
+                    ws.send(record.getBlob());    //发送音频数据
                 }
                     //console.log("#######################send Blob end ##############################");
                 record.clear(); //每次发送完成则清理掉旧数据
@@ -238,28 +238,33 @@ function init(rec){
         }
     };
      
+    //import { ElMessage, ElMessageBox } from 'element-plus';
      
     function receive(data) {
         //console.log('receive data:'+ data);
         if( data == 'END'){
             console.log('END');
             endWS();
-            meetingendVisible.value = true; // 显示确认对话框
-            // 弹出确认框
-            // ElMessageBox.confirm('会议已结束，是否返回主页面？', '会议结束', {
-            // confirmButtonText: '确定',
-            // cancelButtonText: '取消',
-            // type: 'warning',
-            // }).then(() => {
-            // router.push('/main/user'); // 用户点击确定后跳转到主页面
-            // }).catch(() => {
-            // router.push('/main/user'); // 用户点击确定后跳转到主页面
-            // });
+            //meetingendVisible.value = true; // 显示确认对话框
+            ElMessage({
+                        type: 'info',
+                        message: `会议结束`,
+                    });
+            router.push('/main/user');
         }else if(data == 'SomeOneIn'||data == 'ONE_LEAVE'){
+            console.log(data);
             fetchUsers();
             // location.reload(); // 页面刷新
             // beginWS();
-        }else{
+        }else if(data == 'NEW_FILE'){
+            //提示有新文件
+            ElMessage({
+                showClose: true,
+                message: '有新文件上传',
+            })
+
+        }
+        else{
             var buffer = (new Response(data)).arrayBuffer();
             buffer.then(function(buf){
                     //console.log("################recv start ####################################");
@@ -369,8 +374,10 @@ const handleLeaveMeeting = () => {
     console.log('退出会议成功：');
     router.push('/main/user')
 }
+
 onBeforeUnmount(() => {
     endWS(); // 关闭WebSocket连接
+    localStorage.removeItem('fileId'); // 移除 fileId
     // exitMeetingService(); // 调用退出会议界面接口
 });
      
@@ -379,16 +386,18 @@ onBeforeUnmount(() => {
 <template>
     <div class="common-layout">
       <el-container>
-        <el-header>
-            <MeetingHeader />
+        <el-header class="fixed-header">
+          <MeetingHeader />
         </el-header>
         <el-container>
-          <el-aside width="250px" hegiht="100%">
+          <el-aside class="fixed-aside" width="250px">
             <MeetingSider />
           </el-aside>
           <el-container>
-            <el-main>Main</el-main>
-            <el-footer class="footer">
+            <el-main>
+              <MeetingMain />
+            </el-main>
+            <el-footer class="fixed-footer footer">
               <MeetingFooter />
             </el-footer>
           </el-container>
@@ -406,13 +415,51 @@ onBeforeUnmount(() => {
         </template>
       </el-dialog>
     </div>
-</template>
+  </template>
 
 
 <style lang="scss" scoped>
-  .footer {
-    font-size: 14px;
-    color: #666;
-  }
+.common-layout {
+  height: 100vh; // 设置布局高度为视口高度
+  position: relative;
+}
 
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: #fff; // 可以根据需要调整背景颜色
+}
+
+.fixed-aside {
+  position: fixed;
+  top: 60px; // 根据 header 的高度调整
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+  background-color: #f0f2f5; // 可以根据需要调整背景颜色
+}
+
+.el-main {
+    height: auto;
+    margin-top: 60px; // 根据 header 的高度调整
+    margin-left: 250px; // 根据 aside 的宽度调整
+}
+
+.fixed-footer {
+  position: fixed;
+  bottom: 0;
+  left: 250px; // 根据 aside 的宽度调整
+  right: 0;
+  z-index: 998;
+  background-color: #fff; // 可以根据需要调整背景颜色
+}
+
+.footer {
+  font-size: 14px;
+  color: #666;
+  padding: 10px; // 可以根据需要调整内边距
+}
 </style>
