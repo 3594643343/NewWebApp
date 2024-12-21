@@ -213,6 +213,7 @@ const searchFriend = async () => {
   }
 };
 
+//添加好友
 const addFriend = async() => {
   try {
     const response = await applyAddFriend({
@@ -470,7 +471,7 @@ const sendMessage = async (newmessage) => {
             <h4>用户名：{{ selectedFriend.friendName }}</h4>
             <p>ID: {{ selectedFriend.friendId }}</p>
             <p>个性签名: {{ selectedFriend.signature }}</p>
-            <el-button type="primary" @click="addFriend;addFriendDialogVisible=true">添加好友</el-button>
+            <el-button type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
           </div>
           <div v-else-if="foruserProfileDetailsVisible">
             <el-empty description="点击搜索好友的头像显示详情" />

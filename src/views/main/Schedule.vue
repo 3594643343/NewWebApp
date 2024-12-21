@@ -25,7 +25,7 @@
           <el-empty description="没有进行中的会议" />
         </p>
       </el-tab-pane>
-      <el-tab-pane label="已结束的会议" name="second">
+      <!-- <el-tab-pane label="已结束的会议" name="second">
         <el-table :data="endedMeetings" style="width: 100%">
           <el-table-column prop="meetingName" label="会议名称" width="180" />
           <el-table-column prop="meetingStartTime" label="开始时间" width="180" />
@@ -43,7 +43,7 @@
         <p v-if="!endedMeetings.length">
           <el-empty description="没有已结束的会议" />
         </p>
-      </el-tab-pane>
+      </el-tab-pane> -->
       <el-tab-pane label="未开始的会议" name="third">
         <el-table :data="upcomingMeetings" style="width: 100%">
           <el-table-column prop="meetingName" label="会议名称" width="180" />

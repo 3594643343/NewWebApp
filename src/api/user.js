@@ -88,6 +88,21 @@ export const getMeetingDetailService = (recordId) =>
             recordId: recordId // 作为查询参数传递
         }
     })
+//会议记录中获取文件列表
+export const getMeetingFileListService = (recordId) =>
+    request.get('/record/get/fileList', {
+        params: {
+            recordId: recordId // 作为查询参数传递
+        }
+    })
+//下载会议记录文件
+export const downloadMeetingFileService = (fileId) =>
+    request.get('/record/download', {
+        params: {
+            fileId: fileId // 作为查询参数传递
+        },
+        responseType: 'blob' // 下载文件需设置 responseType 为 blob
+    })
 //删除会议记录
 export const deleteMeetingRecordService = (recordId) =>
     request.delete('/record/delete', {
@@ -104,6 +119,19 @@ export const joinMeetingService = ({meetingNumber,meetingPassword}) =>
 //快速会议
 export const quickMeetingService = () =>
     request.get('/menu/quick')
+// 获取会议名称
+export const getMeetingName = (meetingNumber) => {
+    if (!meetingNumber) {
+        console.error('meetingNumber 不能为空');
+        return Promise.reject(new Error('meetingNumber 不能为空'));
+    }
+    return request.get('/meeting/get/meetingName', {
+        params: {
+            meetingNumber: meetingNumber // 作为查询参数传递
+        }
+    });
+};
+
 //获取在会用户信息
 export const getInMeetingUsers = (meetingNumber) => {
     return request.get('/meeting/userlist', {
@@ -137,9 +165,23 @@ export const uploadFile = (meetingNumber, file) => {
         }
     });
 };
-//退出会议界面
-export const exitMeetingService = () =>
+//获取当前会议中文件列表
+export const getCurrentMeetingFileList = () => 
+    request.get('/meeting/get/fileList')
+//下载当前会议文件
+export const downloadCurrentMeetingFile = (fileId) =>
+    request.get('/meeting/download', {
+        params: {
+            fileId: fileId // 作为查询参数传递
+        },
+        responseType: 'blob' // 下载文件需设置 responseType 为 blob
+    })
+//退出系统
+export const exitSystem = () =>
     request.delete('/exit')
+//会议中踢人
+export const kickUserService = ({ id, meetingNumber }) => 
+    request.delete('/meeting/kick', {id, meetingNumber });
 //离开会议
 export const leaveMeetingService = () =>
     request.get('/meeting/leave')

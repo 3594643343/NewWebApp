@@ -14,13 +14,13 @@
         />
       </div>
       <div class="menu-items">
-      <el-menu-item index="register" style="font-weight: bold;">注册</el-menu-item>
-      <el-sub-menu index="login">
-        <template #title ><span style="font-weight: bold;">登录</span></template>
-        <el-menu-item index="email-login" style="font-weight: bold;">邮箱登录</el-menu-item>
-        <el-menu-item index="account-login" style="font-weight: bold;">账号登录</el-menu-item>
-      </el-sub-menu>
-    </div>
+        <el-menu-item index="register" style="font-weight: bold;">注册</el-menu-item>
+        <el-sub-menu index="login">
+          <template #title ><span style="font-weight: bold;">登录</span></template>
+          <el-menu-item index="email-login" style="font-weight: bold;">邮箱登录</el-menu-item>
+          <el-menu-item index="account-login" style="font-weight: bold;">账号登录</el-menu-item>
+        </el-sub-menu>
+      </div>
     </el-menu>
 </template>
   

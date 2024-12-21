@@ -2,7 +2,8 @@
   import { ref, onMounted  } from 'vue';
   import { useRouter } from 'vue-router';
   import { ElMessage, ElDialog } from 'element-plus';
-  import { uploadFile, leaveMeetingService, updatePermissionAPI } from '@/api/user'; // 导入上传文件的接口
+  import { uploadFile, leaveMeetingService, updatePermissionAPI, getCurrentMeetingFileList, downloadCurrentMeetingFile, kickUserService } from '@/api/user'; // 导入上传文件的接口
+  import axios from 'axios';
   
   const users = ref(JSON.parse(localStorage.getItem('users')) || []); // 存储当前会议中的用户列表
   const router = useRouter();
@@ -19,6 +20,8 @@
   // const signature = userProfileData.signature; // 用户签名
 
   const fileInput = ref(null); // 声明和初始化 fileInput 引用
+  const fileListVisible = ref(false); // 文件列表弹窗显示状态
+const files = ref([]); // 存储当前会议的文件列表
 
 // 切换麦克风状态
   const toggleMicStatus = () => {
@@ -50,6 +53,7 @@
         if (response && response.code === 1) {
           console.log('文件上传成功:', response);
           ElMessage.success('文件上传成功');
+          fetchFiles();
         } else {
             ElMessage.error('文件上传失败');
         }
@@ -80,9 +84,9 @@
   //   console.log("翻译功能");
   // };
   
-  const settings = () => {
-    console.log("设置功能");
-  };
+  // const settings = () => {
+  //   console.log("设置功能");
+  // };
   
   // 触发离开会议确认对话框
   const confirmLeaveMeeting = () => {
@@ -109,7 +113,7 @@
 
   };
 
-  // 更新用户权限的方法
+  // 更新用户权限
   const updatePermission = async (userId, newPermission) => {
     try {
       const response = await updatePermissionAPI(meetingNumber, userId, newPermission);
@@ -145,8 +149,82 @@
     }
   };
 
-  const kickUser = (userId) => {
-    console.log('踢除用户:', userId);
+  const showFileList = () => {
+    fetchFiles();
+    fileListVisible.value = true; // 显示文件列表弹窗
+  };
+
+  // 获取文件列表
+  const fetchFiles = async () => {
+    try {
+      const response = await getCurrentMeetingFileList();
+      if (response && response.code === 1) {
+        console.log('获取的文件列表:', response.data);
+        files.value = response.data;
+      } else {
+        console.error('获取文件列表失败:', response);
+        ElMessage.error('获取文件列表失败: ' + response.msg);
+      }
+    } catch (error) {
+      console.error('获取文件列表失败:', error.response ? error.response.data : error.message);
+      ElMessage.error('获取文件列表失败: ' + error.message);
+    }
+  };
+
+  // 下载文件
+  const handleDownloadFile = async (fileId) => {
+  console.log('下载文件id:', fileId);
+  //var axios = require('axios');
+  var config = {
+   method: 'get',
+   url: 'http://121.37.24.76:8079/meeting/download?fileId='+fileId,
+   headers: { 
+    "token" : localStorage.getItem('token')
+   }
+};
+
+axios(config)
+.then(function (response) {
+   //console.log(JSON.stringify(response.data));
+   TODO //将文件显示在屏幕上
+})
+.catch(function (error) {
+   console.log(error);
+});
+
+};
+
+  // 初始化文件列表
+  // onMounted(() => {
+  //   fetchFiles();
+  // });
+
+  const kickUser = async (userId) => {
+    if (!meetingNumber) {
+      ElMessage.error('会议号未找到');
+      return;
+    }
+    const userIdInt = parseInt(userId, 10); // 确保 userId 为整数
+    console.log('踢除用户:', { id: userIdInt, meetingNumber: meetingNumber });
+    try {
+      const response = await kickUserService({id: userIdInt, meetingNumber: meetingNumber});
+      if (response && response.code === 1) {
+        console.log('踢除用户成功:', response);
+        ElMessage.success('踢除用户成功');
+        // 更新本地用户列表
+        const index = users.value.findIndex(user => user.id === userIdInt);
+        if (index !== -1) {
+          users.value.splice(index, 1);
+        }
+      } else {
+        console.error('踢除用户失败:', response);
+        ElMessage.error('踢除用户失败: ' + response.msg);
+      }
+    } catch (error) {
+      console.error('踢除用户失败:', error.response ? error.response.data : error.message);
+      ElMessage.error('踢除用户失败: ' + error.message);
+    } 
+
     // 实现踢除用户的逻辑
   };
   </script>
@@ -166,8 +244,11 @@
       <el-button type="primary" @click="translate">翻译</el-button> -->
       <!-- 添加文件输入 -->
       <input type="file" @change="handleFileUpload" style="display:none" ref="fileInput" />
-      <el-button type="primary" @click="triggerFileInput">文件上传</el-button>
-      <el-button type="primary" @click="settings">设置</el-button>
+      <!-- <el-button type="primary" @click="triggerFileInput">会议文件</el-button> -->
+      <!-- <el-button type="primary" @click="fileListVisible = true">会议文件</el-button> -->
+      <el-button type="primary" @click="showFileList">会议文件</el-button>
+
+      <!-- <el-button type="primary" @click="settings">设置</el-button> -->
       <el-button type="danger" @click="confirmLeaveMeeting">退出会议</el-button>
   
       <el-dialog v-model="InviteVisible" title="邀请" width="300" center>
@@ -234,7 +315,25 @@
           </div>
         </div>
       </el-dialog>
-
+      <el-dialog v-model="fileListVisible" title="会议文件列表" width="600px" center>
+        <div>
+          <el-button type="primary" @click="triggerFileInput">上传文件</el-button>
+          <el-table :data="files" style="width: 100%">
+            <el-table-column prop="fileName" label="文件名" width="400" />
+            <el-table-column prop="fileType" label="文件类型" width="100" />
+            <el-table-column label="操作" width="100">
+              <template #default="scope">
+                <el-button size="small" @click="handleDownloadFile(scope.row.fileId)">下载</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="fileListVisible = false">关闭</el-button>
+          </div>
+        </template>
+      </el-dialog>
     </div>
   </template>
 

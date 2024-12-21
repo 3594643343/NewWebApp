@@ -29,9 +29,19 @@
         <p v-else>暂无音频</p>
       </div>
       <!-- <p v-else>暂无音频</p> -->
-      <p><strong>会议记录:</strong> {{ meetingDetails.meetingRecord || '暂无记录' }}</p>
+      <!-- <p><strong>会议记录:</strong> {{ meetingDetails.meetingRecord || '暂无记录' }}</p>
       <p><strong>会议纪要:</strong> {{ meetingDetails.meetingMinutes || '暂无纪要' }}</p>
-      <p><strong>会议翻译:</strong> {{ meetingDetails.meetingTranslation || '暂无翻译' }}</p>
+      <p><strong>会议翻译:</strong> {{ meetingDetails.meetingTranslation || '暂无翻译' }}</p> -->
+      <p><strong>会议文件:</strong></p>
+        <el-table :data="meetingFiles" style="width: 100%;" class="file-table">
+          <el-table-column prop="fileName" label="文件名" width="600" />
+          <el-table-column prop="fileType" label="文件类型" width="100" />
+          <el-table-column label="操作" width="100">
+            <template #default="scope">
+              <el-button type="primary" icon="Download" @click="downloadFile(scope.row.fileId, scope.row.fileName)" circle></el-button>
+            </template>
+          </el-table-column>
+        </el-table>
     </div>
   </div>
 </template>
@@ -39,7 +49,10 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router'
-import { getMeetingDetailService } from '@/api/user';
+import { getMeetingDetailService, getMeetingFileListService, downloadMeetingFileService  } from '@/api/user';
+import { ArrowLeftBold, Download } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import axios from 'axios';
 
 const router = useRouter(); // 获取 router 实例
 const audioPlayer = ref(null);
@@ -56,6 +69,8 @@ const meetingDetails = ref({
   meetingTranslation: '',
   meetingAudio: '',
 });
+
+const meetingFiles = ref([]);
 
 onMounted(() => {
   const meeting = JSON.parse(localStorage.getItem('currentMeeting'))
@@ -77,36 +92,7 @@ onMounted(() => {
     router.push({ name:'record' })
   }
   getDetails(meeting);
-  // const meetingData = JSON.parse(localStorage.getItem('currentMeetingDetails'))
-  // if (meetingData.meetingRecord) {
-  //   meetingDetails.value.meetingRecord = meetingData.meetingRecord;
-  // }
-  // if (meetingData.meetingMinutes) {
-  //   meetingDetails.value.meetingMinutes = meetingData.meetingMinutes;
-  // }
-  // if (meetingData.meetingTranslation) {
-  //   meetingDetails.value.meetingTranslation = meetingData.meetingTranslation;
-  // }
-  // if (meetingData.meetingAudio) {
-  //   meetingDetails.value.meetingAudio = meetingData.meetingAudio;
-  // }
-
-  // if (meetingDetails.value.meetingName) {
-  //   console.log('从 localStorage 获取会议详情成功：', meetingDetails.value);
-  // } else {
-  //   console.error('未能从 localStorage 获取会议详情');
-  //   // 如果没有获取到会议详情，可以重定向回会议列表页面
-  //   router.push({ name: 'record' });
-  // }
-  // if (audioPlayer.value) {
-  //   audioPlayer.value.addEventListener('timeupdate', () => {
-  //     if (audioPlayer.value.duration) {
-  //       const progress = (audioPlayer.value.currentTime / audioPlayer.value.duration) * 100;
-  //       audioProgress.value.textContent = `播放进度: ${progress.toFixed(2)}%`;
-  //     }
-  //   });
-  // }
-  // console.log('会议详情：', meetingDetails.value)
+  getFileList(meeting);
 });
 
 const goBack = () => {
@@ -139,6 +125,80 @@ const getDetails = async (meeting) => {
     console.error('获取会议详情失败:', error);
   }
 };
+
+//获取文件列表
+const getFileList = async (meeting) => {
+  try {
+    const response = await getMeetingFileListService(meeting.recordId);
+    if (response && response.data) {
+      meetingFiles.value = response.data.map(file => ({
+        ...file,
+        meetingName: meetingDetails.value.meetingName, // 将会议名添加到每个文件对象中
+      }));
+      console.log('获取会议文件列表成功：', meetingFiles.value);
+    } else {
+      console.error('未能获取会议文件列表');
+    }
+  } catch (error) {
+    console.error('获取会议文件列表失败:', error);
+  }
+};
+
+const downloadFile = async (fileId: string, fileName: string) => {
+  console.log('下载文件id:', fileId);
+  var config = {
+    method: 'get',
+    url: 'http://121.37.24.76:8079/record/download?fileId=' + fileId,
+    headers: { 
+      "token": localStorage.getItem('token') || ''
+    },
+    responseType: 'blob' as const // 使用常量断言确保类型正确
+  };
+
+  axios(config)
+    .then(function (response) {
+      const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
+      const fileUrl = URL.createObjectURL(fileBlob);
+
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileName; // 使用传递的文件名
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(fileUrl); // 释放内存
+      console.log('文件下载成功');
+      
+
+    })
+    .catch(function (error) {
+      console.error('下载文件失败:', error.response ? error.response.data : error.message);
+    });
+};
+// try {
+  //   const response = await downloadMeetingFileService(fileId);
+  //   if (response && response.data) {
+  //     // const blob = new Blob([response.data], { type: `application/${fileName.split('.').pop()}` });
+  //     // const url = window.URL.createObjectURL(blob);
+  //     // const link = document.createElement('a');
+  //     // link.href = url;
+  //     // link.download = fileName;
+  //     // document.body.appendChild(link);
+  //     // link.click();
+  //     // document.body.removeChild(link);
+  //     // window.URL.revokeObjectURL(url);
+  //     ElMessage.success('文件下载成功');
+  //     // console.log('文件下载:', response.data);
+  //   } else {
+  //     console.error('未能获取文件数据');
+  //     ElMessage.error('未能获取文件数据');
+  //   }
+  // } catch (error) {
+  //   console.error('文件下载失败:', error);
+  //   ElMessage.error('文件下载失败');
+  // }
+
 </script>
 
 <style>

@@ -55,12 +55,9 @@ onMounted(()=>{
         { audio: true },
         function (mediaStream) {
             init(new Recorder(mediaStream));
-            // beginWS(); // 开始WebSocket连接
-            // micStatus = localStorage.getItem('micStatus') || false;
-            // console.log(micStatus);
-           // if(micStatus.value){
-                beginWS();
-            //}
+
+                // beginWS();
+                
         },
         function (error) {
             console.log(error);
