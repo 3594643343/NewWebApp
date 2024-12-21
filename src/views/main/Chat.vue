@@ -1,14 +1,50 @@
 <script setup>
 import { ref, onMounted,onBeforeUnmount,nextTick } from 'vue';
 import router from '@/router';
-import { searchFriends, applyAddFriend, searchGroup, getChatRecord,getGroupChatRecord,getGroupMembers,applyJoinGroup,handleJoinGroup,getOneFriend } from '@/api/user';
+import { searchFriends,getAllFriends,getUserGroups,getOneGroup, applyAddFriend, searchGroup, getChatRecord,getGroupChatRecord,getGroupMembers,applyJoinGroup,handleJoinGroup,getOneFriend } from '@/api/user';
 import { initWschat,getWschat,closewschat } from '@/api/user';
 import emitter from '@/main.js'; // 根据实际路径调整引入
 import { debounce } from 'lodash';
+import { ElMessage } from 'element-plus';
 
+const loadFriends = async () => {
+  try {
+    const res = await getAllFriends();
+    console.log(res);
+    friends.value = res.data;
+    localStorage.setItem('friends', JSON.stringify(friends.value));
+    console.log("获取好友列表成功:friends",friends.value);
+  } catch (error) {
+    console.error(error);
+  }
+};
+  const friends = ref([]);
 
-
-
+  const usergroups= ref([]);
+  const groupid= ref('');
+const loadUserGroups = async () => {
+  try {
+    const res = await getUserGroups();
+    console.log(res);
+    groupid.value = res.data;
+    console.log("获取用户群号成功:usergroups",groupid.value);
+    for(let i=0;i<groupid.value.length;i++){
+      const res1 = await getOneGroup(groupid.value[i]);
+      console.log(res1);
+      usergroups.value.push(res1.data);
+      console.log("获取用户群信息成功:usergroups",usergroups.value);
+    }
+    localStorage.setItem('usergroups', JSON.stringify(usergroups.value));
+  } catch (error) {
+    console.error(error);
+  }
+};
+const NotFriend = () => {
+  ElMessage({
+    message: '发送消息失败，对方不是好友',
+    type: 'warning',
+  })
+}
 // emitter.emit('messageReceived', {}); // 初始化时先触发一次，可用于加载历史消息等情况（可选）
 const wschatifFriendOrGroup = ref(true); //发消息的是好友还是群聊,true为好友，false为群聊
 
@@ -19,7 +55,12 @@ emitter.on('messageReceived', async (receivedMessage) => {
     wschatifFriendOrGroup.value = true; //发消息的是好友
    }else if(receivedMessage.code === 2){
     wschatifFriendOrGroup.value = false; //发消息的是群聊
-   }
+   }else if (receivedMessage.code === 0) {
+    NotFriend();
+   }else if (receivedMessage === 'NEW_FRIEND') {
+     await loadFriends();
+   }else if (receivedMessage === 'PASS_ADD_GROUP') {
+   };
   if (wschatifFriendOrGroup.value) {
     const newMessageItem = {
         id: receivedMessage.data.senderId,
@@ -136,10 +177,28 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 //   initWschat();
 // });
 
-
+let ifsearchfriend = ref(false); // 判断搜索的好友是不是我的好友
+let ifsearchgroup = ref(false); // 判断搜索的群聊是不是我的群聊
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
+  for(let i=0;i<friendsAndGroups.value.length;i++){
+    if(friendsAndGroups.value[i].friendId){
+      if(friendsAndGroups.value[i].friendId === friend.friendId){
+      ifsearchfriend = true; // 判断是否是好友
+      console.log("friendsAndGroups.value[i].friendId", friendsAndGroups.value[i].friendId);
+      console.log("friend.friendId", friend.friendId);
+      }
+    }else{
+      if(friendsAndGroups.value[i].groupId === friend.groupId){
+      ifsearchgroup = true; // 判断是否是群聊
+      console.log("friendsAndGroups.value[i].groupId", friendsAndGroups.value[i].groupId);
+      console.log("friend.groupId", friend.groupId);
+      }
+    }
+  }
+  console.log("ifsearchfriend", ifsearchfriend);
+  console.log("ifsearchgroup", ifsearchgroup);
   initMessageList();
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
   newMessage.value = ''; // 清空输入消息
@@ -225,6 +284,7 @@ const addFriend = async() => {
       console.log('发送添加好友请求成功', response.data);
       // 发送成功后，关闭用户详情弹窗
       addFriendDialogVisible.value = false;
+      loadFriends(); // 刷新好友列表
     } else {
       console.error('发送添加好友请求失败，返回数据格式不正确');
     }
@@ -245,6 +305,7 @@ const addGroup = async() => {
       console.log('发送加入群聊请求成功', response.data);
       // 发送成功后，关闭用户详情弹窗
       addGroupDialogVisible.value = false;
+      loadUserGroups(); // 刷新群聊列表
     } else {
       console.error('发送加入群聊请求失败，返回数据格式不正确');
     }
@@ -426,6 +487,13 @@ const sendMessage = async (newmessage) => {
   }
 
 };
+// const goTochat = () => {
+//   console.log('跳转到聊天页面');
+//   searchFriendId.value = ''; // 清空搜索框
+//   selectedFriend.value = friendsAndGroups.value[0]; // 设置默认选择的好友
+//   initMessageList();
+// };
+
 
 </script>
 
@@ -473,7 +541,12 @@ const sendMessage = async (newmessage) => {
             <h4>用户名：{{ selectedFriend.friendName }}</h4>
             <p>ID: {{ selectedFriend.friendId }}</p>
             <p>个性签名: {{ selectedFriend.signature }}</p>
-            <el-button type="primary" @click="addFriend; addFriendDialogVisible = true">添加好友</el-button>
+            <div v-if="ifsearchfriend==false">
+              <el-button  type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
+            </div>
+            <div v-else>
+              <span style="margin-left: 10px;">已是好友</span>
+            </div>
           </div>
           <div v-else-if="foruserProfileDetailsVisible">
             <el-empty description="点击搜索好友的头像显示详情" />
@@ -484,7 +557,12 @@ const sendMessage = async (newmessage) => {
             <h4>群聊名：{{ selectedFriend.groupName }}</h4>
             <p>群号: {{ selectedFriend.groupId }}</p>
             <p>群聊创建者: {{ selectedFriend.ownerName }}</p>
-            <el-button type="primary" @click="addGroup; addGroupDialogVisible = true">申请入群</el-button>
+            <div v-if="ifsearchgroup==false">
+              <el-button  type="primary" @click="addGroup;addGroupDialogVisible=true">申请入群</el-button>
+            </div>
+            <div v-else>
+              <span style="margin-left: 10px;">已加入群聊</span>
+            </div>
           </div>
           <div v-else>
             <div class="chat-header">
