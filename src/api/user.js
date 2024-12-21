@@ -362,3 +362,44 @@ export const getGroupChatRecord = ({groupId}) => {
     return request.get(`/group/record?${queryParams.toString()}`);
 }
 
+//解散群聊
+export const dissolveGroup = ({groupId}) => {
+    const intGroupId = parseInt(groupId, 10);
+
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.post(`/group/disband?${queryParams.toString()}`);
+}
+//退出群聊
+export const exitGroup = ({groupId}) => {
+    const intGroupId = parseInt(groupId, 10);
+
+    if (isNaN(intGroupId)) {
+        throw new Error('groupId 必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId: intGroupId,
+    });
+    return request.delete(`/group/delete?${queryParams.toString()}`);
+}
+//踢人
+export const kickUser = ({groupId,userId}) => {
+    const intGroupId = parseInt(groupId, 10);
+    const intuserId = parseInt(userId, 10);
+
+    if (isNaN(intGroupId) || isNaN(intuserId)) {
+        throw new Error('参数必须是一个有效的整数');
+    }
+    const queryParams = new URLSearchParams({
+        groupId,
+        userId,
+    });
+    return request.post(`/group/kick?${queryParams.toString()}`);
+}
+
+
+
