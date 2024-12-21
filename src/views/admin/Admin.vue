@@ -6,23 +6,27 @@
       </el-header>
       <el-main class="main-content">
         <div class="header-content">
-          <el-input
-            v-model="searchText"
-            placeholder="输入用户名"
-            class="search-input"
-            size="medium" 
-          />
-          <el-button type="primary" @click="searchUser" size="medium" class="search-button">搜索</el-button>
+          <div class="search-and-logout">
+            <el-input
+              v-model="searchText"
+              placeholder="输入用户名"
+              class="search-input"
+              size="medium" 
+            />
+            <el-button type="primary" @click="searchUser" size="medium" class="search-button">搜索</el-button>
+          </div>
           <el-button type="danger" @click="logoutDialogVisible = true" size="medium" class="logout-button">退出登录</el-button>
         </div>
+
         <div class="table-container">
           <el-table :data="filteredData" style="width: 100%;" class="table" :height="tableHeight">
-            <el-table-column label="头像" width="100" fixed>
+            <el-table-column label="头像" width="150" fixed>
               <template v-slot="scope">
                 <el-avatar :src="scope.row.avatar" size="large"></el-avatar>
               </template>
             </el-table-column>
             <el-table-column prop="username" label="用户名" fixed />
+            <el-table-column prop="id" label="用户ID" fixed />
             <el-table-column label="个性签名" prop="signature" />
             <el-table-column label="操作" width="150" fixed="right">
               <template v-slot="scope">
@@ -192,6 +196,7 @@ const handleResize = () => {
   z-index: 999;  
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .search-and-logout {
