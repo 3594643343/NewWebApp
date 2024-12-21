@@ -650,6 +650,7 @@ const createGroup = async () => {
         groupsData.push(newGroup);
         // localStorage.setItem('usergroups', JSON.stringify(groupsData)); 
         loadUserGroups(); // 刷新群组列表
+        currentPage.value = 'messages'; // 回到创建群聊页面
         console.log('更新localStorage成功');
     } else {
         console.error('转换得到的Base64头像数据格式不正确');

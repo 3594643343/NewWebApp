@@ -177,11 +177,29 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 //   initWschat();
 // });
 
-
+let ifsearchfriend = ref(false); // 判断搜索的好友是不是我的好友
+let ifsearchgroup = ref(false); // 判断搜索的群聊是不是我的群聊
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
-  // initMessageList();
+  for(let i=0;i<friendsAndGroups.value.length;i++){
+    if(friendsAndGroups.value[i].friendId){
+      if(friendsAndGroups.value[i].friendId === friend.friendId){
+      ifsearchfriend = true; // 判断是否是好友
+      console.log("friendsAndGroups.value[i].friendId", friendsAndGroups.value[i].friendId);
+      console.log("friend.friendId", friend.friendId);
+      }
+    }else{
+      if(friendsAndGroups.value[i].groupId === friend.groupId){
+      ifsearchgroup = true; // 判断是否是群聊
+      console.log("friendsAndGroups.value[i].groupId", friendsAndGroups.value[i].groupId);
+      console.log("friend.groupId", friend.groupId);
+      }
+    }
+  }
+  console.log("ifsearchfriend", ifsearchfriend);
+  console.log("ifsearchgroup", ifsearchgroup);
+  initMessageList();
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
   newMessage.value = ''; // 清空输入消息
   console.log('2:', userProfileDetailsVisible.value, foruserProfileDetailsVisible.value,ifFriendOrGroup.value);
@@ -469,6 +487,13 @@ const sendMessage = async (newmessage) => {
   }
 
 };
+// const goTochat = () => {
+//   console.log('跳转到聊天页面');
+//   searchFriendId.value = ''; // 清空搜索框
+//   selectedFriend.value = friendsAndGroups.value[0]; // 设置默认选择的好友
+//   initMessageList();
+// };
+
 
 </script>
 
@@ -514,7 +539,12 @@ const sendMessage = async (newmessage) => {
             <h4>用户名：{{ selectedFriend.friendName }}</h4>
             <p>ID: {{ selectedFriend.friendId }}</p>
             <p>个性签名: {{ selectedFriend.signature }}</p>
-            <el-button type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
+            <div v-if="ifsearchfriend==false">
+              <el-button  type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
+            </div>
+            <div v-else>
+              <span style="margin-left: 10px;">已是好友</span>
+            </div>
           </div>
           <div v-else-if="foruserProfileDetailsVisible">
             <el-empty description="点击搜索好友的头像显示详情" />
@@ -525,7 +555,12 @@ const sendMessage = async (newmessage) => {
             <h4>群聊名：{{ selectedFriend.groupName }}</h4>
             <p>群号: {{ selectedFriend.groupId }}</p>
             <p>群聊创建者: {{ selectedFriend.ownerName }}</p>
-            <el-button type="primary" @click="addGroup;addGroupDialogVisible=true">申请入群</el-button>
+            <div v-if="ifsearchgroup==false">
+              <el-button  type="primary" @click="addGroup;addGroupDialogVisible=true">申请入群</el-button>
+            </div>
+            <div v-else>
+              <span style="margin-left: 10px;">已加入群聊</span>
+            </div>
           </div>
           <div v-else class="chat-header">
             <el-header class="chat-header">
