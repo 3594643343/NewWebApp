@@ -1,7 +1,7 @@
 import request from '../utils/request';
 import { ref } from 'vue';
 import emitter from '@/main.js'; // 根据实际路径调整引入
-import exp from 'constants';
+
 
 
 let wschat = ref(null); // 聊天websocket实例
@@ -22,7 +22,12 @@ export const initWschat = () => {
     };
     wschat.value.onmessage = (event) => {
         console.log('websocket接收到消息:', event.data);
-        try {
+        // 如果不是JSON格式的消息
+        if (event.data==='NEW_FRIEND') {
+            console.error('WebSocket接收到的消息不是字符串格式');
+            emitter.emit('messageReceived', receivedMessage);
+        }else{
+            try {
             const receivedMessage = JSON.parse(event.data);
             // 触发事件总线的消息更新事件，传递接收到的消息数据
             emitter.emit('messageReceived', receivedMessage);
@@ -30,6 +35,9 @@ export const initWschat = () => {
             console.error('解析WebSocket接收的消息出现错误:', error);
             console.error('接收到的原始消息内容为:', event.data);
         }
+    }
+
+        
     };
     wschat.value.onclose = () => {
       console.log('websocket连接关闭');
