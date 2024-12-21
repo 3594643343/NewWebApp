@@ -83,7 +83,7 @@
             <br>
             <span class="message-content">群聊验证消息：{{ msgItem.messageContent }}</span>
             <br>
-            <span class="message-time">时间：{{ msgItem.time }}</span>
+
             <div v-if="msgItem.status === 0">
               <el-button @click="handleGroupRequest('join', msgItem)" type="primary">同意入群</el-button>
               <el-button @click="handleGroupRequest('reject', msgItem)" type="primary">拒绝</el-button>
@@ -154,7 +154,25 @@ import { createMyGroup, getMyApplyList, getAllFriends, getUserGroups, deleteMyFr
 import emitter from '@/main.js'; // 根据实际路径调整引入
 import { ElMessage } from 'element-plus';
 
+//接收websocket消息
+emitter.on('messageReceived', (receivedMessage) => {
+  console.log('接收到消息', receivedMessage);
+  if (receivedMessage.code === 3) {
+    console.log("好友验证消息");
+    // 处理好友验证消息，添加到消息列表
+    handleMessage(receivedMessage.data, true);
+  } else if (receivedMessage.code === 4) {
+    console.log("群聊验证消息");
+    // 处理群聊验证消息，添加到消息列表
+    handleMessage(receivedMessage.data, false);
+    console.log("处理群聊验证消息");
+  }
+});
 
+//重新获取好友消息和群聊信息
+const friends = ref([]);
+const usergroups= ref([]);
+const groupid= ref('');
 
 const loadFriends = async () => {
   try {
@@ -167,10 +185,7 @@ const loadFriends = async () => {
     console.error(error);
   }
 };
-  const friends = ref([]);
 
-  const usergroups= ref([]);
-  const groupid= ref('');
 const loadUserGroups = async () => {
   try {
     const res = await getUserGroups();
@@ -189,23 +204,8 @@ const loadUserGroups = async () => {
   }
 };
 
-// 用于存储消息列表（包含好友申请和群聊申请消息）
-const messageList = ref([]);
 
-emitter.on('messageReceived', (receivedMessage) => {
-  console.log('接收到消息', receivedMessage);
-  if (receivedMessage.code === 3) {
-    console.log("好友验证消息");
-    // 处理好友验证消息，添加到消息列表
-    handleMessage(receivedMessage.data, true);
-  } else if (receivedMessage.code === 4) {
-    console.log("群聊验证消息");
-    // 处理群聊验证消息，添加到消息列表
-    handleMessage(receivedMessage.data, false);
-    console.log("处理群聊验证消息");
-  }
-});
-
+// 用于存储好友列表和群聊列表
 const friendsAndGroups = ref([]);
 const showfriendData = () => {
     const friendsData = localStorage.getItem('friends')? JSON.parse(localStorage.getItem('friends')) : [];
@@ -298,7 +298,8 @@ const showgroupData = () => {
         }
     });
 };
-
+// 用于存储消息列表（包含好友申请和群聊申请消息）
+const messageList = ref([]);
 //得到消息发送者的信息
 const getsenderInfo = async (id) => {
   try {
@@ -313,8 +314,9 @@ const getsenderInfo = async (id) => {
     console.error(error);
     }
 };
+//获取我的id
 const myUserId = localStorage.getItem('userId');
-//处理好友申请
+//处理收到的消息
 const handleMessage = async(data,isFriendRequest) => {
   try {
     if (data.receiverId === myUserId) {
@@ -326,7 +328,7 @@ const handleMessage = async(data,isFriendRequest) => {
       senderName: senderInfo.username,
       senderAvatar: senderInfo.avatar ? `data:image/png;base64,${senderInfo.avatar}` : '',
       messageContent: data.message,
-      time: new Date().toLocaleString(),
+      // time: new Date().toLocaleString(),
       recordId: data.recordId,
       groupId: data.groupId,
     // isFriendRequest: item.groupId ? false : true // 判断是否是自己发出的申请
@@ -340,89 +342,7 @@ const handleMessage = async(data,isFriendRequest) => {
     console.error(error);
   }
 };
-
-
-// 处理好友申请请求（同意或拒绝）
-const handleFriendRequest = async (action, data) => {
-  console.log("action", action);
-  console.log("data", data);
-  try {
-    const res = await handleAddFriend({
-      recordId: data.recordId,
-      friendId: data.senderId,
-      check: action === 'accept' ? 1 : 0
-    });
-
-    if (res.code === 1) {
-      ElMessage({
-        message: '处理好友申请成功',
-        type: 'success',
-      }); 
-      //改变status
-      messageList.value.forEach((item) => {
-        if (item.recordId === data.recordId) {
-          item.status = 1;
-        }
-       
-      });
-      loadFriends(); // 刷新好友列表
-    } else {
-      ElMessage({
-        message: '处理好友申请失败',
-        type: 'error',
-      });
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-
-// 处理群聊申请请求（同意入群或拒绝）
-const handleGroupRequest = async (action, data) => {
-  console.log("action", action);
-  console.log("data", data);
-  try {
-    const res = await handleJoinGroup({
-      recordId: data.recordId,
-      groupId: data.groupId,
-      userId: data.senderId,
-      check: action === 'join' ? 1 : 0
-    });
-
-    if (res.code === 1) {
-      ElMessage({
-        message: '处理群聊申请成功',
-        type: 'success',
-      });
-      //改变stauts状态
-      messageList.value.forEach((item) => {
-        if (item.recordId === data.recordId) {
-          item.status = 1;
-        }
-      });
-      loadUserGroups(); // 刷新群组列表
-    } else {
-      ElMessage({
-        message: '处理群聊申请失败',
-        type: 'error',
-      });
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-
-const currentPage = ref('messages'); // 当前显示的页面
-onMounted(() => {
-  currentPage.value ='messages';
-  // 加载申请列表消息
-  loadmyApplyList();
-  showfriendData();
-  showgroupData();
-});
-
+// 加载申请列表消息，从后端获取
 const loadmyApplyList = async () => {
   try {
     const res = await getMyApplyList();
@@ -438,7 +358,7 @@ const loadmyApplyList = async () => {
           senderName: senderInfo.username,
           senderAvatar: senderInfo.avatar ? `data:image/png;base64,${senderInfo.avatar}` : '',
           messageContent: item.message,
-          time: new Date().toLocaleString(),
+          // time: new Date().toLocaleString(),
           recordId: item.recordId,
           groupId: item.groupId,
           isFriendRequest: item.groupId ? false : true, // 判断是否是自己发出的申请
@@ -454,13 +374,124 @@ const loadmyApplyList = async () => {
     console.error(error);
   }
   };
-const pendingRequest = ref(false); // 是否有待处理的请求
-const deleteFriendSuccess = () => {
+
+// 处理好友申请请求（同意或拒绝）
+const handleFriendRequest = async (action, data) => {
+  console.log("action", action);
+  console.log("data", data);
+  try {
+    const res = await handleAddFriend({
+      recordId: data.recordId,
+      friendId: data.senderId,
+      check: action === 'accept' ? 1 : 0
+    });
+
+    if (res.code === 1) {
+      //改变status
+      messageList.value.forEach((item) => {
+        if (item.recordId === data.recordId) {
+          item.status = 1;
+        }
+      });
+      if (action === 'accept') {
+        handleFriendRequestSuccessT();
+      } else {
+        handleFriendRequestSuccessF();
+      }
+      loadFriends(); // 刷新好友列表
+    } else {
+      console.error('处理好友申请失败:', res.message);
+      handleFriendRequestFailure();
+    }
+  } catch (error) {
+    console.error(error);
+    handleFriendRequestFailure();
+  }
+};
+const handleFriendRequestSuccessT = () => {
   ElMessage({
-    message: '删除好友成功',
+    message: '处理好友申请成功,已同意',
     type: 'success',
   })
 }
+const handleFriendRequestSuccessF = () => {
+  ElMessage({
+    message: '处理好友申请成功,已拒绝',
+    type: 'success',
+  })
+}
+const handleFriendRequestFailure = () => {
+  ElMessage({
+    message: '处理好友申请失败',
+    type: 'error',
+  })
+}
+// 处理群聊申请请求（同意入群或拒绝）
+const handleGroupRequest = async (action, data) => {
+  console.log("action", action);
+  console.log("data", data);
+  try {
+    const res = await handleJoinGroup({
+      recordId: data.recordId,
+      groupId: data.groupId,
+      userId: data.senderId,
+      check: action === 'join' ? 1 : 0
+    });
+
+    if (res.code === 1) {
+      //改变stauts状态
+      messageList.value.forEach((item) => {
+        if (item.recordId === data.recordId) {
+          item.status = 1;
+        }
+      });
+      if (action === 'join') {
+        handleGroupRequestSuccessT();
+      } else {
+        handleGroupRequestSuccessF();
+      }
+      loadUserGroups(); // 刷新群组列表
+    } else {
+      console.error('处理群聊申请失败:', res.message);
+      handleGroupRequestFailure();
+    }
+  } catch (error) {
+    console.error(error);
+    handleGroupRequestFailure();
+  }
+};
+const handleGroupRequestSuccessT = () => {
+  ElMessage({
+    message: '处理群聊申请成功，已同意',
+    type: 'success',
+  })
+}
+const handleGroupRequestSuccessF = () => {
+  ElMessage({
+    message: '处理群聊申请成功，已拒绝',
+    type: 'success',
+  })
+}
+const handleGroupRequestFailure = () => {
+  ElMessage({
+    message: '处理群聊申请失败',
+    type: 'error',
+  })
+}
+
+// 初始化当前显示的页面
+const currentPage = ref('messages'); 
+
+onMounted(() => {
+  currentPage.value ='messages';
+  // 加载申请列表消息
+  loadmyApplyList();
+  showfriendData();
+  showgroupData();
+});
+
+
+
 // 删除好友
 const deleteFriend = async (id) => {
   try {
@@ -480,12 +511,13 @@ const deleteFriend = async (id) => {
     console.error('删除好友失败:', error);
   }
 };
-const deleteGroupSuccess = () => {
+const deleteFriendSuccess = () => {
   ElMessage({
-    message: '解散群聊成功',
+    message: '删除好友成功',
     type: 'success',
   })
 }
+
 //解散群聊
 const deleteGroup = async (id) => {
   try {
@@ -505,12 +537,13 @@ const deleteGroup = async (id) => {
     console.error('解散群聊失败:', error);
   }
 };
-const quitGroupSuccess = () => {
+const deleteGroupSuccess = () => {
   ElMessage({
-    message: '退出群聊成功',
+    message: '解散群聊成功',
     type: 'success',
   })
 }
+
 //退出群聊
 const quitGroup = async (id) => {
   try {
@@ -524,7 +557,12 @@ const quitGroup = async (id) => {
     console.error("退出群聊失败", error);
   }
   };
-
+  const quitGroupSuccess = () => {
+  ElMessage({
+    message: '退出群聊成功',
+    type: 'success',
+  })
+}
 // 创建群聊表单数据
 const groupForm = ref({
   groupName: '',
@@ -612,6 +650,7 @@ const createGroup = async () => {
         groupsData.push(newGroup);
         // localStorage.setItem('usergroups', JSON.stringify(groupsData)); 
         loadUserGroups(); // 刷新群组列表
+        console.log('更新localStorage成功');
     } else {
         console.error('转换得到的Base64头像数据格式不正确');
     }
