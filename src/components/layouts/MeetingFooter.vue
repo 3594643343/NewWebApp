@@ -207,19 +207,34 @@ axios(config)
     const userIdInt = parseInt(userId, 10); // 确保 userId 为整数
     console.log('踢除用户:', { id: userIdInt, meetingNumber: meetingNumber });
     try {
-      const response = await kickUserService({id: userIdInt, meetingNumber: meetingNumber});
-      if (response && response.code === 1) {
-        console.log('踢除用户成功:', response);
-        ElMessage.success('踢除用户成功');
-        // 更新本地用户列表
-        const index = users.value.findIndex(user => user.id === userIdInt);
-        if (index !== -1) {
-          users.value.splice(index, 1);
+      var data = JSON.stringify({
+        "id": userIdInt,
+        "meetingNumber": meetingNumber
+      });
+
+      var config = {
+        method: 'delete',
+        url: 'http://121.37.24.76:8079/meeting/kick',
+        headers: { 
+            'token': localStorage.getItem('token'), 
+            'Content-Type': 'application/json'
+        },
+        data : data
+      };
+
+      axios(config)
+      .then(function (response) {
+        console.log(response.data);
+        if(response.data.code === 1){
+          ElMessage.success('踢除用户成功');
+          
+        }else {
+          ElMessage.error('踢除用户失败');
         }
-      } else {
-        console.error('踢除用户失败:', response);
-        ElMessage.error('踢除用户失败: ' + response.msg);
-      }
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
     } catch (error) {
       console.error('踢除用户失败:', error.response ? error.response.data : error.message);
       ElMessage.error('踢除用户失败: ' + error.message);

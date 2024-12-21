@@ -2,6 +2,7 @@ import request from '../utils/request';
 import { ref } from 'vue';
 import emitter from '@/main.js'; // 根据实际路径调整引入
 import exp from 'constants';
+import { head } from 'lodash';
 
 
 let wschat = ref(null); // 聊天websocket实例
@@ -141,8 +142,12 @@ export const getInMeetingUsers = (meetingNumber) => {
     });
 };
 //修改与会者权限
-export const updatePermissionAPI = ({id,meetingNumber,Permission}) => 
-    request.put('/meeting/permissionchange', {id,meetingNumber,permission:Permission})
+export const updatePermissionAPI = (id,meetingNumber,Permission) => {
+    return request.put('/meeting/permissionchange', {id,meetingNumber,permission:Permission})
+};
+
+    
+    
 //禁言
 export const muteUser = ({userId,meetingNumber}) => 
     request.put('/meeting/mute', {userId,meetingNumber})
@@ -180,8 +185,11 @@ export const downloadCurrentMeetingFile = (fileId) =>
 export const exitSystem = () =>
     request.delete('/exit')
 //会议中踢人
-export const kickUserService = ({ id, meetingNumber }) => 
-    request.delete('/meeting/kick', {id, meetingNumber });
+export const kickUserService = ( id, meetingNumber ) => {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    return request.delete('/meeting/kick',myHeaders, {id, meetingNumber });
+}
 //离开会议
 export const leaveMeetingService = () =>
     request.get('/meeting/leave')
