@@ -60,8 +60,7 @@ emitter.on('messageReceived', async (receivedMessage) => {
    }else if (receivedMessage === 'NEW_FRIEND') {
      await loadFriends();
    }else if (receivedMessage === 'PASS_ADD_GROUP') {
-     await loadUserGroups();
-   }else{
+   };
   if (wschatifFriendOrGroup.value) {
     const newMessageItem = {
         id: receivedMessage.data.senderId,
