@@ -180,7 +180,7 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
-  initMessageList();
+  // initMessageList();
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
   newMessage.value = ''; // 清空输入消息
   console.log('2:', userProfileDetailsVisible.value, foruserProfileDetailsVisible.value,ifFriendOrGroup.value);
