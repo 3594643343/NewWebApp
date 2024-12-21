@@ -1,135 +1,3 @@
-<template>
-  <el-container class="friend-container">
-    <el-aside width="25%">
-      <el-header>
-        <h3>管理我的好友和群聊</h3>
-        <el-popover placement="bottom" :width="150" trigger="click" class="circle-plus-btn">
-          <template #reference>
-            <el-button
-              style="margin-right: 12px; position: relative; bottom: 45px; left: 190px; color: #fff; background-color: #409eff;"
-            >
-              <el-icon class="el-icon-plus">
-                <CirclePlus />
-              </el-icon>
-            </el-button>
-          </template>
-          <div class="circle-plus-btn-actions">
-            <el-button @click="showMessages" type="primary" class="action-button">我的消息</el-button>
-            <el-button @click="showCreateGroup" type="primary" class="action-button">创建群聊</el-button>
-          </div>
-        </el-popover>
-      </el-header>
-      <el-scrollbar style="height: 400px;">
-        <el-list>
-          <el-list-item
-            v-for="item in friendsAndGroups"
-            :key="item.id"
-            class="friend-item"
-            @dblclick="showFriendOrGroupDetails(item)"
-          >
-            <img :src="item.avatar" style="width: 40px; height: 40px ;" class="avatar" />
-            <!-- 根据数据结构判断是用户还是群聊来展示不同内容 -->
-            <span v-if="item.friendName">{{ item.friendName }}</span>
-            <span v-else-if="item.groupName">{{ item.groupName }}</span>
-            <span v-else>{{ '未知名称' }}</span>
-
-            <div v-if="item.friendName" class="friend-actions">
-              <el-button type="primary" @click="goToChat">聊天</el-button>
-              <el-button type="primary" @click="deleteFriend(item.friendId)">删除好友</el-button>
-            </div>
-            <div v-else-if="item.groupName" class="friend-actions">
-              <el-button type="primary" @click="goToChat">聊天</el-button>
-              <el-button type="primary" @click="deleteGroup(item.groupId)">解散群聊</el-button>
-            </div>
-          </el-list-item>
-        </el-list>
-      </el-scrollbar>
-    </el-aside>
-
-    <el-main width="70%">
-      <div v-if="currentPage ==='messages'" class="message-box">
-        <h1 style="font-size: large;">我的消息</h1>
-        <el-scrollbar style="height: 400px;"> <!-- 添加滚动条 -->
-      <el-list>
-        <el-card v-for="msgItem in messageList" :key="msgItem.recordId" style="margin-bottom: 10px;">
-          <!-- 根据消息类型（好友或群聊）展示不同内容 -->
-          <div v-if="msgItem.isFriendRequest">
-            <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
-            <br>
-            <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
-            <br>
-            <span class="message-content">验证消息：{{ msgItem.messageContent }}</span>
-            <br>
-            <span class="message-time">时间：{{ msgItem.time }}</span>
-            <el-button @click="handleFriendRequest('accept', msgItem)" type="primary">同意</el-button>
-            <el-button @click="handleFriendRequest('reject', msgItem)" type="primary">拒绝</el-button>
-          </div>
-          <div v-else>
-            <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
-            <br>
-            <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
-            <br>
-            <span class="message-content">群聊验证消息：{{ msgItem.messageContent }}</span>
-            <br>
-            <span class="message-time">时间：{{ msgItem.time }}</span>
-            <el-button @click="handleGroupRequest('join', msgItem)" type="primary">同意入群</el-button>
-            <el-button @click="handleGroupRequest('reject', msgItem)" type="primary">拒绝</el-button>
-          </div>
-        </el-card>
-      </el-list>
-    </el-scrollbar>
-      </div>
-      <div v-if="currentPage === 'createGroup'" class="create-group-box">
-        <h1 style="font-size: large;">创建群聊</h1>
-        <el-form :model="groupForm" label-width="150px" class="create-group-form">
-          <el-form-item label="群名称：" style="margin-bottom: 10px; margin-left: 0%;">
-            <el-input style="width: 20%;" v-model="groupForm.groupName" placeholder="请输入群名称" />
-          </el-form-item>
-          <el-form-item label="上传群聊头像：" style="margin-bottom: 10px;">
-            <el-upload
-              class="avatar-uploader"
-              :show-file-list="true"
-              :http-request="handleAvatarUpload"
-              :on-success="handleAvatarChange"
-              @change="handleFileChange"
-            >
-              <el-button size="small" type="primary">选择头像</el-button>
-              <img v-if="groupForm.avatar" :src="groupForm.avatar" class="avatar-preview" />
-            </el-upload>
-          </el-form-item>
-          <el-form-item label="入群是否需要验证：" style="margin-bottom: 10px;">
-            <el-radio-group v-model="groupForm.requireVerification">
-              <el-radio label="是">是</el-radio>
-              <el-radio label="否">否</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" style="width: 20%;" @click="createGroup">确认创建</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-      <div v-else class="friendgroup-detail-box">
-        <div v-if="currentPage === 'friendDetail'">
-          <h5 style="margin-bottom: 10px;font-size: large; align-items: center;">用户信息：</h5>
-          <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
-          <h4>用户名：{{ selectedFriend.friendName }}</h4>
-          <p>ID: {{ selectedFriend.friendId }}</p>
-          <p>个性签名: {{ selectedFriend.signature }}</p>
-        </div>
-        <div v-if="currentPage === 'groupDetail'">
-          <h5 style="margin-bottom: 10px;font-size: large; align-items: center;">群聊信息：</h5>
-          <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
-          <h4>群聊名：{{ selectedFriend.groupName }}</h4>
-          <p>群号: {{ selectedFriend.groupId }}</p>
-          <p>群聊创建者: {{ selectedFriend.creatorName }}</p>
-        </div>
-      </div>
-    </el-main>
-  </el-container>
-</template>
-<el-main width="70%">
-</el-main>
-
 <script setup>
 import { onMounted, ref } from 'vue';
 import router from '@/router';
@@ -504,11 +372,146 @@ const showFriendOrGroupDetails = (item) => {
 };
 </script>
 
+<template>
+  <el-container class="friend-container">
+    <el-aside width="25%" class="friend-aside">
+      <el-header class="friend-header">
+        <h3>好友和群聊</h3>
+        <el-popover placement="bottom" :width="150" trigger="click" class="circle-plus-btn">
+          <template #reference>
+            <el-button
+              style="margin-right: 12px; position: relative; bottom: 45px; left: 190px; color: #fff; background-color: #409eff;"
+            >
+              <el-icon class="el-icon-plus">
+                <CirclePlus />
+              </el-icon>
+            </el-button>
+          </template>
+          <div class="circle-plus-btn-actions">
+            <el-button @click="showMessages" type="primary" class="action-button">我的消息</el-button>
+            <el-button @click="showCreateGroup" type="primary" class="action-button">创建群聊</el-button>
+          </div>
+        </el-popover>
+      </el-header>
+      <el-scrollbar style="height: 550px; padding: 10px;">
+        <el-list>
+          <el-list-item
+            v-for="item in friendsAndGroups"
+            :key="item.id"
+            class="friend-item"
+            @dblclick="showFriendOrGroupDetails(item)"
+          >
+            <img :src="item.avatar" style="width: 40px; height: 40px ;" class="avatar" />
+            <!-- 根据数据结构判断是用户还是群聊来展示不同内容 -->
+            <span v-if="item.friendName">{{ item.friendName }}</span>
+            <span v-else-if="item.groupName">{{ item.groupName }}</span>
+            <span v-else>{{ '未知名称' }}</span>
+
+            <div v-if="item.friendName" class="friend-actions">
+              <el-button type="primary" @click="goToChat">聊天</el-button>
+              <el-button type="danger" @click="deleteFriend(item.friendId)">删除好友</el-button>
+            </div>
+            <div v-else-if="item.groupName" class="friend-actions">
+              <el-button type="primary" @click="goToChat">聊天</el-button>
+              <el-button type="danger" @click="deleteGroup(item.groupId)">解散群聊</el-button>
+            </div>
+          </el-list-item>
+        </el-list>
+      </el-scrollbar>
+    </el-aside>
+
+    <el-main width="70%">
+      <div v-if="currentPage ==='messages'" class="message-box">
+        <h1 style="font-size: large;">我的消息</h1>
+        <el-scrollbar style="height: 400px;"> <!-- 添加滚动条 -->
+      <el-list>
+        <el-card v-for="msgItem in messageList" :key="msgItem.recordId" style="margin-bottom: 10px;">
+          <!-- 根据消息类型（好友或群聊）展示不同内容 -->
+          <div v-if="msgItem.isFriendRequest">
+            <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
+            <br>
+            <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
+            <br>
+            <span class="message-content">验证消息：{{ msgItem.messageContent }}</span>
+            <br>
+            <span class="message-time">时间：{{ msgItem.time }}</span>
+            <el-button @click="handleFriendRequest('accept', msgItem)" type="primary">同意</el-button>
+            <el-button @click="handleFriendRequest('reject', msgItem)" type="primary">拒绝</el-button>
+          </div>
+          <div v-else>
+            <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
+            <br>
+            <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
+            <br>
+            <span class="message-content">群聊验证消息：{{ msgItem.messageContent }}</span>
+            <br>
+            <span class="message-time">时间：{{ msgItem.time }}</span>
+            <el-button @click="handleGroupRequest('join', msgItem)" type="primary">同意入群</el-button>
+            <el-button @click="handleGroupRequest('reject', msgItem)" type="primary">拒绝</el-button>
+          </div>
+        </el-card>
+      </el-list>
+    </el-scrollbar>
+      </div>
+      <div v-if="currentPage === 'createGroup'" class="create-group-box">
+        <h1 style="font-size: large;">创建群聊</h1>
+        <el-form :model="groupForm" label-width="150px" class="create-group-form">
+          <el-form-item label="群名称：" style="margin-bottom: 10px; margin-left: 0%;">
+            <el-input style="width: 20%;" v-model="groupForm.groupName" placeholder="请输入群名称" />
+          </el-form-item>
+          <el-form-item label="上传群聊头像：" style="margin-bottom: 10px;">
+            <el-upload
+              class="avatar-uploader"
+              :show-file-list="true"
+              :http-request="handleAvatarUpload"
+              :on-success="handleAvatarChange"
+              @change="handleFileChange"
+            >
+              <el-button size="small" type="primary">选择头像</el-button>
+              <img v-if="groupForm.avatar" :src="groupForm.avatar" class="avatar-preview" />
+            </el-upload>
+          </el-form-item>
+          <el-form-item label="入群是否需要验证：" style="margin-bottom: 10px;">
+            <el-radio-group v-model="groupForm.requireVerification">
+              <el-radio label="是">是</el-radio>
+              <el-radio label="否">否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" style="width: 20%;" @click="createGroup">确认创建</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+      <div v-else class="friendgroup-detail-box">
+        <div v-if="currentPage === 'friendDetail'">
+          <h5 style="margin-bottom: 10px;font-size: large; align-items: center;">用户信息：</h5>
+          <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
+          <h4>用户名：{{ selectedFriend.friendName }}</h4>
+          <p>ID: {{ selectedFriend.friendId }}</p>
+          <p>个性签名: {{ selectedFriend.signature }}</p>
+        </div>
+        <div v-if="currentPage === 'groupDetail'">
+          <h5 style="margin-bottom: 10px;font-size: large; align-items: center;">群聊信息：</h5>
+          <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
+          <h4>群聊名：{{ selectedFriend.groupName }}</h4>
+          <p>群号: {{ selectedFriend.groupId }}</p>
+          <p>群聊创建者: {{ selectedFriend.creatorName }}</p>
+        </div>
+      </div>
+    </el-main>
+  </el-container>
+</template>
+
 <style scoped>
 .friend-container {
   display: flex;
 }
 
+.friend-aside {
+  background-color: #fff;
+  margin-top: 30px;
+  height: 600px;
+}
 .friend-item {
   display: flex;
   align-items: center;

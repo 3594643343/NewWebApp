@@ -30,9 +30,9 @@ const fetchUsers = async () => {
 };
 
 
-const addFriend = () => {
-  console.log('添加好友');
-};
+// const addFriend = () => {
+//   console.log('添加好友');
+// };
 
 const updateMembers = () => {
   const storedUsers = localStorage.getItem('users');
@@ -44,7 +44,7 @@ let fetchInterval;
 onMounted(() => {
   fetchUsers();
   // fetchInterval = setInterval(fetchUsers, 5000); // 每5秒调用一次fetchUsers
-  fetchInterval = setInterval(updateMembers, 5000); // 每5秒调用一次fetchUsers
+  fetchInterval = setInterval(updateMembers, 3000); // 每5秒调用一次fetchUsers
 });
 
 onUnmounted(() => {
@@ -78,12 +78,12 @@ onUnmounted(() => {
                     <div class="signature">{{ user.signature }}</div>
                   </div>
                 </div>
-                <div class="button-group">
+                <!-- <div class="button-group">
                   <el-button type="text" @click="addFriend" class="icon-button">
                     <el-icon><User /></el-icon>
                     添加好友
                   </el-button>
-                </div>
+                </div> -->
               </el-popover>
               <div class="user-info">
                 <span class="username">{{ user.username }}</span>
