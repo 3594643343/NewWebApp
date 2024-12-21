@@ -25,7 +25,8 @@ export const initWschat = () => {
         // 如果不是JSON格式的消息
         if (event.data==='NEW_FRIEND') {
             console.log('websocket接收到新好友请求');
-            emitter.emit('messageReceived', 'NEW_FRIEND');
+            const receivedMessage = event.data;
+            emitter.emit('messageReceived', receivedMessage);
         }else{
             try {
             const receivedMessage = JSON.parse(event.data);
