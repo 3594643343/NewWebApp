@@ -601,7 +601,7 @@ const showFriendOrGroupDetails = (item) => {
             class="friend-item"
             @dblclick="showFriendOrGroupDetails(item)"
           >
-            <img :src="item.avatar" style="width: 40px; height: 40px ;" class="avatar" />
+            <el-avatar :src="item.avatar" style="width: 40px; height: 40px ;" class="avatar" />
             <!-- 根据数据结构判断是用户还是群聊来展示不同内容 -->
             <span v-if="item.friendName">{{ item.friendName }}</span>
             <span v-else-if="item.groupName">{{ item.groupName }}</span>

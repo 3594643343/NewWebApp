@@ -690,7 +690,7 @@ const sendMessage = async (newmessage) => {
 .chat-layout {
   display: flex;
   flex-direction: row;
-  height: 100vh;
+  height: 100%;
 }
 
 .chat-container {
@@ -757,7 +757,7 @@ const sendMessage = async (newmessage) => {
   display: flex;
   background-color: #fff;
   align-items: center;
-  /* margin-bottom: 20px; */
+  margin-bottom: 20px;
 }
 
 .friend-message {
@@ -801,7 +801,7 @@ const sendMessage = async (newmessage) => {
   bottom: 0;
   left: 530px;
   right: 30px;
-  /* top: 580px; */
+  top: 580px;
 }
 
 .input-message {
