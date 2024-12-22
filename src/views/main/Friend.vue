@@ -492,6 +492,22 @@ const createGroupSuccess = () => {
 }
 // 创建群聊的确认操作
 const createGroup = async () => {
+  if (!groupForm.value.groupName) {
+    ElMessage({
+      message: '请填写群名称',
+      type: 'warning',
+    });
+    return;
+  }
+
+  // 检查是否上传头像
+  if (!groupForm.value.avatar) {
+    ElMessage({
+      message: '请上传群聊头像',
+      type: 'warning',
+    });
+    return;
+  }
   const formData = new FormData();
   formData.append('groupName', groupForm.value.groupName);
   formData.append('groupAvatar', groupForm.value.avatar); // 更改为groupAvatar
@@ -522,7 +538,8 @@ const createGroup = async () => {
         groupsData.push(newGroup);
         // localStorage.setItem('usergroups', JSON.stringify(groupsData)); 
         loadUserGroups(); // 刷新群组列表
-        currentPage.value = 'messages'; // 回到创建群聊页面
+        currentPage.value = 'messages'; // 回到消息页面
+        resetGroupForm(); // 重置表单数据
         console.log('更新localStorage成功');
     } else {
         console.error('转换得到的Base64头像数据格式不正确');
@@ -535,6 +552,13 @@ const createGroup = async () => {
   }
 };
 
+const resetGroupForm = () => {
+  groupForm.value = {
+    groupName: '',
+    avatar: null,
+    requireVerification: '否'
+  };
+};
 
 const selectedFriend = ref({}); // 选中的好友或群聊
 const showFriendOrGroupDetails = (item) => {
