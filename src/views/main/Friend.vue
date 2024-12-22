@@ -352,6 +352,7 @@ const handleFriendRequest = async (action, data) => {
       friendId: data.senderId,
       check: action === 'accept' ? 1 : 0
     });
+    console.log("res: ", res);
 
     if (res.code === 1) {
       ElMessage({
