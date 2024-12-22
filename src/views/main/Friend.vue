@@ -6,7 +6,7 @@ import emitter from '@/main.js'; // 根据实际路径调整引入
 import { ElMessage } from 'element-plus';
 
 //接收websocket消息
-emitter.on('messageReceived', (receivedMessage) => {
+emitter.on('messageReceived', async (receivedMessage) => {
   console.log('接收到消息', receivedMessage);
   if (receivedMessage.code === 3) {
     console.log("好友验证消息");
@@ -17,7 +17,11 @@ emitter.on('messageReceived', (receivedMessage) => {
     // 处理群聊验证消息，添加到消息列表
     handleMessage(receivedMessage.data, false);
     console.log("处理群聊验证消息");
-  }
+  }else if (receivedMessage === 'NEW_FRIEND') {
+     await loadFriends();
+   }else if (receivedMessage === 'PASS_ADD_GROUP') {
+     await loadUserGroups();
+   };
 });
 
 //重新获取好友消息和群聊信息
@@ -26,11 +30,16 @@ const usergroups= ref([]);
 const groupid= ref('');
 
 const loadFriends = async () => {
+  // 先清空friends数组
+  friends.value = [];
   try {
     const res = await getAllFriends();
     console.log(res);
     friends.value = res.data;
     localStorage.setItem('friends', JSON.stringify(friends.value));
+    friendsAndGroups.value = [];
+    showfriendData();
+    showgroupData();
     console.log("获取好友列表成功:friends",friends.value);
   } catch (error) {
     console.error(error);
@@ -38,6 +47,8 @@ const loadFriends = async () => {
 };
 
 const loadUserGroups = async () => {
+  // 先清空usergroups数组
+  usergroups.value = [];
   try {
     const res = await getUserGroups();
     console.log(res);
@@ -50,6 +61,9 @@ const loadUserGroups = async () => {
       console.log("获取用户群信息成功:usergroups",usergroups.value);
     }
     localStorage.setItem('usergroups', JSON.stringify(usergroups.value));
+    friendsAndGroups.value = [];
+    showfriendData();
+    showgroupData();
   } catch (error) {
     console.error(error);
   }
@@ -59,6 +73,8 @@ const loadUserGroups = async () => {
 // 用于存储好友列表和群聊列表
 const friendsAndGroups = ref([]);
 const showfriendData = () => {
+    // 先清空friendsAndGroups数组
+    // friendsAndGroups.value = [];
     const friendsData = localStorage.getItem('friends')? JSON.parse(localStorage.getItem('friends')) : [];
     console.log("friendsData", friendsData);
     friendsData.forEach((friend) => {
@@ -110,6 +126,8 @@ const cleanBase64Data = (base64Data) => {
 };
 
 const showgroupData = () => {
+    // 先清空friendsAndGroups数组
+    // friendsAndGroups.value = [];
     const groupsData = localStorage.getItem('usergroups')? JSON.parse(localStorage.getItem('usergroups')) : [];
     console.log("groupsData", groupsData);
     groupsData.forEach((group) => {
@@ -127,7 +145,7 @@ const showgroupData = () => {
                 }
                 const blob = new Blob([uint8Array], { type: `image/${avatarFormat}` });
                 const objectURL = URL.createObjectURL(blob);
-                console.log('生成的Object URL:', objectURL);  // 打印生成的可用于显示的URL
+                // console.log('生成的Object URL:', objectURL);  // 打印生成的可用于显示的URL
                 if (avatarData.startsWith('/9j/')) {
                     avatarFormat = 'jpg';
                 }
@@ -292,11 +310,13 @@ const handleGroupRequest = async (action, data) => {
 
     if (res.code === 1) {
       //改变stauts状态
+      console.log("改变stauts状态")
       messageList.value.forEach((item) => {
         if (item.recordId === data.recordId) {
           item.status = 1;
         }
       });
+      console.log("改变stauts状态成功")
       if (action === 'join') {
         handleGroupRequestSuccessT();
       } else {
@@ -569,7 +589,14 @@ const showFriendOrGroupDetails = (item) => {
             </div>
             <div v-else-if="item.groupName" class="friend-actions">
               <el-button type="primary" @click="goToChat">聊天</el-button>
-              <el-button type="danger" @click="deleteGroup(item.groupId)">解散群聊</el-button>
+              <div>
+                <el-button v-if="parseInt(item.creatorId) === parseInt(myUserId)" type="primary" @click="deleteGroup(item.groupId)">
+                    解散群聊
+                </el-button>
+                <el-button v-else type="primary" @click="quitGroup(item.groupId)">
+                    退出群聊
+                </el-button>
+              </div>
             </div>
           </el-list-item>
         </el-list>
@@ -590,20 +617,35 @@ const showFriendOrGroupDetails = (item) => {
             <br>
             <span class="message-content">验证消息：{{ msgItem.messageContent }}</span>
             <br>
-            <span class="message-time">时间：{{ msgItem.time }}</span>
-            <el-button @click="handleFriendRequest('accept', msgItem)" type="primary">同意</el-button>
-            <el-button @click="handleFriendRequest('reject', msgItem)" type="primary">拒绝</el-button>
+            <div v-if="msgItem.status === 0">
+              <el-button @click="handleFriendRequest('accept', msgItem)" type="primary">接受</el-button>
+              <el-button @click="handleFriendRequest('reject', msgItem)" type="primary">拒绝</el-button>
+            </div>
+            <div v-else-if="msgItem.status === 1">
+              <span class="message-status" >已同意请求</span>
+            </div>
+            <div v-else>
+              <span class="message-status">已拒绝请求</span>
+            </div>
           </div>
           <div v-else>
             <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
             <br>
             <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
             <br>
+            <span class="message-content">申请入群：{{ msgItem.groupId }}</span>
             <span class="message-content">群聊验证消息：{{ msgItem.messageContent }}</span>
             <br>
-            <span class="message-time">时间：{{ msgItem.time }}</span>
-            <el-button @click="handleGroupRequest('join', msgItem)" type="primary">同意入群</el-button>
-            <el-button @click="handleGroupRequest('reject', msgItem)" type="primary">拒绝</el-button>
+            <div v-if="msgItem.status === 0">
+              <el-button @click="handleGroupRequest('join', msgItem)" type="primary">同意入群</el-button>
+              <el-button @click="handleGroupRequest('reject', msgItem)" type="primary">拒绝</el-button>
+            </div>
+            <div v-else-if="msgItem.status === 1">
+              <span class="message-status">已同意请求</span>
+            </div>
+            <div v-else>
+              <span class="message-status">已拒绝请求</span>
+            </div>
           </div>
         </el-card>
       </el-list>
