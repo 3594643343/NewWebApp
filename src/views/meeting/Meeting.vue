@@ -429,7 +429,7 @@ onBeforeUnmount(() => {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 998;
   background-color: #fff; // 可以根据需要调整背景颜色
 }
 
@@ -438,7 +438,7 @@ onBeforeUnmount(() => {
   top: 60px; // 根据 header 的高度调整
   bottom: 0;
   left: 0;
-  z-index: 999;
+  z-index: 998;
   background-color: #f0f2f5; // 可以根据需要调整背景颜色
 }
 

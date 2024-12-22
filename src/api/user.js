@@ -27,7 +27,12 @@ export const initWschat = () => {
             console.log('websocket接收到新好友请求');
             const receivedMessage = event.data;
             emitter.emit('messageReceived', receivedMessage);
-        }else{
+        }else if(event.data==='PASS_ADD_GROUP'){   
+            console.log('websocket接收到新消息');
+            const receivedMessage = event.data;
+            emitter.emit('messageReceived', receivedMessage);
+            }
+        else{
             try {
             const receivedMessage = JSON.parse(event.data);
             // 触发事件总线的消息更新事件，传递接收到的消息数据

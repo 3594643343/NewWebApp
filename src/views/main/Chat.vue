@@ -59,7 +59,8 @@ emitter.on('messageReceived', async (receivedMessage) => {
     NotFriend();
    }else if (receivedMessage === 'NEW_FRIEND') {
      await loadFriends();
-   }
+   }else if (receivedMessage === 'PASS_ADD_GROUP') {
+   };
   if (wschatifFriendOrGroup.value) {
     const newMessageItem = {
         id: receivedMessage.data.senderId,
@@ -176,10 +177,28 @@ const ifFriendOrGroup = ref(true); // 判断是否是好友或群聊,false默认
 //   initWschat();
 // });
 
-
+let ifsearchfriend = ref(false); // 判断搜索的好友是不是我的好友
+let ifsearchgroup = ref(false); // 判断搜索的群聊是不是我的群聊
 
 const selectFriend = (friend) => {
   selectedFriend.value = friend;
+  for(let i=0;i<friendsAndGroups.value.length;i++){
+    if(friendsAndGroups.value[i].friendId){
+      if(friendsAndGroups.value[i].friendId === friend.friendId){
+      ifsearchfriend = true; // 判断是否是好友
+      console.log("friendsAndGroups.value[i].friendId", friendsAndGroups.value[i].friendId);
+      console.log("friend.friendId", friend.friendId);
+      }
+    }else{
+      if(friendsAndGroups.value[i].groupId === friend.groupId){
+      ifsearchgroup = true; // 判断是否是群聊
+      console.log("friendsAndGroups.value[i].groupId", friendsAndGroups.value[i].groupId);
+      console.log("friend.groupId", friend.groupId);
+      }
+    }
+  }
+  console.log("ifsearchfriend", ifsearchfriend);
+  console.log("ifsearchgroup", ifsearchgroup);
   initMessageList();
   foruserProfileDetailsVisible.value = false; // 隐藏搜索中空白页
   newMessage.value = ''; // 清空输入消息
@@ -468,6 +487,13 @@ const sendMessage = async (newmessage) => {
   }
 
 };
+// const goTochat = () => {
+//   console.log('跳转到聊天页面');
+//   searchFriendId.value = ''; // 清空搜索框
+//   selectedFriend.value = friendsAndGroups.value[0]; // 设置默认选择的好友
+//   initMessageList();
+// };
+
 
 </script>
 
@@ -475,7 +501,7 @@ const sendMessage = async (newmessage) => {
   <div class="chat-layout">
     <el-container class="chat-container">
       <el-aside class="user-list" width="300px">
-        <div>
+        <div class="search-container">
           <el-input
             v-model="searchFriendId"
             class="search-input"
@@ -486,11 +512,13 @@ const sendMessage = async (newmessage) => {
 
         <div class="friend-list">
           <h3>好友/群聊列表</h3>
+          <br>
           <el-menu v-if="searchedFriend.length > 0">
             <el-menu-item
               v-for="item in searchedFriend"
               :key="item.time"
               @click="selectFriend(item)"
+              class="friend-menu-item"
             >
               <el-avatar :src="item.avatar" size="large" class="avatar" />
               <!-- 根据数据结构判断是用户还是群聊来展示不同内容 -->
@@ -507,13 +535,18 @@ const sendMessage = async (newmessage) => {
 
       <el-container>
         <el-main class="chat-main">
-          <div v-if="userProfileDetailsVisible==true&&foruserProfileDetailsVisible==false&&ifFriendOrGroup==true" class="user-details">
+          <div v-if="userProfileDetailsVisible == true && foruserProfileDetailsVisible == false && ifFriendOrGroup == true" class="user-details">
             <h5 style="margin-bottom: 10px;font-size: large;align-items: center;">用户信息：</h5>
             <el-avatar :src="selectedFriend.avatar" size="large" style="width: 100px;height: 100px;margin-bottom: 10px;" />
             <h4>用户名：{{ selectedFriend.friendName }}</h4>
             <p>ID: {{ selectedFriend.friendId }}</p>
             <p>个性签名: {{ selectedFriend.signature }}</p>
-            <el-button type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
+            <div v-if="ifsearchfriend==false">
+              <el-button  type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
+            </div>
+            <div v-else>
+              <span style="margin-left: 10px;">已是好友</span>
+            </div>
           </div>
           <div v-else-if="foruserProfileDetailsVisible">
             <el-empty description="点击搜索好友的头像显示详情" />
@@ -524,89 +557,89 @@ const sendMessage = async (newmessage) => {
             <h4>群聊名：{{ selectedFriend.groupName }}</h4>
             <p>群号: {{ selectedFriend.groupId }}</p>
             <p>群聊创建者: {{ selectedFriend.ownerName }}</p>
-            <el-button type="primary" @click="addGroup;addGroupDialogVisible=true">申请入群</el-button>
+            <div v-if="ifsearchgroup==false">
+              <el-button  type="primary" @click="addGroup;addGroupDialogVisible=true">申请入群</el-button>
+            </div>
+            <div v-else>
+              <span style="margin-left: 10px;">已加入群聊</span>
+            </div>
           </div>
-          <div v-else class="chat-header">
-            <el-header class="chat-header">
-              <h3 v-if="selectedFriend.name">与 {{ selectedFriend.name }} 的聊天</h3>
-              <h3 v-else>在 {{ selectedFriend.groupName }} 中的聊天</h3>
-            </el-header>
-            <el-main>
-              <div v-if="selectedFriend.name" class="message-list" ref="messageListElement">
+          <div v-else>
+            <div class="chat-header">
+              <el-header class="chat-header">
+                <h3 v-if="selectedFriend.name">与 {{ selectedFriend.name }} 的聊天</h3>
+                <h3 v-else>在 {{ selectedFriend.groupName }} 中的聊天</h3>
+              </el-header>
+            </div>
+            <!-- <div class="message-list-container"> -->
+              <div class="message-list" ref="messageListElement">
                 <div
                   v-for="msg in messageList"
-                  :class="['message', msg.speaker === 'me' ? 'my-message' : 'friend-message']"
+                  :class="msg.speaker === 'me' ? 'my-message' : 'friend-message'"
                 >
-                  <div v-if="msg.speaker === 'friend'">
+                  <div v-if="msg.speaker === 'friend'"  class="message-content">
                     <el-avatar :src="selectedFriend.avatar" size="medium" class="avatar" />
-                    <span class="text">{{ msg.text }}</span>
+                    <div class="text-container">
+                      <span class="text">{{ msg.text }}</span>
+                    </div>
                   </div>
-                  <div v-else>
-                    <span class="text">{{ msg.text }}</span>
+                  <div v-else  class="message-content">
+                    <div class="text-container">
+                      <span class="text">{{ msg.text }}</span>
+                    </div>
                     <el-avatar :src="myUserAvatar" size="medium" class="avatar" />
                   </div>
                 </div>
               </div>
-              <div v-else class="message-list" ref="messageListElement">
-                <div
-                  v-for="msg in groupMessageList"
-                  :class="['message', msg.speaker === 'me' ? 'my-message' : 'friend-message']"
-                >
-                  <div v-if="msg.speaker === 'friend'">
-                    <span class="name">{{ msg.speakername }}</span>
-                    <el-avatar :src="msg.speakerAvatar" size="medium" class="avatar" />
-                    <span class="text">{{ msg.text }}</span>
-                    
-                  </div>
-                  <div v-else>
-                    <span class="text">{{ msg.text }}</span>
-                    <el-avatar :src="myUserAvatar" size="medium" class="avatar" />
-                    <span style="margin-top: 10px;font-size: smaller;">{{ msg.speakername }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="input-wrapper">
-                <el-input
-                  v-model="newMessage"
-                  class="input-message"
-                  placeholder="输入消息..."
-                  @keyup.enter="sendMessage(newMessage)"
-                  clearable
-                />
-                <el-button type="primary" @click="sendMessage(newMessage)">发送</el-button>
-              </div>
-            </el-main>
+            <!-- </div> -->
+            <div class="input-wrapper">
+              <el-input
+                v-model="newMessage"
+                class="input-message"
+                placeholder="输入消息..."
+                @keyup.enter="sendMessage(newMessage)"
+                clearable
+              />
+              <el-button type="primary" @click="sendMessage(newMessage)">发送</el-button>
+            </div>
           </div>
         </el-main>
       </el-container>
     </el-container>
     <!-- 添加好友请求对话框 -->
-    <el-dialog class="add-friend-dialog" title="添加好友" v-model="addFriendDialogVisible">
-      <el-input
-        v-model="verificationMessage"
-        placeholder="输入验证消息..."
-        clearable
-      />
-      <span slot="footer">
-        <el-button @click="addFriendDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="addFriend">发送请求</el-button>
-      </span>
+    <el-dialog class="add-friend-dialog" title="添加好友" v-model="addFriendDialogVisible" width="400px" center>
+      <div class="dialog-content">
+        <el-input
+          v-model="verificationMessage"
+          placeholder="输入验证消息..."
+          clearable
+          class="verification-input"
+        />
+        <el-button type="primary" @click="addFriend" class="dialog-button">发送请求</el-button>
+        <el-button @click="addFriendDialogVisible = false" class="dialog-button">取消</el-button>
+      </div>
     </el-dialog>
     <!-- 申请群聊请求对话框 -->
-    <el-dialog class="add-friend-dialog" title="申请入群" v-model="addGroupDialogVisible">
-      <el-input
-        v-model="verificationMessage"
-        placeholder="输入验证消息..."
-        clearable
-      />
-      <span slot="footer">
-        <el-button @click="addGroupDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="addGroup">发送请求</el-button>
-      </span>
+    <el-dialog class="add-friend-dialog" title="申请入群" v-model="addGroupDialogVisible"  width="400px" center>
+      <div class="dialog-content">
+        <el-input
+          v-model="verificationMessage"
+          placeholder="输入验证消息..."
+          clearable
+          class="verification-input"
+        />
+        <el-button type="primary" @click="addGroup" class="dialog-button">发送请求</el-button>
+        <el-button @click="addGroupDialogVisible = false" class="dialog-button">取消</el-button>
+      </div>
     </el-dialog>
   </div>
 </template>
 <style>
+.search-container {
+  display: flex;
+  justify-content: center;
+}
+
 .chat-layout {
   display: flex;
   flex-direction: row;
@@ -622,99 +655,112 @@ const sendMessage = async (newmessage) => {
 .user-list {
   background-color: #f5f5f5;
   border-right: 1px solid #ccc;
+  padding-top: 20px;
   height: 100%;
 }
 
 .search-input {
-  width: 60%;
-  padding: 5px;
+  width: 80%;
+  padding: 10px;
   border: none;
   border-radius: 5px;
   margin-top: 10px;
   margin-left: 15px;
-  font-size: large;
-}
-
-.avatar {
-  margin-right: 10px;
-}
-
-.chat-header {
-  background-color: #fff;
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-.chat-main {
-  background-color: #f5f5f5;
-  /* flex: 1;
-  padding: 10px; */
-}
-
-.message-list {
-  height: 300px;
-  overflow-y: auto;
+  font-size: 16px;
 }
 
 .friend-list {
-  margin-top: 10px;
-  margin-left: 70px;
+  margin-top: 20px;
+  margin-left: 20px;
 }
 
-.my-message {
+
+.el-menu-item {
+  height: 70px;
+  padding: 15px 20px;
   display: flex;
-  justify-content: flex-end; /* 使自己的消息右对齐 */
-  align-items: center; /* 使用 center 使头像与消息垂直居中 */
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 10px;
-  margin-right: 20px; /* 添加右边距，使消息距离右边框远一些 */
+  align-items: center;
 }
 
-.my-message .avatar {
-  margin-left: 10px; /* 头像与文本之间的间距 */
-  /* margin-right: 10px; 不需要左边距和右边距 */
+.avatar {
+  margin-right: 10px; /* 头像与文本之间的间距 */
+}
+
+.chat-main {
+  flex: 1;
+  padding: 10px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 10px;
+  /* border-bottom: 1px solid #ccc; */
+  position: sticky; /* 使用 sticky 固定在顶部 */
+  top: 0;
+  z-index: 999; /* 确保标题在上方 */
+}
+
+.message-list-container {
+  width: 820px;
+}
+
+.message-content {
+  display: flex;
+  background-color: #fff;
+  align-items: center;
 }
 
 .friend-message {
-  display: flex;
-  justify-content: flex-start; /* 使朋友的消息左对齐 */
-  align-items: center; /* 使用 center 使头像与消息垂直居中 */
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 10px;
-  margin-left: 20px; /* 添加左边距，使消息距离左边框远一些 */
+  justify-content: flex-start;
 }
 
 .friend-message .avatar {
-  margin-right: 10px; /* 头像与文本之间的间距 */
-  /* margin-left: 10px; 不需要左边距 */
+  margin-right: 10px;
 }
 
+.text-container {
+  max-width: 600px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #79BBFF; /* 仅为文本内容添加背景颜色 */
+  margin: 0 10px;
+}
 
+.text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
 
-
-
-
-/* .input-wrapper {
-  display: flex;
-  justify-content: baseline;
-  align-items: center;
+.message-list {
+  height: 400px;
+  width: 820px;
+  overflow-y: auto;
   background-color: #fff;
-  border-radius: 1px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.input-wrapper {
+  display: flex;
+  justify-content: space-between;
+  background-color: #fff;
+  position: fixed;
+  width: 820px;
+  padding: 10px;
+  z-index: 999;
+  bottom: 0;
+  left: 530px;
+  right: 30px;
 }
 
 .input-message {
-  height: 100%;
-  width: 60%;
-  border: 1px solid #ccc;
+  width: 70%; /* 调整输入框的宽度 */
   border-radius: 5px;
   padding: 8px;
   font-size: 16px;
   transition: border-color 0.3s;
-} */
+}
 
 .input-message:focus {
   outline: none;
@@ -734,17 +780,85 @@ const sendMessage = async (newmessage) => {
   margin-top: 100px;
 }
 
-.add-friend-dialog.el-input__inner {
+.add-friend-dialog .el-input__inner {
   width: 100%;
   padding: 10px;
   font-size: 16px;
   margin-bottom: 10px;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
-.add-friend-dialog.el-button {
+/* .add-friend-dialog .el-button {
   width: 80%;
   margin-top: 10px;
-  margin-left: 27px;
+  margin-left: 10%;
+} */
+
+.friend-menu-item {
+  height: 80px; /* 增大每行好友的高度 */
+  padding: 15px 20px; /* 调整内边距 */
+  display: flex;
+  align-items: left; /* 垂直居中 */
+}
+
+.friend-menu-item .avatar {
+  margin-right: 20px; /* 增加头像与文本之间的间距 */
+}
+
+.friend-menu-item span {
+  font-size: 18px; /* 增加文本的字体大小 */
+  font-weight: bold; /* 加粗文本 */
+}
+
+.my-message {
+  display: flex;
+  justify-content: flex-end; /* 使自己的消息右对齐 */
+  align-items: center;
+  border-radius: 10px;
+  margin-right: 20px;
+}
+
+.my-message .avatar {
+  margin-left: 10px; /* 头像与文本之间的间距 */
+}
+
+.verification-input {
+  /* width: 80%; */
+  border-radius: 5px;
+  padding: 10px;
+  transition: border-color 0.3s;
+}
+
+.verification-input:focus {
+  outline: none;
+  border-color: #409eff;
+  background-color: #f0f9ff;
+}
+
+.dialog-button {
+  width: 40%;
+  margin: 5px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.dialog-button.el-button--primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+.dialog-button.el-button--primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.dialog-button.el-button--default {
+  background-color: #f5f5f5;
+  border-color: #dcdcdc;
+}
+
+.dialog-button.el-button--default:hover {
+  background-color: #e0e0e0;
+  border-color: #adadad;
 }
 </style>

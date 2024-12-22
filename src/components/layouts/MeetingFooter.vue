@@ -1,7 +1,8 @@
 <script setup>
   import { ref, onMounted  } from 'vue';
   import { useRouter } from 'vue-router';
-  import { ElMessage, ElDialog } from 'element-plus';
+  import { ElMessage, ElDialog, ElMessageBox } from 'element-plus';
+  import { getInMeetingUsers } from '@/api/user'; 
   import { uploadFile, leaveMeetingService, updatePermissionAPI, getCurrentMeetingFileList, downloadCurrentMeetingFile, kickUserService } from '@/api/user'; // 导入上传文件的接口
   import axios from 'axios';
   
@@ -205,49 +206,132 @@ const handleDownloadFile = (fileId) => {
   //   fetchFiles();
   // });
 
-  const kickUser = async (userId) => {
-    if (!meetingNumber) {
-      ElMessage.error('会议号未找到');
-      return;
-    }
-    const userIdInt = parseInt(userId, 10); // 确保 userId 为整数
-    console.log('踢除用户:', { id: userIdInt, meetingNumber: meetingNumber });
+  // 获取当前会议中的用户列表
+  const fetchUsers = async () => {
     try {
-      var data = JSON.stringify({
+      console.log('获取用户列表...',meetingNumber);
+      const response = await getInMeetingUsers(meetingNumber);
+      if (response && response.data) {
+        console.log('获取的用户数据:', response.data);
+        users.value = response.data.map(user => {
+          // const newUsers = response.data.map(user => {
+          // 对每个用户的头像进行格式转换
+          return {
+            ...user,
+            avatar: user.avatar ? 'data:image/png;base64,' + user.avatar : '',// 格式转换
+          };
+        });
+        localStorage.setItem('users', JSON.stringify(users.value)); // 缓存用户列表到本地
+      }
+    } catch (error) {
+      console.error('获取用户列表失败:', error.response ? error.response.data : error.message);
+    }
+  };
+    //更新用户列表
+  const updateMembers = () => {
+    const storedUsers = localStorage.getItem('users');
+    users.value = storedUsers ? JSON.parse(storedUsers) : [];
+  };
+  // 踢除用户
+  // const kickUser = async (userId) => {
+  //   if (!meetingNumber) {
+  //     ElMessage.error('会议号未找到');
+  //     return;
+  //   }
+  //   const userIdInt = parseInt(userId, 10); // 确保 userId 为整数
+  //   console.log('踢除用户:', { id: userIdInt, meetingNumber: meetingNumber });
+  //   try {
+  //     var data = JSON.stringify({
+  //       "id": userIdInt,
+  //       "meetingNumber": meetingNumber
+  //     });
+
+  //     var config = {
+  //       method: 'delete',
+  //       url: 'http://121.37.24.76:8079/meeting/kick',
+  //       headers: { 
+  //           'token': localStorage.getItem('token'), 
+  //           'Content-Type': 'application/json'
+  //       },
+  //       data : data
+  //     };
+
+  //     axios(config)
+  //     .then(function (response) {
+  //       console.log(response.data);
+  //       if(response.data.code === 1){
+  //         ElMessage.success('踢除用户成功');
+  //         fetchUsers();
+  //         updateMembers();
+          
+  //       }else {
+  //         ElMessage.error('踢除用户失败');
+  //       }
+  //     })
+  //     .catch(function (error) {
+  //       console.log(error);
+  //     });
+  //   } catch (error) {
+  //     console.error('踢除用户失败:', error.response ? error.response.data : error.message);
+  //     ElMessage.error('踢除用户失败: ' + error.message);
+  //   } 
+
+  //   // 实现踢除用户的逻辑
+  // };
+  const kickUser = async (userId) => {
+  if (!meetingNumber) {
+    ElMessage.error('会议号未找到');
+    return;
+  }
+
+  const user = users.value.find(user => user.id === userId);
+  if (!user) {
+    ElMessage.error('用户未找到');
+    return;
+  }
+
+  ElMessageBox.confirm(`确认踢除用户 ${user.username} 吗？`, '踢除用户', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async () => {
+    try {
+      const userIdInt = parseInt(userId, 10); // 确保 userId 为整数
+      console.log('踢除用户:', { id: userIdInt, meetingNumber: meetingNumber });
+      const data = JSON.stringify({
         "id": userIdInt,
         "meetingNumber": meetingNumber
       });
 
-      var config = {
+      const config = {
         method: 'delete',
         url: 'http://121.37.24.76:8079/meeting/kick',
         headers: { 
-            'token': localStorage.getItem('token'), 
-            'Content-Type': 'application/json'
+          'token': localStorage.getItem('token'), 
+          'Content-Type': 'application/json'
         },
-        data : data
+        data: data
       };
 
-      axios(config)
-      .then(function (response) {
-        console.log(response.data);
-        if(response.data.code === 1){
-          ElMessage.success('踢除用户成功');
-          
-        }else {
-          ElMessage.error('踢除用户失败');
-        }
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+      const response = await axios(config);
+      console.log(response.data);
+      if (response.data.code === 1) {
+        ElMessage.success('踢除用户成功');
+        fetchUsers();
+        updateMembers();
+      } else {
+        ElMessage.error('踢除用户失败');
+        console.error('踢除用户失败:', response);
+      }
     } catch (error) {
       console.error('踢除用户失败:', error.response ? error.response.data : error.message);
       ElMessage.error('踢除用户失败: ' + error.message);
-    } 
-
-    // 实现踢除用户的逻辑
-  };
+    }
+  }).catch(() => {
+    // 用户点击取消
+    ElMessage.info('已取消踢除用户');
+  });
+};
   </script>
   
   <template>
