@@ -742,12 +742,13 @@ const sendMessage = async (newmessage) => {
 }
 
 .chat-header {
-  padding: 10px;
-  /* border-bottom: 1px solid #ccc; */
-  position: sticky; /* 使用 sticky 固定在顶部 */
-  top: 0;
-  z-index: 999; /* 确保标题在上方 */
+  display: flex; /* 使用 flexbox 布局 */
+  justify-content: center; /* 使内容水平居中 */
+  align-items: center; /* 垂直居中 */
+  padding: 10px; /* 适当的内边距 */
+  /* border-bottom: 1px solid #ccc; */ /* 如果需要下边框，可以取消注释这行 */
 }
+
 
 .message-list-container {
   width: 820px;
