@@ -791,26 +791,25 @@ const sendMessage = async (newmessage) => {
 
 .input-wrapper {
   display: flex;
-  justify-content: space-between;
+  align-items: center; /* 添加垂直居中 */
   background-color: #fff;
-  /* background-color: aqua; */
   position: fixed;
   width: 820px;
   padding: 10px;
   z-index: 999;
-  bottom: 0;
+  bottom: 100px;
   left: 530px;
   right: 30px;
-  top: 580px;
 }
 
 .input-message {
-  width: 70%; /* 调整输入框的宽度 */
+  flex: 1; /* 自动扩展以填充空白空间 */
+  height: 50px; /* 或者设置一个合适的固定高度 */
   border-radius: 5px;
-  padding: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s;
+  padding: 8px; /* 你可以调整这个值来更改内边距 */
+  margin-right: 10px; /* 与发送按钮的间距 */
 }
+
 
 .input-message:focus {
   outline: none;

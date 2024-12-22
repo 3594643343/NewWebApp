@@ -614,10 +614,10 @@ const showFriendOrGroupDetails = (item) => {
             <div v-else-if="item.groupName" class="friend-actions">
               <el-button type="primary" @click="goToChat">聊天</el-button>
               <div>
-                <el-button v-if="parseInt(item.creatorId) === parseInt(myUserId)" type="primary" @click="deleteGroup(item.groupId)">
+                <el-button v-if="parseInt(item.creatorId) === parseInt(myUserId)" type="danger" @click="deleteGroup(item.groupId)">
                     解散群聊
                 </el-button>
-                <el-button v-else type="primary" @click="quitGroup(item.groupId)">
+                <el-button v-else type="danger" @click="quitGroup(item.groupId)">
                     退出群聊
                 </el-button>
               </div>
@@ -763,6 +763,7 @@ const showFriendOrGroupDetails = (item) => {
 
 .friend-actions button {
   width: 60px;
+  margin-left: auto;
 }
 
 .message-box {
