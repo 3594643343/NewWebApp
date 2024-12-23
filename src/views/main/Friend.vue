@@ -638,9 +638,7 @@ const showFriendOrGroupDetails = (item) => {
             <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
             <br>
             <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
-            <br>
             <span class="message-content">验证消息：{{ msgItem.messageContent }}</span>
-            <br>
             <div v-if="msgItem.status === 0">
               <el-button @click="handleFriendRequest('accept', msgItem)" type="primary">接受</el-button>
               <el-button @click="handleFriendRequest('reject', msgItem)" type="primary">拒绝</el-button>
@@ -656,10 +654,8 @@ const showFriendOrGroupDetails = (item) => {
             <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
             <br>
             <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
-            <br>
             <span class="message-content">申请入群：{{ msgItem.groupId }}</span>
             <span class="message-content">群聊验证消息：{{ msgItem.messageContent }}</span>
-            <br>
             <div v-if="msgItem.status === 0">
               <el-button @click="handleGroupRequest('join', msgItem)" type="primary">同意入群</el-button>
               <el-button @click="handleGroupRequest('reject', msgItem)" type="primary">拒绝</el-button>
