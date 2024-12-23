@@ -237,7 +237,7 @@ const selectFriend = (friend) => {
   console.log('2:', userProfileDetailsVisible.value, foruserProfileDetailsVisible.value,ifFriendOrGroup.value);
 };
 
-
+let ifmyself = false; // 判断是否是自己
 
 const searchFriend = async () => {
   if (!searchFriendId.value.trim()) {
@@ -252,6 +252,22 @@ const searchFriend = async () => {
   const inputValue = searchFriendId.value.trim();
   console.log('1:', userProfileDetailsVisible.value);
   foruserProfileDetailsVisible.value = true; // 隐藏用户详情
+  if (parseInt(inputValue) === parseInt(myUserId)) {
+        // 如果搜索框内容为自己的 ID，显示我的信息
+        ifmyself = true;
+        console.log('搜索框内容为自己的 ID，显示我的信息', myUserInfo);
+        searchedFriend.value = [{
+          ...myUserInfo,
+          avatar: myUserInfo.avatar ? `data:image/png;base64,${myUserInfo.avatar}` : '',
+          signature: myUserInfo.signature && myUserInfo.signature.trim() !== ''? myUserInfo.signature : '尚未设置个性签名',
+          friendName: myUserInfo.username,
+          name: myUserInfo.username,
+          friendId: myUserId
+        }];
+        console.log('搜索框内容为自己的 ID，显示我的信息2', searchedFriend.value);
+        userProfileDetailsVisible.value = true; // 显示用户详情
+        return;
+    }
   try {
     if (inputValue.length === 9) {
       // 搜索用户逻辑
@@ -269,6 +285,7 @@ const searchFriend = async () => {
           name: response.data.friendName,
           friendId: response.data.friendId
         }]; // 更新搜索结果为单个好友
+        console.log('搜索框内容为好友 ID，显示该好友信息', searchedFriend.value);
         userProfileDetailsVisible.value = true; // 显示用户详情
       } else {
         console.error('查找好友失败，返回数据格式不正确');
@@ -569,11 +586,14 @@ const sendMessage = async (newmessage) => {
             <h4>用户名：{{ selectedFriend.friendName }}</h4>
             <p>ID: {{ selectedFriend.friendId }}</p>
             <p>个性签名: {{ selectedFriend.signature }}</p>
-            <div v-if="ifsearchfriend==false">
+            <div v-if="ifmyself==false&&ifsearchfriend==false">
               <el-button  type="primary" @click="addFriend; addFriendDialogVisible=true">添加好友</el-button>
             </div>
-            <div v-else>
+            <div v-else-if="ifmyself==false&&ifsearchfriend">
               <span style="margin-left: 10px;">已是好友</span>
+            </div>
+            <div v-else>
+              <span style="margin-left: 10px;">自己</span>
             </div>
           </div>
           <div v-else-if="foruserProfileDetailsVisible">
@@ -690,7 +710,7 @@ const sendMessage = async (newmessage) => {
 .chat-layout {
   display: flex;
   flex-direction: row;
-  height: 100vh;
+  height: 100%;
 }
 
 .chat-container {
@@ -742,12 +762,13 @@ const sendMessage = async (newmessage) => {
 }
 
 .chat-header {
-  padding: 10px;
-  /* border-bottom: 1px solid #ccc; */
-  position: sticky; /* 使用 sticky 固定在顶部 */
-  top: 0;
-  z-index: 999; /* 确保标题在上方 */
+  display: flex; /* 使用 flexbox 布局 */
+  justify-content: center; /* 使内容水平居中 */
+  align-items: center; /* 垂直居中 */
+  padding: 10px; /* 适当的内边距 */
+  /* border-bottom: 1px solid #ccc; */ /* 如果需要下边框，可以取消注释这行 */
 }
+
 
 .message-list-container {
   width: 820px;
@@ -757,7 +778,7 @@ const sendMessage = async (newmessage) => {
   display: flex;
   background-color: #fff;
   align-items: center;
-  /* margin-bottom: 20px; */
+  margin-bottom: 20px;
 }
 
 .friend-message {
@@ -791,26 +812,25 @@ const sendMessage = async (newmessage) => {
 
 .input-wrapper {
   display: flex;
-  justify-content: space-between;
+  align-items: center; /* 添加垂直居中 */
   background-color: #fff;
-  /* background-color: aqua; */
   position: fixed;
   width: 820px;
   padding: 10px;
   z-index: 999;
-  bottom: 0;
+  bottom: 100px;
   left: 530px;
   right: 30px;
-  /* top: 580px; */
 }
 
 .input-message {
-  width: 70%; /* 调整输入框的宽度 */
+  flex: 1; /* 自动扩展以填充空白空间 */
+  height: 50px; /* 或者设置一个合适的固定高度 */
   border-radius: 5px;
-  padding: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s;
+  padding: 8px; /* 你可以调整这个值来更改内边距 */
+  margin-right: 10px; /* 与发送按钮的间距 */
 }
+
 
 .input-message:focus {
   outline: none;

@@ -202,10 +202,13 @@ const handleMessage = async(data,isFriendRequest) => {
       groupId: data.groupId,
     // isFriendRequest: item.groupId ? false : true // 判断是否是自己发出的申请
       isFriendRequest: isFriendRequest, // 判断是否是自己发出的申请
-      status: 0 // 0表示未读，1表示已读
+      status: 0 ,// 0表示未读，1表示已读
+      timestamp: new Date().getTime()
     };
   console.log("newMessage", newMessage);
   messageList.value.push(newMessage);
+  messageList.value.sort((a, b) => b.timestamp - a.timestamp); // 按时间戳倒序排列
+  console.log("messageList", messageList.value);
 }
   } catch (error) {
     console.error(error);
@@ -231,13 +234,14 @@ const loadmyApplyList = async () => {
           recordId: item.recordId,
           groupId: item.groupId,
           isFriendRequest: item.groupId ? false : true, // 判断是否是自己发出的申请
-          status: item.result // 0表示未读，1表示已读
+          status: item.result,// 0表示未读，1表示已读
+          timestamp: new Date().getTime()
       };
     // 处理获取到的消息数据，添加到消息列表
         messageList.value.push(newMessage);
         }
-    
       }
+       messageList.value.sort((a, b) => b.timestamp - a.timestamp); // 按时间戳倒序排列
     console.log("messageList", messageList.value);
   } catch (error) {
     console.error(error);
@@ -270,8 +274,14 @@ const handleFriendRequest = async (action, data) => {
       }
       loadFriends(); // 刷新好友列表
     } else {
-      console.error('处理好友申请失败:', res.message);
-      handleFriendRequestFailure();
+      if(res.msg == "已是好友"){
+        console.log("已经是好友: ", res.msg);
+        handleIsFriend();
+      }else{
+        console.error('处理好友申请失败:', res.message);
+        handleFriendRequestFailure();
+      }
+      
     }
   } catch (error) {
     console.error(error);
@@ -288,6 +298,13 @@ const handleFriendRequestSuccessF = () => {
   ElMessage({
     message: '处理好友申请成功,已拒绝',
     type: 'success',
+  })
+}
+
+const handleIsFriend = () => {
+  ElMessage({
+    message: '已是好友!',
+    type: 'info',
   })
 }
 const handleFriendRequestFailure = () => {
@@ -324,8 +341,13 @@ const handleGroupRequest = async (action, data) => {
       }
       loadUserGroups(); // 刷新群组列表
     } else {
-      console.error('处理群聊申请失败:', res.message);
-      handleGroupRequestFailure();
+      if(res.message == "用户已在群聊"){
+        console.log("用户已在群聊: ", res.message);
+        handleInGroup();
+      }else{
+        console.error('处理群聊申请失败:', res.message);
+        handleGroupRequestFailure();
+      }
     }
   } catch (error) {
     console.error(error);
@@ -342,6 +364,13 @@ const handleGroupRequestSuccessF = () => {
   ElMessage({
     message: '处理群聊申请成功，已拒绝',
     type: 'success',
+  })
+}
+
+const handleInGroup = ()=> {
+  ElMessage({
+    message: '用户已在群聊!',
+    type: 'info',
   })
 }
 const handleGroupRequestFailure = () => {
@@ -601,7 +630,7 @@ const showFriendOrGroupDetails = (item) => {
             class="friend-item"
             @dblclick="showFriendOrGroupDetails(item)"
           >
-            <img :src="item.avatar" style="width: 40px; height: 40px ;" class="avatar" />
+            <el-avatar :src="item.avatar" style="width: 40px; height: 40px ;" class="avatar" />
             <!-- 根据数据结构判断是用户还是群聊来展示不同内容 -->
             <span v-if="item.friendName">{{ item.friendName }}</span>
             <span v-else-if="item.groupName">{{ item.groupName }}</span>
@@ -614,10 +643,10 @@ const showFriendOrGroupDetails = (item) => {
             <div v-else-if="item.groupName" class="friend-actions">
               <el-button type="primary" @click="goToChat">聊天</el-button>
               <div>
-                <el-button v-if="parseInt(item.creatorId) === parseInt(myUserId)" type="primary" @click="deleteGroup(item.groupId)">
+                <el-button v-if="parseInt(item.creatorId) === parseInt(myUserId)" type="danger" @click="deleteGroup(item.groupId)">
                     解散群聊
                 </el-button>
-                <el-button v-else type="primary" @click="quitGroup(item.groupId)">
+                <el-button v-else type="danger" @click="quitGroup(item.groupId)">
                     退出群聊
                 </el-button>
               </div>
@@ -638,9 +667,7 @@ const showFriendOrGroupDetails = (item) => {
             <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
             <br>
             <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
-            <br>
             <span class="message-content">验证消息：{{ msgItem.messageContent }}</span>
-            <br>
             <div v-if="msgItem.status === 0">
               <el-button @click="handleFriendRequest('accept', msgItem)" type="primary">接受</el-button>
               <el-button @click="handleFriendRequest('reject', msgItem)" type="primary">拒绝</el-button>
@@ -656,10 +683,8 @@ const showFriendOrGroupDetails = (item) => {
             <el-avatar :src="msgItem.senderAvatar" size="large" style="width: 50px;height: 50px;margin-right: 10px;" />
             <br>
             <span class="message-from">发送人：{{ msgItem.senderName + ':' }}</span>
-            <br>
             <span class="message-content">申请入群：{{ msgItem.groupId }}</span>
             <span class="message-content">群聊验证消息：{{ msgItem.messageContent }}</span>
-            <br>
             <div v-if="msgItem.status === 0">
               <el-button @click="handleGroupRequest('join', msgItem)" type="primary">同意入群</el-button>
               <el-button @click="handleGroupRequest('reject', msgItem)" type="primary">拒绝</el-button>
@@ -763,6 +788,7 @@ const showFriendOrGroupDetails = (item) => {
 
 .friend-actions button {
   width: 60px;
+  margin-left: auto;
 }
 
 .message-box {
