@@ -270,8 +270,14 @@ const handleFriendRequest = async (action, data) => {
       }
       loadFriends(); // 刷新好友列表
     } else {
-      console.error('处理好友申请失败:', res.message);
-      handleFriendRequestFailure();
+      if(res.message == "已是好友"){
+        console.log("已经是好友: ", res.message);
+        handleIsFriend();
+      }else{
+        console.error('处理好友申请失败:', res.message);
+        handleFriendRequestFailure();
+      }
+      
     }
   } catch (error) {
     console.error(error);
@@ -288,6 +294,13 @@ const handleFriendRequestSuccessF = () => {
   ElMessage({
     message: '处理好友申请成功,已拒绝',
     type: 'success',
+  })
+}
+
+const handleIsFriend = () => {
+  ElMessage({
+    message: '已是好友!',
+    type: 'info',
   })
 }
 const handleFriendRequestFailure = () => {
@@ -324,8 +337,13 @@ const handleGroupRequest = async (action, data) => {
       }
       loadUserGroups(); // 刷新群组列表
     } else {
-      console.error('处理群聊申请失败:', res.message);
-      handleGroupRequestFailure();
+      if(res.message == "用户已在群聊"){
+        console.log("用户已在群聊: ", res.message);
+        handleInGroup();
+      }else{
+        console.error('处理群聊申请失败:', res.message);
+        handleGroupRequestFailure();
+      }
     }
   } catch (error) {
     console.error(error);
@@ -342,6 +360,13 @@ const handleGroupRequestSuccessF = () => {
   ElMessage({
     message: '处理群聊申请成功，已拒绝',
     type: 'success',
+  })
+}
+
+const handleInGroup = ()=> {
+  ElMessage({
+    message: '用户已在群聊!',
+    type: 'info',
   })
 }
 const handleGroupRequestFailure = () => {
