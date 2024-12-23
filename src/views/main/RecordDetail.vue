@@ -17,8 +17,10 @@
           <li v-for="participant in meetingDetails.participants" :key="participant">{{ participant }}</li>
         </ul>
       </div>
-      <p><strong>会议音频:</strong></p>
-      <div class="audio-container">
+      <p><strong>会议音频:  </strong>
+        <el-button type="primary" @click="getMeetingAudio(meeting)" >下载</el-button>
+      </p>
+      <!-- <div class="audio-container">
         <audio
           v-if="meetingDetails.meetingAudio"
           :src="`data:audio/wav;base64,${meetingDetails.meetingAudio}`"
@@ -27,8 +29,7 @@
           class="custom-audio"
         ></audio>
         <p v-else>暂无音频</p>
-      </div>
-      <!-- <p v-else>暂无音频</p> -->
+      </div> -->
       <!-- <p><strong>会议记录:</strong> {{ meetingDetails.meetingRecord || '暂无记录' }}</p>
       <p><strong>会议纪要:</strong> {{ meetingDetails.meetingMinutes || '暂无纪要' }}</p>
       <p><strong>会议翻译:</strong> {{ meetingDetails.meetingTranslation || '暂无翻译' }}</p> -->
@@ -49,7 +50,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router'
-import { getMeetingDetailService, getMeetingFileListService, downloadMeetingFileService  } from '@/api/user';
+import { getMeetingDetailService, getMeetingAudioService, getMeetingFileListService, downloadMeetingFileService  } from '@/api/user';
 import { ArrowLeftBold, Download } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
@@ -72,8 +73,9 @@ const meetingDetails = ref({
 
 const meetingFiles = ref([]);
 
+const meeting = JSON.parse(localStorage.getItem('currentMeeting'))
+
 onMounted(() => {
-  const meeting = JSON.parse(localStorage.getItem('currentMeeting'))
   if (meeting) {
     meetingDetails.value = {
       meetingName: meeting.meetingName,
@@ -91,7 +93,7 @@ onMounted(() => {
     console.error('未能获取会议详情')
     router.push({ name:'record' })
   }
-  getDetails(meeting);
+  // getDetails(meeting);
   getFileList(meeting);
 });
 
@@ -99,31 +101,65 @@ const goBack = () => {
   router.back(); // 返回上一页
 };
 
-const getDetails = async (meeting) => {
-  try {
-    const response = await getMeetingDetailService(meeting.recordId);
-    if (response && response.data) {
-      console.log('获取会议详情成功：', response.data);
-      // console.log('当前会议信息：', meeting);
-      // localStorage.setItem('currentMeetingDetails', JSON.stringify(response.data));
-      meetingDetails.value = {
-        meetingName: meetingDetails.value.meetingName,
-        meetingStartTime: meetingDetails.value.meetingStartTime,
-        meetingEndTime: meetingDetails.value.meetingEndTime,
-        meetingHost: meetingDetails.value.meetingHost,
-        participants: meetingDetails.value.participants,
-        meetingRecord: response.data.meetingRecord || '',
-        meetingMinutes: response.data.meetingMinutes || '',
-        meetingTranslation: response.data.meetingTranslation || '',
-        meetingAudio: response.data.meetingAudio || '',
-      };
-      console.log('更新后的会议详情：', meetingDetails.value);
-    } else {
-      console.error('未能获取会议详情');
-    }
-  } catch (error) {
-    console.error('获取会议详情失败:', error);
-  }
+// const getDetails = async (meeting) => {
+//   try {
+//     const response = await getMeetingDetailService(meeting.recordId);
+//     if (response && response.data) {
+//       console.log('获取会议详情成功：', response.data);
+//       // console.log('当前会议信息：', meeting);
+//       // localStorage.setItem('currentMeetingDetails', JSON.stringify(response.data));
+//       meetingDetails.value = {
+//         meetingName: meetingDetails.value.meetingName,
+//         meetingStartTime: meetingDetails.value.meetingStartTime,
+//         meetingEndTime: meetingDetails.value.meetingEndTime,
+//         meetingHost: meetingDetails.value.meetingHost,
+//         participants: meetingDetails.value.participants,
+//         meetingRecord: response.data.meetingRecord || '',
+//         meetingMinutes: response.data.meetingMinutes || '',
+//         meetingTranslation: response.data.meetingTranslation || '',
+//         meetingAudio: response.data.meetingAudio || '',
+//       };
+//       console.log('更新后的会议详情：', meetingDetails.value);
+//     } else {
+//       console.error('未能获取会议详情');
+//     }
+//   } catch (error) {
+//     console.error('获取会议详情失败:', error);
+//   }
+// };
+
+const getMeetingAudio = async (meeting) => {
+  const fileId = meeting.recordId;
+  console.log('下载音频文件id:', fileId);
+  var config = {
+    method: 'get',
+    url: 'http://121.37.24.76:8079/record/download/audio?fileId=' + fileId,
+    headers: { 
+      "token": localStorage.getItem('token') || ''
+    },
+    responseType: 'blob' as const // 使用常量断言确保类型正确
+  };
+
+  axios(config)
+    .then(function (response) {
+      const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
+      const fileUrl = URL.createObjectURL(fileBlob);
+
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = meeting.meetingName + '会议音频.wav'; // 使用传递的文件名
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(fileUrl); // 释放内存
+      console.log('音频文件下载成功');
+      
+
+    })
+    .catch(function (error) {
+      console.error('音频下载文件失败:', error.response ? error.response.data : error.message);
+    });
 };
 
 //获取文件列表

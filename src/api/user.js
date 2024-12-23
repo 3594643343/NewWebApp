@@ -102,6 +102,14 @@ export const getMeetingDetailService = (recordId) =>
             recordId: recordId // 作为查询参数传递
         }
     })
+//获取会议音频
+export const getMeetingAudioService = (fileId) =>
+    request.get('/record/download/audio', {
+        params: {
+            fileId: fileId // 作为查询参数传递
+        },
+        responseType: 'blob' 
+    })
 //会议记录中获取文件列表
 export const getMeetingFileListService = (recordId) =>
     request.get('/record/get/fileList', {
