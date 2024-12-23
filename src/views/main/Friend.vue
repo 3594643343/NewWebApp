@@ -202,10 +202,13 @@ const handleMessage = async(data,isFriendRequest) => {
       groupId: data.groupId,
     // isFriendRequest: item.groupId ? false : true // 判断是否是自己发出的申请
       isFriendRequest: isFriendRequest, // 判断是否是自己发出的申请
-      status: 0 // 0表示未读，1表示已读
+      status: 0 ,// 0表示未读，1表示已读
+      timestamp: new Date().getTime()
     };
   console.log("newMessage", newMessage);
   messageList.value.push(newMessage);
+  messageList.value.sort((a, b) => b.timestamp - a.timestamp); // 按时间戳倒序排列
+  console.log("messageList", messageList.value);
 }
   } catch (error) {
     console.error(error);
@@ -231,13 +234,14 @@ const loadmyApplyList = async () => {
           recordId: item.recordId,
           groupId: item.groupId,
           isFriendRequest: item.groupId ? false : true, // 判断是否是自己发出的申请
-          status: item.result // 0表示未读，1表示已读
+          status: item.result,// 0表示未读，1表示已读
+          timestamp: new Date().getTime()
       };
     // 处理获取到的消息数据，添加到消息列表
         messageList.value.push(newMessage);
         }
-    
       }
+       messageList.value.sort((a, b) => b.timestamp - a.timestamp); // 按时间戳倒序排列
     console.log("messageList", messageList.value);
   } catch (error) {
     console.error(error);
@@ -270,8 +274,8 @@ const handleFriendRequest = async (action, data) => {
       }
       loadFriends(); // 刷新好友列表
     } else {
-      if(res.message == "已是好友"){
-        console.log("已经是好友: ", res.message);
+      if(res.msg == "已是好友"){
+        console.log("已经是好友: ", res.msg);
         handleIsFriend();
       }else{
         console.error('处理好友申请失败:', res.message);
