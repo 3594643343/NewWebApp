@@ -270,11 +270,11 @@ const handleFriendRequest = async (action, data) => {
       }
       loadFriends(); // 刷新好友列表
     } else {
-      if(res.message == "已是好友"){
-        console.log("已经是好友: ", res.message);
+      if(res.msg == "已是好友"){
+        console.log("已经是好友: ", res.mse);
         handleIsFriend();
       }else{
-        console.error('处理好友申请失败:', res.message);
+        console.error('处理好友申请失败:', res.msg);
         handleFriendRequestFailure();
       }
       
