@@ -240,44 +240,73 @@ function init(rec){
      
     //import { ElMessage, ElMessageBox } from 'element-plus';
      
-    function receive(data) {
-        //console.log('receive data:'+ data);
-        if( data == 'END'){
-            console.log('END');
-            endWS();
-            //meetingendVisible.value = true; // 显示确认对话框
-            ElMessage({
-                        type: 'info',
-                        message: `会议结束`,
-                    });
-            router.push('/main/user');
-        }else if(data == 'SomeOneIn'||data == 'ONE_LEAVE'){
-            console.log(data);
-            fetchUsers();
-            // location.reload(); // 页面刷新
-            // beginWS();
-        }else if(data == 'NEW_FILE'){
-            //提示有新文件
-            ElMessage({
-                showClose: true,
-                message: '有新文件上传',
-            })
+    // function receive(data) {
+    //     //console.log('receive data:'+ data);
+    //     if( data == 'END'){
+    //         console.log('END');
+    //         endWS();
+    //         //meetingendVisible.value = true; // 显示确认对话框
+    //         ElMessage({
+    //                     type: 'info',
+    //                     message: `会议结束`,
+    //                 });
+    //         router.push('/main/user');
+    //     }else if(data == 'SomeOneIn'||data == 'ONE_LEAVE'){
+    //         console.log(data);
+    //         fetchUsers();
+    //         // location.reload(); // 页面刷新
+    //         // beginWS();
+    //     }else if(data == 'NEW_FILE'){
+    //         //提示有新文件
+    //         ElMessage({
+    //             showClose: true,
+    //             message: '有新文件上传',
+    //         })
 
-        }
-        else{
-            var buffer = (new Response(data)).arrayBuffer();
-            buffer.then(function(buf){
-                    //console.log("################recv start ####################################");
-                var audioContext = new ( window.AudioContext || window.webkitAudioContext )();
-                  // var fileResult =addWavHeader(buf, '16000', '16', '2');//解析数据转码wav
-                var fileResult =addWavHeader(buf, my_sampleRate, '16', '1');//解析数据转码wav
-                audioContext.decodeAudioData(fileResult, function(buffer) {
-                     _visualize(audioContext,buffer);//播放
-                });
-                    //console.log("################recv end ####################################");
+    //     }
+    //     else{
+    //         var buffer = (new Response(data)).arrayBuffer();
+    //         buffer.then(function(buf){
+    //                 //console.log("################recv start ####################################");
+    //             var audioContext = new ( window.AudioContext || window.webkitAudioContext )();
+    //               // var fileResult =addWavHeader(buf, '16000', '16', '2');//解析数据转码wav
+    //             var fileResult =addWavHeader(buf, my_sampleRate, '16', '1');//解析数据转码wav
+    //             audioContext.decodeAudioData(fileResult, function(buffer) {
+    //                  _visualize(audioContext,buffer);//播放
+    //             });
+    //                 //console.log("################recv end ####################################");
+    //         });
+    //     }
+    // }
+    // 修改 receive 函数，使用 _visualize 函数来处理每个接收到的音频数据
+function receive(data) {
+    if (data == 'END') {
+        console.log('END');
+        endWS();
+        ElMessage({
+            type: 'info',
+            message: `会议结束`,
+        });
+        router.push('/main/user');
+    } else if (data == 'SomeOneIn' || data == 'ONE_LEAVE') {
+        console.log(data);
+        fetchUsers();
+    } else if (data == 'NEW_FILE') {
+        ElMessage({
+            showClose: true,
+            message: '有新文件上传',
+        });
+    } else {
+        const buffer = (new Response(data)).arrayBuffer();
+        buffer.then((buf) => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const fileResult = addWavHeader(buf, my_sampleRate, '16', '1');
+            audioContext.decodeAudioData(fileResult, (buffer) => {
+                _visualize(audioContext, buffer);
             });
-        }
+        });
     }
+}
      
      
         //处理音频流，转码wav
@@ -345,30 +374,63 @@ function init(rec){
         return view.buffer;
     }
         //播放音频
-    var _visualize = function(audioContext, buffer) {
-        var audioBufferSouceNode = audioContext.createBufferSource(),
-            analyser = audioContext.createAnalyser(),
-            that = this;
-            //将信号源连接到分析仪
-        audioBufferSouceNode.connect(analyser);
-            //将分析仪连接到目的地（扬声器），否则我们将听不到声音
-        analyser.connect(audioContext.destination);
-            //然后将缓冲区分配给缓冲区源节点
-        audioBufferSouceNode.buffer = buffer;
-            //发挥作用
-        if (!audioBufferSouceNode.start) {
-            audioBufferSouceNode.start = audioBufferSouceNode.noteOn //在旧浏览器中使用noteOn方法
-            audioBufferSouceNode.stop = audioBufferSouceNode.noteOff //在旧浏览器中使用noteOff方法
-        };
-            //如果有的话，停止前一个声音
-        // if (this.animationId !== null) {
-        //     cancelAnimationFrame(this.animationId);
-        // }
-        audioBufferSouceNode.start(0);
-            /*let audo;
-            audo.source = audioBufferSouceNode;
-            audo.audioContext = audioContext;*/
+    // var _visualize = function(audioContext, buffer) {
+    //     var audioBufferSouceNode = audioContext.createBufferSource(),
+    //         analyser = audioContext.createAnalyser(),
+    //         that = this;
+    //         //将信号源连接到分析仪
+    //     audioBufferSouceNode.connect(analyser);
+    //         //将分析仪连接到目的地（扬声器），否则我们将听不到声音
+    //     analyser.connect(audioContext.destination);
+    //         //然后将缓冲区分配给缓冲区源节点
+    //     audioBufferSouceNode.buffer = buffer;
+    //         //发挥作用
+    //     if (!audioBufferSouceNode.start) {
+    //         audioBufferSouceNode.start = audioBufferSouceNode.noteOn //在旧浏览器中使用noteOn方法
+    //         audioBufferSouceNode.stop = audioBufferSouceNode.noteOff //在旧浏览器中使用noteOff方法
+    //     };
+    //         //如果有的话，停止前一个声音
+    //     // if (this.animationId !== null) {
+    //     //     cancelAnimationFrame(this.animationId);
+    //     // }
+    //     audioBufferSouceNode.start(0);
+    //         /*let audo;
+    //         audo.source = audioBufferSouceNode;
+    //         audo.audioContext = audioContext;*/
+    // }
+    // 在 script setup 中添加一个数组来存储 AudioBufferSourceNode 实例
+const audioSources = ref([]);
+
+// 修改 _visualize 函数，使其返回创建的 AudioBufferSourceNode 实例
+const _visualize = (audioContext, buffer) => {
+    const audioBufferSouceNode = audioContext.createBufferSource();
+    const analyser = audioContext.createAnalyser();
+
+    audioBufferSouceNode.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    audioBufferSouceNode.buffer = buffer;
+
+    if (!audioBufferSouceNode.start) {
+        audioBufferSouceNode.start = audioBufferSouceNode.noteOn;
+        audioBufferSouceNode.stop = audioBufferSouceNode.noteOff;
     }
+
+    audioBufferSouceNode.start(0);
+
+    // 将创建的 AudioBufferSourceNode 实例添加到数组中
+    audioSources.value.push(audioBufferSouceNode);
+
+    // 可选：设置一个事件监听器，在音频播放结束后从数组中移除该实例
+    audioBufferSouceNode.onended = () => {
+        const index = audioSources.value.indexOf(audioBufferSouceNode);
+        if (index > -1) {
+            audioSources.value.splice(index, 1);
+        }
+    };
+
+    return audioBufferSouceNode;
+};
 
 const handleLeaveMeeting = () => {
     console.log('退出会议成功：');
