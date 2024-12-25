@@ -11,7 +11,7 @@
   const InviteVisible = ref(false);
   const confirmLeaveVisible = ref(false); // 确认离开会议弹窗显示状态
   const manageMembersVisible = ref(false); // 成员管理弹窗显示状态
-  const micStatus = ref(true); // 全局麦克风状态
+  const micStatus = ref(''); // 全局麦克风状态
   const meetingNumber = localStorage.getItem('meetingNumber');
   const meetingPassword = localStorage.getItem('meetingPassword');
   const userProfileData = JSON.parse(localStorage.getItem('userProfile')); // 用户信息，假设存储的是JSON字符串
@@ -24,6 +24,10 @@
   const fileListVisible = ref(false); // 文件列表弹窗显示状态
   const files = ref([]); // 存储当前会议的文件列表
 
+  onMounted(()=>{
+    micStatus.value = true;
+    localStorage.setItem('micStatus', JSON.stringify(micStatus.value));
+  }); 
 // 切换麦克风状态
   const toggleMicStatus = () => {
     if (!micStatus.value) {
